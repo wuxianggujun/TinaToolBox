@@ -2,6 +2,7 @@
 #include "MainWindowMenuBar.hpp"
 #include <QTimer>
 #include <QEvent>
+#include <QStyle>
 
 MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
     setFixedHeight(30);
@@ -25,6 +26,10 @@ MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
         margin: 0px;
         background: transparent;
     }
+    /* 活动状态的菜单按钮 */
+    QPushButton[class="menu-button"][active="true"] {
+        background-color: #E0E0E0;
+    }
     /* 右侧控制按钮样式 */
     QPushButton[class="control-button"] {
         border: none;
@@ -33,12 +38,8 @@ MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
         padding: 0;
         background: transparent;
     }
-    /* 通用悬停和按压效果 */
-    QPushButton:hover {
+    QPushButton[class="control-button"]:hover {
         background-color: #E0E0E0;
-    }
-    QPushButton:pressed {
-        background-color: #D0D0D0;
     }
     QPushButton::menu-indicator {
         width: 0px;
@@ -160,7 +161,7 @@ void MainWindowMenuBar::updateMaximizeButton(bool isMaximized) {
     }
 }
 
-bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
+/*bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
     if (auto *menu = qobject_cast<QMenu*>(watched)) {
         if (event->type() == QEvent::Hide) {
             if (!m_switchingMenu) {
@@ -212,6 +213,99 @@ bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
                 m_activeMenuButton = nullptr;
             } else {
                 // 显示新菜单
+                m_switchingMenu = true;
+                if (m_activeMenu) {
+                    m_activeMenu->hide();
+                }
+                QPoint pos = menuBtn->mapToGlobal(QPoint(0, menuBtn->height()));
+                menuBtn->menu()->popup(pos);
+                m_activeMenu = menuBtn->menu();
+                m_activeMenuButton = menuBtn;
+            }
+            return true;
+        }
+    }
+
+    return QWidget::eventFilter(watched, event);
+}*/
+
+bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
+    if (auto *menu = qobject_cast<QMenu*>(watched)) {
+        if (event->type() == QEvent::Hide) {
+            if (!m_switchingMenu) {
+                if (m_activeMenuButton) {
+                    m_activeMenuButton->setProperty("active", false);
+                    m_activeMenuButton->style()->unpolish(m_activeMenuButton);
+                    m_activeMenuButton->style()->polish(m_activeMenuButton);
+                }
+                m_activeMenu = nullptr;
+                m_activeMenuButton = nullptr;
+            }
+            m_switchingMenu = false;
+            return true;
+        }
+    }
+
+    // 当有活动菜单时，检查鼠标位置
+    if (m_activeMenu && (event->type() == QEvent::MouseMove || event->type() == QEvent::Enter)) {
+        QPoint globalPos = QCursor::pos();
+        
+        // 遍历所有菜单按钮
+        for (auto *child : children()) {
+            if (auto *btn = qobject_cast<QPushButton*>(child)) {
+                if (btn->property("class").toString() == "menu-button" && btn != m_activeMenuButton) {
+                    QRect btnGeometry = QRect(btn->mapToGlobal(QPoint(0, 0)), btn->size());
+                    
+                    if (btnGeometry.contains(globalPos)) {
+                        // 更新按钮状态
+                        if (m_activeMenuButton) {
+                            m_activeMenuButton->setProperty("active", false);
+                            m_activeMenuButton->style()->unpolish(m_activeMenuButton);
+                            m_activeMenuButton->style()->polish(m_activeMenuButton);
+                        }
+                        
+                        btn->setProperty("active", true);
+                        btn->style()->unpolish(btn);
+                        btn->style()->polish(btn);
+                        
+                        m_switchingMenu = true;
+                        m_activeMenu->hide();
+                        
+                        QPoint pos = btnGeometry.bottomLeft();
+                        btn->menu()->popup(pos);
+                        m_activeMenu = btn->menu();
+                        m_activeMenuButton = btn;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    // 处理菜单按钮的点击事件
+    auto *menuBtn = qobject_cast<QPushButton*>(watched);
+    if (menuBtn && menuBtn->property("class").toString() == "menu-button") {
+        if (event->type() == QEvent::MouseButtonPress) {
+            if (m_activeMenu == menuBtn->menu()) {
+                menuBtn->setProperty("active", false);
+                menuBtn->style()->unpolish(menuBtn);
+                menuBtn->style()->polish(menuBtn);
+                
+                m_activeMenu->hide();
+                m_activeMenu = nullptr;
+                m_activeMenuButton = nullptr;
+            } else {
+                // 更新按钮状态
+                if (m_activeMenuButton) {
+                    m_activeMenuButton->setProperty("active", false);
+                    m_activeMenuButton->style()->unpolish(m_activeMenuButton);
+                    m_activeMenuButton->style()->polish(m_activeMenuButton);
+                }
+                
+                menuBtn->setProperty("active", true);
+                menuBtn->style()->unpolish(menuBtn);
+                menuBtn->style()->polish(menuBtn);
+                
                 m_switchingMenu = true;
                 if (m_activeMenu) {
                     m_activeMenu->hide();

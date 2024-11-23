@@ -13,6 +13,8 @@
 #include <QMdiSubWindow>
 #include <QPushButton>
 #include <QClipboard>
+#include "LogPanel.hpp"
+#include <QCloseEvent>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -81,19 +83,33 @@ void MainWindow::setUpUI() {
     mainSplitter->addWidget(leftPanel);
 
     rightSplitter = new QSplitter(Qt::Vertical);
+    rightSplitter->setHandleWidth(1); // 设置分割条宽度
+    // rightSplitter->setChildrenCollapsible(false); // 防止子控件完全折叠
 
+
+    // 设置中心区域
+    QWidget* centerWidget = new QWidget();
+    auto* centerLayout = new QVBoxLayout(centerWidget);
+    centerLayout->setContentsMargins(0, 0, 0, 0);
+    centerLayout->setSpacing(0);
+    
     // documentArea = new DocumentArea();
     auto *centerSplitter = new QSplitter(Qt::Horizontal);
     // centerSplitter->addWidget(documentArea);
+    centerSplitter->addWidget(centerWidget);
 
+    // 设置属性面板
     QWidget *propertyPanel = new QWidget();
     propertyPanel->setMinimumWidth(200);
     propertyPanel->setMaximumWidth(350);
     QVBoxLayout *propertyPanelLayout = new QVBoxLayout(propertyPanel);
     propertyPanelLayout->setContentsMargins(0, 0, 0, 0);
+    propertyPanelLayout->setSpacing(0);
+    
 
     propertyStack = new QStackedWidget();
     propertyPanelLayout->addWidget(propertyStack);
+    
     centerSplitter->addWidget(propertyPanel);
 
     rightSplitter->addWidget(centerSplitter);
@@ -104,8 +120,9 @@ void MainWindow::setUpUI() {
     bottomPanelLayout->setContentsMargins(0, 0, 0, 0);
     bottomPanelLayout->setSpacing(0);
 
-    // logPanel = new LogPanel();
-    // bottomPanelLayout->addWidget(logPanel);
+    // 添加日志面板
+    logPanel = new LogPanel();
+    bottomPanelLayout->addWidget(logPanel);
     rightSplitter->addWidget(bottomPanel);
 
     mainSplitter->addWidget(rightSplitter);
@@ -113,8 +130,33 @@ void MainWindow::setUpUI() {
     rightSplitter->setSizes({700, 250});
     mainSplitter->setSizes({200, 800});
 
+
+    // 设置分割器的拉伸因子
+    rightSplitter->setStretchFactor(0, 1);  // 上部分可以拉伸
+    rightSplitter->setStretchFactor(1, 0);  // 下部分不自动拉伸
+
+    // 设置主分割器的属性
+    mainSplitter->setHandleWidth(1);
+    mainSplitter->setCollapsible(0, false);  // 防止左侧面板完全折叠
+    mainSplitter->setChildrenCollapsible(false);
+
+    // 设置分割器的样式
+    QString splitterStyle = R"(
+        QSplitter::handle {
+            background-color: #2d2d2d;
+        }
+        QSplitter::handle:hover {
+            background-color: #007acc;
+        }
+    )";
+
+    mainSplitter->setStyleSheet(splitterStyle);
+    rightSplitter->setStyleSheet(splitterStyle);
+    centerSplitter->setStyleSheet(splitterStyle);
+    
     connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
     connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
+    connect(logPanel,&LogPanel::closed,this,&MainWindow::hideBottomPanel);
 }
 
 void MainWindow::createTileBar() {
@@ -187,7 +229,7 @@ void MainWindow::toggleMaximize() {
 
 void MainWindow::showBottomPanel() {
     bottomPanel->show();
-    // logPanel->show();
+    logPanel->show();
     QList<int> sizes = rightSplitter->sizes();
     int total = sizes[0] + sizes[1];
     rightSplitter->setSizes({total - 200, 200});
@@ -281,8 +323,8 @@ void MainWindow::openTextFile(const QString &filePath, bool updateHistory) {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     // Cleanup and save any necessary state
-    // if (logPanel) {
-    //     logPanel->cleanup();
-    // }
-    // event->accept();
+    if (logPanel) {
+        logPanel->cleanup();
+    }
+    event->accept();
 }
