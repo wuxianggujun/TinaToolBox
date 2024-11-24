@@ -22,7 +22,10 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(tr("TinaToolBox"));
     setMinimumSize(1024, 768);
     setWindowFlags(Qt::FramelessWindowHint);
-
+    
+    // 设置鼠标追踪
+    setMouseTracking(true);
+    
     centerWidget = new QWidget();
     setCentralWidget(centerWidget);
 
@@ -153,6 +156,9 @@ void MainWindow::setUpUI() {
     mainSplitter->setStyleSheet(splitterStyle);
     rightSplitter->setStyleSheet(splitterStyle);
     centerSplitter->setStyleSheet(splitterStyle);
+
+    installEventFilter(this);
+    
     
     connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
     connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
@@ -187,25 +193,23 @@ void MainWindow::handleMenuAction(const QString &actionName) {
     }
 }
 
-/*
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
-        if (titleBar->geometry().contains(event->pos())) {
+        if (m_menuBar->geometry().contains(event->pos())) {
             dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
             event->accept();
         }
     }
 }
-*/
 
-// void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-//     if (event->buttons() & Qt::LeftButton) {
-//         if (!dragPosition.isNull()) {
-//             move(event->globalPosition().toPoint() - dragPosition);
-//             event->accept();
-//         }
-//     }
-// }
+void MainWindow::mouseMoveEvent(QMouseEvent *event) {
+    if (event->buttons() & Qt::LeftButton) {
+        if (!dragPosition.isNull()) {
+            move(event->globalPosition().toPoint() - dragPosition);
+            event->accept();
+        }
+    }
+}
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
     dragPosition = QPoint();
@@ -319,6 +323,24 @@ void MainWindow::openTextFile(const QString &filePath, bool updateHistory) {
         QMessageBox::critical(this, tr("错误"), 
             tr("打开文本文件时出错: %1").arg(e.what()));
     }*/
+}
+
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == this) {
+        switch (event->type()) {
+            case QEvent::MouseMove: {
+                QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+                return false; // 让事件继续传播
+            }
+            case QEvent::Leave: {
+                return false; // 让事件继续传播
+            }
+            default:
+                break;
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
