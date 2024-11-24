@@ -72,6 +72,7 @@ private slots:
 private:
     QVBoxLayout* layout_;
     QTabWidget* tab_widget_;
+    QWidget* toolbar_; // 添加工具栏
     QMap<QString,DocumentTab*> documents_;
     
 };

@@ -69,6 +69,11 @@ void MainWindow::setUpUI() {
     leftPanelTab = new QTabWidget();
     leftPanelTab->setDocumentMode(true);
     leftPanelTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    leftPanelTab->setStyleSheet(R"(
+        QTabBar::tab {
+            height: 35px;  /* 与工具栏高度一致 */
+        }
+    )");
     leftPanelLayout->addWidget(leftPanelTab);
 
     fileTree = new QTreeWidget();
@@ -92,18 +97,10 @@ void MainWindow::setUpUI() {
     rightSplitter->setHandleWidth(1); // 设置分割条宽度
     // rightSplitter->setChildrenCollapsible(false); // 防止子控件完全折叠
 
-
-    /*// 设置中心区域
-    QWidget *centerWidget = new QWidget();
-    auto *centerLayout = new QVBoxLayout(centerWidget);
-    centerLayout->setContentsMargins(0, 0, 0, 0);
-    centerLayout->setSpacing(0);*/
-
     documentArea = new DocumentArea();
     auto *centerSplitter = new QSplitter(Qt::Horizontal);
     centerSplitter->addWidget(documentArea);
-    // centerSplitter->addWidget(centerWidget);
-
+    
     // 设置属性面板
     QWidget *propertyPanel = new QWidget();
     propertyPanel->setMinimumWidth(200);

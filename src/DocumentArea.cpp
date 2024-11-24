@@ -5,11 +5,13 @@
 #include "DocumentArea.hpp"
 
 #include <qfileinfo.h>
+#include <QLabel>
+
 #include "ExceptionHandler.hpp"
 
-DocumentTab::DocumentTab(const QString &filePath, QWidget *parent):QWidget(parent),file_path_(filePath) {
-    layout_= new QVBoxLayout(this);
-    layout_->setContentsMargins(0,0,0,0);
+DocumentTab::DocumentTab(const QString &filePath, QWidget *parent): QWidget(parent), file_path_(filePath) {
+    layout_ = new QVBoxLayout(this);
+    layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);
 
     stacked_widget_ = new QStackedWidget(this);
@@ -21,7 +23,7 @@ DocumentTab::DocumentTab(const QString &filePath, QWidget *parent):QWidget(paren
     layout_->addWidget(sheet_tab_);
 }
 
-QTextEdit * DocumentTab::setupTextView() {
+QTextEdit *DocumentTab::setupTextView() {
     if (!text_edit_) {
         text_edit_ = new QTextEdit(this);
         text_edit_->setReadOnly(false);
@@ -38,13 +40,12 @@ QTextEdit * DocumentTab::setupTextView() {
 
         stacked_widget_->addWidget(text_edit_);
         sheet_tab_->hide();
-        
     }
     stacked_widget_->setCurrentWidget(text_edit_);
     return text_edit_;
 }
 
-MergedTableView * DocumentTab::setupExcelView() {
+MergedTableView *DocumentTab::setupExcelView() {
     try {
         if (!table_view_) {
             table_view_ = new MergedTableView(this);
@@ -59,8 +60,8 @@ MergedTableView * DocumentTab::setupExcelView() {
             sheet_tab_->clear();
 
             // 为每个sheet创建标签页
-            for (const auto& sheetInfo : sheetsInfo) {
-                auto* sheetWidget = new QWidget();
+            for (const auto &sheetInfo: sheetsInfo) {
+                auto *sheetWidget = new QWidget();
                 sheet_tab_->addTab(sheetWidget, sheetInfo.sheetName);
             }
 
@@ -85,20 +86,18 @@ MergedTableView * DocumentTab::setupExcelView() {
 
         stacked_widget_->setCurrentWidget(table_view_);
         return table_view_;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         spdlog::error("设置Excel视图失败: {}", e.what());
         return nullptr;
     }
-        
 }
 
 void DocumentTab::moveSheetTabs(bool showAtTop) {
-    
 }
 
 void DocumentTab::setupToolBar(const QString &fileType) {
     toolbar_ = new QWidget();
-    auto* toolbarLayout = new QHBoxLayout(toolbar_);
+    auto *toolbarLayout = new QHBoxLayout(toolbar_);
     toolbarLayout->setContentsMargins(0, 0, 0, 0);
     toolbarLayout->setSpacing(4);
 
@@ -106,12 +105,16 @@ void DocumentTab::setupToolBar(const QString &fileType) {
 
     if (QStringList{"py", "js", "sh"}.contains(fileType.toLower())) {
         run_button_ = new RunButton(this);
-        run_button_->setFixedSize(20,30);
+        run_button_->setFixedSize(32, 32);
         toolbarLayout->addWidget(run_button_);
 
+        /*connect(runButton, &RunButton::clicked, this, [this, filePath]() {
+          if (auto* docTab = documents_.value(filePath)) {
+              qDebug() << "Running script:" << filePath;
+          }
+      });*/
         connect(run_button_, &RunButton::clicked, this, &DocumentTab::runScript);
     }
-    
 }
 
 void DocumentTab::changeSheet(int index) {
@@ -126,21 +129,168 @@ void DocumentTab::changeSheet(int index) {
                 table_view_->resizeColumnsToContents();
                 table_view_->resizeRowsToContents();
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             spdlog::error("切换sheet失败: {}", e.what());
         }
     }
 }
 
-DocumentArea::DocumentArea(QWidget *parent):QWidget(parent) {
+
+/*DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     layout_ = new QVBoxLayout(this);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);
-
+    
+    // 创建标签页
     tab_widget_ = new QTabWidget();
-    tab_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     tab_widget_->setTabsClosable(true);
     tab_widget_->setMovable(true);
+    tab_widget_->setDocumentMode(true);
+
+    // 创建一个widget作为corner widget
+    auto* cornerWidget = new QWidget();
+    auto* cornerLayout = new QHBoxLayout(cornerWidget);
+    cornerLayout->setContentsMargins(4, 0, 8, 0);
+    cornerLayout->setSpacing(4);
+    cornerLayout->setAlignment(Qt::AlignCenter);  // 居中对齐
+
+    // 创建运行按钮
+    auto* runButton = new RunButton(this);
+    runButton->setFixedSize(20, 20);
+    cornerLayout->addWidget(runButton);
+
+    // 连接运行按钮的点击信号
+    connect(runButton, &RunButton::clicked, this, [this]() {
+        if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
+            qDebug() << "Running script:" << currentTab->getFilePath();
+        }
+    });
+    
+    // 设置corner widget
+    tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
+    
+    tab_widget_->setStyleSheet(R"(
+        QTabBar::tab {
+            height: 35px;
+            padding: 4px 8px;
+        }
+    )");
+
+    connect(tab_widget_, &QTabWidget::tabCloseRequested,
+            this, &DocumentArea::closeTab);
+
+    layout_->addWidget(tab_widget_);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}*/
+
+/*DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
+    layout_ = new QVBoxLayout(this);
+    layout_->setContentsMargins(0, 0, 0, 0);
+    layout_->setSpacing(0);
+    
+    // 创建标签页
+    tab_widget_ = new QTabWidget();
+    tab_widget_->setTabsClosable(true);
+    tab_widget_->setMovable(true);
+    tab_widget_->setDocumentMode(true);
+
+    // 创建一个widget作为corner widget
+    auto* cornerWidget = new QWidget();
+    cornerWidget->setFixedHeight(35);  // 设置固定高度与标签页一致
+    auto* cornerLayout = new QHBoxLayout(cornerWidget);
+    cornerLayout->setContentsMargins(4, 0, 8, 0);
+    cornerLayout->setSpacing(4);
+
+    // 创建运行按钮
+    auto* runButton = new RunButton(this);
+    runButton->setFixedSize(20, 20);
+    
+    // 设置布局的对齐方式
+    cornerLayout->setAlignment(Qt::AlignVCenter);  // 垂直居中
+    cornerLayout->addWidget(runButton, 0, Qt::AlignVCenter);  // 添加按钮时也指定垂直居中
+
+    // 连接运行按钮的点击信号
+    connect(runButton, &RunButton::clicked, this, [this]() {
+        if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
+            qDebug() << "Running script:" << currentTab->getFilePath();
+        }
+    });
+    
+    // 设置corner widget
+    tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
+    
+    tab_widget_->setStyleSheet(R"(
+        QTabBar::tab {
+            height: 35px;
+            padding: 4px 8px;
+        }
+    )");
+
+    connect(tab_widget_, &QTabWidget::tabCloseRequested,
+            this, &DocumentArea::closeTab);
+
+    layout_->addWidget(tab_widget_);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}*/
+
+DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
+    layout_ = new QVBoxLayout(this);
+    layout_->setContentsMargins(0, 0, 0, 0);
+    layout_->setSpacing(0);
+    
+    // 创建标签页
+    tab_widget_ = new QTabWidget();
+    tab_widget_->setTabsClosable(true);
+    tab_widget_->setMovable(true);
+    tab_widget_->setDocumentMode(true);
+
+    // 创建一个widget作为corner widget
+    auto* cornerWidget = new QWidget();
+    cornerWidget->setFixedHeight(35);  // 设置固定高度与标签页一致
+    auto* cornerLayout = new QHBoxLayout(cornerWidget);
+    cornerLayout->setContentsMargins(4, 0, 8, 0);
+    cornerLayout->setSpacing(4);
+
+    // 创建运行按钮
+    auto* runButton = new RunButton(this);
+    runButton->setFixedSize(20, 20);
+    
+    // 设置布局的对齐方式
+    cornerLayout->setAlignment(Qt::AlignVCenter);  // 垂直居中
+    cornerLayout->addWidget(runButton, 0, Qt::AlignVCenter);  // 添加按钮时也指定垂直居中
+
+    // 连接运行按钮的点击信号
+    connect(runButton, &RunButton::clicked, this, [this]() {
+        if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
+            qDebug() << "Running script:" << currentTab->getFilePath();
+        }
+    });
+    
+    // 设置corner widget
+    tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
+    
+    // 更新样式表，强制保持布局
+    tab_widget_->setStyleSheet(R"(
+        QTabWidget::pane {
+            border: none;
+        }
+        QTabBar::tab {
+            height: 35px;
+            padding: 4px 8px;
+        }
+        QTabWidget::tab-bar {
+            alignment: left;  /* 确保标签栏左对齐 */
+        }
+        QWidget[cornerWidget="true"] {
+            height: 35px;
+            margin: 0;
+            padding: 0;
+        }
+    )");
+
+    // 设置cornerWidget的对象名，以便样式表能识别
+    cornerWidget->setProperty("cornerWidget", true);
+
     connect(tab_widget_, &QTabWidget::tabCloseRequested,
             this, &DocumentArea::closeTab);
 
@@ -148,7 +298,7 @@ DocumentArea::DocumentArea(QWidget *parent):QWidget(parent) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-QWidget * DocumentArea::openDocument(const QString &filePath, const QString &fileType) {
+QWidget *DocumentArea::openDocument(const QString &filePath, const QString &fileType) {
     // 检查文档是否已经打开
     if (documents_.contains(filePath)) {
         int index = tab_widget_->indexOf(documents_[filePath]);
@@ -157,29 +307,28 @@ QWidget * DocumentArea::openDocument(const QString &filePath, const QString &fil
     }
 
     // 创建新的文档标签
-    auto* docTab = new DocumentTab(filePath, this);
+    auto *docTab = new DocumentTab(filePath, this);
     documents_[filePath] = docTab;
 
-    // 设置工具栏
-    docTab->setupToolBar(QFileInfo(filePath).suffix());
-    
     // 添加到标签页
     QFileInfo fileInfo(filePath);
     tab_widget_->addTab(docTab, fileInfo.fileName());
     tab_widget_->setCurrentWidget(docTab);
 
+    QWidget *view = nullptr;
     // 根据文件类型设置不同的视图
-    if (fileType.toLower() == "xlsx" || fileType.toLower() == "xls") {
-        return docTab->setupExcelView();
+    if (QStringList{"xlsx", "xls"}.contains(fileType.toLower())) {
+        view = docTab->setupExcelView();
     } else {
-        return docTab->setupTextView();
+        view = docTab->setupTextView();
     }
+    return view;
 }
 
 void DocumentArea::closeTab(int index) {
-    QWidget* widget = tab_widget_->widget(index);
+    QWidget *widget = tab_widget_->widget(index);
     QString filePath;
-    
+
     // 查找对应的文件路径
     for (auto it = documents_.begin(); it != documents_.end(); ++it) {
         if (it.value() == widget) {
@@ -191,7 +340,7 @@ void DocumentArea::closeTab(int index) {
     if (!filePath.isEmpty()) {
         documents_.remove(filePath);
     }
-    
+
     tab_widget_->removeTab(index);
     delete widget;
 }
