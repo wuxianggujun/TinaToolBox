@@ -7,7 +7,7 @@
 
 RunButton::RunButton(QWidget* parent) : QPushButton(parent), isRunning_(true) {
     // 设置固定大小
-    setFixedSize(40, 40);
+    // setFixedSize(20, 20);
 
     // 设置颜色
     runColor_ = QColor("#4CAF50");    // 绿色

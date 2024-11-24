@@ -6,7 +6,7 @@
 
 #include <qfileinfo.h>
 #include <QLabel>
-
+#include "DocumentTabWidget.hpp"
 #include "ExceptionHandler.hpp"
 
 DocumentTab::DocumentTab(const QString &filePath, QWidget *parent): QWidget(parent), file_path_(filePath) {
@@ -233,7 +233,7 @@ void DocumentTab::changeSheet(int index) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }*/
 
-DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
+/*DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     layout_ = new QVBoxLayout(this);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);
@@ -244,21 +244,33 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     tab_widget_->setMovable(true);
     tab_widget_->setDocumentMode(true);
 
+    // 创建一个空的占位标签页，以确保tabBar始终显示
+    tab_widget_->addTab(new QWidget(), "");
+    tab_widget_->removeTab(0);
+
     // 创建一个widget作为corner widget
     auto* cornerWidget = new QWidget();
-    cornerWidget->setFixedHeight(35);  // 设置固定高度与标签页一致
+    // cornerWidget->setFixedHeight(35);  // 设置固定高度与标签页一致
     auto* cornerLayout = new QHBoxLayout(cornerWidget);
     cornerLayout->setContentsMargins(4, 0, 8, 0);
     cornerLayout->setSpacing(4);
-
+    
     // 创建运行按钮
     auto* runButton = new RunButton(this);
     runButton->setFixedSize(20, 20);
-    
-    // 设置布局的对齐方式
-    cornerLayout->setAlignment(Qt::AlignVCenter);  // 垂直居中
-    cornerLayout->addWidget(runButton, 0, Qt::AlignVCenter);  // 添加按钮时也指定垂直居中
+    cornerLayout->addWidget(runButton);
+    cornerLayout->setAlignment(Qt::AlignVCenter);  // 设置垂直居中对齐
+    // cornerLayout->addWidget(runButton, 0, Qt::AlignVCenter);
 
+    // 设置cornerWidget的样式以确保正确的对齐
+    cornerWidget->setStyleSheet(R"(
+        QWidget {
+            margin: 0;
+            padding: 0;
+        }
+    )");
+
+    
     // 连接运行按钮的点击信号
     connect(runButton, &RunButton::clicked, this, [this]() {
         if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
@@ -266,10 +278,10 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
         }
     });
     
-    // 设置corner widget
+    // 设置corner widget到标签栏的右侧
     tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
     
-    // 更新样式表，强制保持布局
+    // 设置样式，强制tabBar始终显示
     tab_widget_->setStyleSheet(R"(
         QTabWidget::pane {
             border: none;
@@ -279,18 +291,28 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
             padding: 4px 8px;
         }
         QTabWidget::tab-bar {
-            alignment: left;  /* 确保标签栏左对齐 */
+            alignment: left;
         }
-        QWidget[cornerWidget="true"] {
-            height: 35px;
-            margin: 0;
-            padding: 0;
+        QTabBar::scroller {
+            width: 0px;
         }
     )");
 
-    // 设置cornerWidget的对象名，以便样式表能识别
-    cornerWidget->setProperty("cornerWidget", true);
+    connect(tab_widget_, &QTabWidget::tabCloseRequested,
+            this, &DocumentArea::closeTab);
 
+    layout_->addWidget(tab_widget_);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}*/
+
+DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
+    layout_ = new QVBoxLayout(this);
+    layout_->setContentsMargins(0, 0, 0, 0);
+    layout_->setSpacing(0);
+    
+    // 创建标签页
+    tab_widget_ = new DocumentTabWidget();
+    
     connect(tab_widget_, &QTabWidget::tabCloseRequested,
             this, &DocumentArea::closeTab);
 
@@ -312,7 +334,7 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
 
     // 添加到标签页
     QFileInfo fileInfo(filePath);
-    tab_widget_->addTab(docTab, fileInfo.fileName());
+    tab_widget_->addDocumentTab(docTab,fileInfo.fileName());
     tab_widget_->setCurrentWidget(docTab);
 
     QWidget *view = nullptr;
@@ -341,6 +363,6 @@ void DocumentArea::closeTab(int index) {
         documents_.remove(filePath);
     }
 
-    tab_widget_->removeTab(index);
+    tab_widget_->removeDocumentTab(index);
     delete widget;
 }

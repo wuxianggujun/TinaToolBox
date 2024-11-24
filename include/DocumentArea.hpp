@@ -17,6 +17,7 @@
 #include "TableModel.hpp"
 #include "ExcelProcessor.hpp"
 #include "RunButton.hpp"
+#include "DocumentTabWidget.hpp"
 
 class DocumentTab : public QWidget {
     Q_OBJECT
@@ -71,7 +72,7 @@ private slots:
 
 private:
     QVBoxLayout* layout_;
-    QTabWidget* tab_widget_;
+    DocumentTabWidget* tab_widget_;
     QWidget* toolbar_; // 添加工具栏
     QMap<QString,DocumentTab*> documents_;
     
