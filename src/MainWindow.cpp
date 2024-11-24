@@ -16,16 +16,19 @@
 #include "LogPanel.hpp"
 #include <QCloseEvent>
 
+#include "DocumentArea.hpp"
+#include "FileHistory.hpp"
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent) {
     setWindowTitle(tr("TinaToolBox"));
     setMinimumSize(1024, 768);
     setWindowFlags(Qt::FramelessWindowHint);
-    
+
     // 设置鼠标追踪
     setMouseTracking(true);
-    
+
     centerWidget = new QWidget();
     setCentralWidget(centerWidget);
 
@@ -90,16 +93,16 @@ void MainWindow::setUpUI() {
     // rightSplitter->setChildrenCollapsible(false); // 防止子控件完全折叠
 
 
-    // 设置中心区域
-    QWidget* centerWidget = new QWidget();
-    auto* centerLayout = new QVBoxLayout(centerWidget);
+    /*// 设置中心区域
+    QWidget *centerWidget = new QWidget();
+    auto *centerLayout = new QVBoxLayout(centerWidget);
     centerLayout->setContentsMargins(0, 0, 0, 0);
-    centerLayout->setSpacing(0);
-    
-    // documentArea = new DocumentArea();
+    centerLayout->setSpacing(0);*/
+
+    documentArea = new DocumentArea();
     auto *centerSplitter = new QSplitter(Qt::Horizontal);
-    // centerSplitter->addWidget(documentArea);
-    centerSplitter->addWidget(centerWidget);
+    centerSplitter->addWidget(documentArea);
+    // centerSplitter->addWidget(centerWidget);
 
     // 设置属性面板
     QWidget *propertyPanel = new QWidget();
@@ -108,11 +111,11 @@ void MainWindow::setUpUI() {
     QVBoxLayout *propertyPanelLayout = new QVBoxLayout(propertyPanel);
     propertyPanelLayout->setContentsMargins(0, 0, 0, 0);
     propertyPanelLayout->setSpacing(0);
-    
+
 
     propertyStack = new QStackedWidget();
     propertyPanelLayout->addWidget(propertyStack);
-    
+
     centerSplitter->addWidget(propertyPanel);
 
     rightSplitter->addWidget(centerSplitter);
@@ -135,12 +138,12 @@ void MainWindow::setUpUI() {
 
 
     // 设置分割器的拉伸因子
-    rightSplitter->setStretchFactor(0, 1);  // 上部分可以拉伸
-    rightSplitter->setStretchFactor(1, 0);  // 下部分不自动拉伸
+    rightSplitter->setStretchFactor(0, 1); // 上部分可以拉伸
+    rightSplitter->setStretchFactor(1, 0); // 下部分不自动拉伸
 
     // 设置主分割器的属性
     mainSplitter->setHandleWidth(1);
-    mainSplitter->setCollapsible(0, false);  // 防止左侧面板完全折叠
+    mainSplitter->setCollapsible(0, false); // 防止左侧面板完全折叠
     mainSplitter->setChildrenCollapsible(false);
 
     // 设置分割器的样式
@@ -158,11 +161,12 @@ void MainWindow::setUpUI() {
     centerSplitter->setStyleSheet(splitterStyle);
 
     installEventFilter(this);
-    
-    
+
+
     connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
     connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
-    connect(logPanel,&LogPanel::closed,this,&MainWindow::hideBottomPanel);
+    connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
+
 }
 
 void MainWindow::createTileBar() {
@@ -172,7 +176,8 @@ void MainWindow::createTileBar() {
     connect(m_menuBar, &MainWindowMenuBar::minimizeClicked, this, &MainWindow::showMinimized);
     connect(m_menuBar, &MainWindowMenuBar::maximizeClicked, this, &MainWindow::toggleMaximize);
     connect(m_menuBar, &MainWindowMenuBar::closeClicked, this, &MainWindow::close);
-    
+    // 添加这个连接
+    connect(m_menuBar, &MainWindowMenuBar::menuActionTriggered, this, &MainWindow::handleMenuAction);
     mainLayout->addWidget(m_menuBar);
 }
 
@@ -185,7 +190,7 @@ void MainWindow::handleMenuAction(const QString &actionName) {
     if (actionName == "新建") {
         // Handle new file
     } else if (actionName == "打开") {
-        // openFile();
+        openFile();
     } else if (actionName == "保存") {
         // Handle save
     } else if (actionName == "显示日志面板") {
@@ -222,7 +227,6 @@ void MainWindow::toggleMaximize() {
         if (m_menuBar) {
             m_menuBar->updateMaximizeButton(false);
         }
- 
     } else {
         showMaximized();
         if (m_menuBar) {
@@ -276,32 +280,77 @@ void MainWindow::openFile() {
         this,
         tr("打开文件"),
         QString(),
-        tr("Excel文件 (*.xlsx *.xls);;所有文件 (*.*)")
+        tr("所有文件 (*.*)")
     );
 
-    // if (!filePath.isEmpty()) {
-    //     QFileInfo fileInfo(filePath);
-    //     QString extension = fileInfo.suffix().toLower();
-    //
-    //     if (extension == "xlsx" || extension == "xls") {
-    //         openExcelFile(filePath);
-    //     } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
-    //                .contains(extension)) {
-    //         openTextFile(filePath);
-    //                } else {
-    //                    QMessageBox::warning(this, tr("警告"), 
-    //                        tr("不支持的文件类型: %1").arg(extension));
-    //                    return;
-    //                }
-    //
-    //     saveFileHistory(filePath);
-    // }
+    if (!filePath.isEmpty()) {
+        QFileInfo fileInfo(filePath);
+        QString extension = fileInfo.suffix().toLower();
+
+        // 保存文件历史到数据库
+        FileHistoryManager fileHistoryManager;
+        if (fileHistoryManager.addFileHistory(filePath)) {
+            // 更新文件树显示
+            updateFileTree();
+        }
+
+        // 根据文件类型打开文件
+        if (extension == "xlsx" || extension == "xls") {
+            // openExcelFile(filePath);
+            // 暂时不处理Excel文件
+        } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
+            .contains(extension)) {
+            openTextFile(filePath);
+        } else {
+            QMessageBox::warning(this, tr("警告"),
+                                 tr("不支持的文件类型: %1").arg(extension));
+            return;
+        }
+    }
 }
 
-void MainWindow::openTextFile(const QString &filePath, bool updateHistory) {
-    /*try {
-        DocumentTab *docTab = documentArea->openDocument(filePath, "text");
-        QTextEdit *textEdit = docTab->setupTextView();
+void MainWindow::updateFileTree() {
+    fileTree->clear();
+
+    // 从数据库获取最近文件记录
+    FileHistoryManager fileHistoryManager;
+    QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
+
+    for (const auto &file: recentFiles) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(fileTree);
+
+        // 设置文件名
+        item->setText(0, file.fileName);
+
+        // 设置修改日期
+        item->setText(1, file.modifiedDate.toString("yyyy-MM-dd HH:mm:ss"));
+
+        // 设置文件类型
+        item->setText(2, file.fileType.toUpper());
+
+        // 设置文件大小
+        QString sizeStr;
+        if (file.fileSize < 1024) {
+            sizeStr = QString("%1 B").arg(file.fileSize);
+        } else if (file.fileSize < 1024 * 1024) {
+            sizeStr = QString("%1 KB").arg(file.fileSize / 1024.0, 0, 'f', 2);
+        } else {
+            sizeStr = QString("%1 MB").arg(file.fileSize / 1024.0 / 1024.0, 0, 'f', 2);
+        }
+        item->setText(3, sizeStr);
+
+        // 存储完整文件路径
+        item->setData(0, Qt::UserRole, file.filePath);
+    }
+}
+
+void MainWindow::openTextFile(const QString &filePath) {
+    try {
+        QWidget *widget = documentArea->openDocument(filePath, "text");
+        QTextEdit *textEdit = qobject_cast<QTextEdit *>(widget);
+        if (!textEdit) {
+            throw std::runtime_error("Cannot cast to QTextEdit");
+        }
 
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -309,20 +358,19 @@ void MainWindow::openTextFile(const QString &filePath, bool updateHistory) {
         }
 
         QTextStream in(&file);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        in.setEncoding(QStringConverter::Utf8);
+#else
         in.setCodec("UTF-8");
+#endif
         QString content = in.readAll();
         file.close();
 
         textEdit->setText(content);
-
-        if (updateHistory) {
-            updateFileHistory(filePath);
-        }
-
     } catch (const std::exception &e) {
-        QMessageBox::critical(this, tr("错误"), 
-            tr("打开文本文件时出错: %1").arg(e.what()));
-    }*/
+        QMessageBox::critical(this, tr("错误"),
+                              tr("打开文本文件时出错: %1").arg(e.what()));
+    }
 }
 
 
@@ -330,7 +378,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (obj == this) {
         switch (event->type()) {
             case QEvent::MouseMove: {
-                QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+                QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
                 return false; // 让事件继续传播
             }
             case QEvent::Leave: {

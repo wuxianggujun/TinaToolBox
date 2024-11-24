@@ -96,6 +96,24 @@ void DocumentTab::moveSheetTabs(bool showAtTop) {
     
 }
 
+void DocumentTab::setupToolBar(const QString &fileType) {
+    toolbar_ = new QWidget();
+    auto* toolbarLayout = new QHBoxLayout(toolbar_);
+    toolbarLayout->setContentsMargins(0, 0, 0, 0);
+    toolbarLayout->setSpacing(4);
+
+    toolbarLayout->addStretch();
+
+    if (QStringList{"py", "js", "sh"}.contains(fileType.toLower())) {
+        run_button_ = new RunButton(this);
+        run_button_->setFixedSize(20,30);
+        toolbarLayout->addWidget(run_button_);
+
+        connect(run_button_, &RunButton::clicked, this, &DocumentTab::runScript);
+    }
+    
+}
+
 void DocumentTab::changeSheet(int index) {
     if (index >= 0 && excel_processor_) {
         try {
@@ -142,6 +160,9 @@ QWidget * DocumentArea::openDocument(const QString &filePath, const QString &fil
     auto* docTab = new DocumentTab(filePath, this);
     documents_[filePath] = docTab;
 
+    // 设置工具栏
+    docTab->setupToolBar(QFileInfo(filePath).suffix());
+    
     // 添加到标签页
     QFileInfo fileInfo(filePath);
     tab_widget_->addTab(docTab, fileInfo.fileName());

@@ -57,7 +57,7 @@ private:
 
     void openFile();
 
-    void openTextFile(const QString &filePath, bool updateHistory = true);
+    void openTextFile(const QString &filePath);
 
     void openExcelFile(const QString &filePath, bool updateHistory = true);
 
@@ -66,6 +66,8 @@ private:
     void updateFileHistory(const QString &filePath);
     
 
+    void updateFileTree();
+    
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     
