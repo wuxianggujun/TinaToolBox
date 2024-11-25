@@ -12,75 +12,57 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QScrollBar>
-#include <QTextCursor>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
 
-template<class Mutex>
-class qt_sink : public spdlog::sinks::base_sink<Mutex> {
+class LogPanel;
+
+// 创建一个自定义的spdlog sink
+template<typename Mutex>
+class LogPanelSink : public spdlog::sinks::base_sink<Mutex> {
 public:
-    explicit qt_sink(QTextEdit *text_edit): text_edit_(text_edit) {
-    }
+    explicit LogPanelSink(LogPanel* panel) : panel_(panel) {}
 
 protected:
-    void sink_it_(const spdlog::details::log_msg &msg) override {
-        if (!text_edit_) return;
-
-        spdlog::memory_buf_t formatted;
-        spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
-        QString text = QString::fromUtf8(formatted.data(), formatted.size());
-
-        // 使用 Qt::QueuedConnection 确保在主线程中更新 UI
-        QMetaObject::invokeMethod(text_edit_, "append", Qt::QueuedConnection, Q_ARG(QString, text));
-    }
-
-    void flush_() override {
-    }
+    void sink_it_(const spdlog::details::log_msg& msg) override;
+    void flush_() override {}
 
 private:
-    QTextEdit *text_edit_;
+    LogPanel* panel_;
 };
 
-using qt_sink_mt = qt_sink<std::mutex>;
-using qt_sink_st = qt_sink<spdlog::details::null_mutex>;
-
-class LogPanel : public QWidget{
+class LogPanel : public QWidget {
 
 Q_OBJECT
+
 public:
     explicit LogPanel(QWidget* parent = nullptr);
     ~LogPanel() override;
 
-    void cleanup();
     void appendLog(const QString& text);
+    void appendLogWithColor(const QString& text, const QColor& color);
 
-    signals:
-    void searchTextChanged(const QString& text);
+signals:
     void closed();
+    void logMessage(const QString& message, const QColor& color);
 
-protected:
-    void closeEvent(QCloseEvent *event) override;
-
-private slots:
-    void onSearchTextChanged(const QString& text);
-    void highlightSearchText(const QString& text);
+public slots:
     void clearLog();
     void closePanel();
-    
+    void onSearchTextChanged(const QString& text);
+
 private:
     void setupUI();
-    void setupLogger();
+    void setupLogHandlers();
 
     QTextEdit* logArea_;
     QLineEdit* searchInput_;
     QPushButton* clearButton_;
     QPushButton* closeButton_;
-
-    std::shared_ptr<spdlog::logger> logger_;
-    std::shared_ptr<qt_sink_mt> qt_sink_mt_;
+    
+    std::shared_ptr<LogPanelSink<std::mutex>> sink_;
+    static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+    static LogPanel* instance_;
 };
-
-
 
 #endif //TINA_TOOL_BOX_LOG_PANEL_HPP

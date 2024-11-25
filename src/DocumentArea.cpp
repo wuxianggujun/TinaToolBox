@@ -16,9 +16,9 @@ DocumentTab::DocumentTab(const QString &filePath, QWidget *parent): QWidget(pare
 
     stacked_widget_ = new QStackedWidget(this);
     layout_->addWidget(stacked_widget_);
-
+    
     sheet_tab_ = new QTabWidget();
-    sheet_tab_->setMaximumHeight(25);
+    sheet_tab_->setMaximumHeight(35);
     sheet_tab_->setTabPosition(QTabWidget::South);
     layout_->addWidget(sheet_tab_);
 }
@@ -95,28 +95,6 @@ MergedTableView *DocumentTab::setupExcelView() {
 void DocumentTab::moveSheetTabs(bool showAtTop) {
 }
 
-void DocumentTab::setupToolBar(const QString &fileType) {
-    toolbar_ = new QWidget();
-    auto *toolbarLayout = new QHBoxLayout(toolbar_);
-    toolbarLayout->setContentsMargins(0, 0, 0, 0);
-    toolbarLayout->setSpacing(4);
-
-    toolbarLayout->addStretch();
-
-    if (QStringList{"py", "js", "sh"}.contains(fileType.toLower())) {
-        run_button_ = new RunButton(this);
-        run_button_->setFixedSize(32, 32);
-        toolbarLayout->addWidget(run_button_);
-
-        /*connect(runButton, &RunButton::clicked, this, [this, filePath]() {
-          if (auto* docTab = documents_.value(filePath)) {
-              qDebug() << "Running script:" << filePath;
-          }
-      });*/
-        connect(run_button_, &RunButton::clicked, this, &DocumentTab::runScript);
-    }
-}
-
 void DocumentTab::changeSheet(int index) {
     if (index >= 0 && excel_processor_) {
         try {
@@ -135,176 +113,6 @@ void DocumentTab::changeSheet(int index) {
     }
 }
 
-
-/*DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
-    layout_ = new QVBoxLayout(this);
-    layout_->setContentsMargins(0, 0, 0, 0);
-    layout_->setSpacing(0);
-    
-    // 创建标签页
-    tab_widget_ = new QTabWidget();
-    tab_widget_->setTabsClosable(true);
-    tab_widget_->setMovable(true);
-    tab_widget_->setDocumentMode(true);
-
-    // 创建一个widget作为corner widget
-    auto* cornerWidget = new QWidget();
-    auto* cornerLayout = new QHBoxLayout(cornerWidget);
-    cornerLayout->setContentsMargins(4, 0, 8, 0);
-    cornerLayout->setSpacing(4);
-    cornerLayout->setAlignment(Qt::AlignCenter);  // 居中对齐
-
-    // 创建运行按钮
-    auto* runButton = new RunButton(this);
-    runButton->setFixedSize(20, 20);
-    cornerLayout->addWidget(runButton);
-
-    // 连接运行按钮的点击信号
-    connect(runButton, &RunButton::clicked, this, [this]() {
-        if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
-            qDebug() << "Running script:" << currentTab->getFilePath();
-        }
-    });
-    
-    // 设置corner widget
-    tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
-    
-    tab_widget_->setStyleSheet(R"(
-        QTabBar::tab {
-            height: 35px;
-            padding: 4px 8px;
-        }
-    )");
-
-    connect(tab_widget_, &QTabWidget::tabCloseRequested,
-            this, &DocumentArea::closeTab);
-
-    layout_->addWidget(tab_widget_);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-}*/
-
-/*DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
-    layout_ = new QVBoxLayout(this);
-    layout_->setContentsMargins(0, 0, 0, 0);
-    layout_->setSpacing(0);
-    
-    // 创建标签页
-    tab_widget_ = new QTabWidget();
-    tab_widget_->setTabsClosable(true);
-    tab_widget_->setMovable(true);
-    tab_widget_->setDocumentMode(true);
-
-    // 创建一个widget作为corner widget
-    auto* cornerWidget = new QWidget();
-    cornerWidget->setFixedHeight(35);  // 设置固定高度与标签页一致
-    auto* cornerLayout = new QHBoxLayout(cornerWidget);
-    cornerLayout->setContentsMargins(4, 0, 8, 0);
-    cornerLayout->setSpacing(4);
-
-    // 创建运行按钮
-    auto* runButton = new RunButton(this);
-    runButton->setFixedSize(20, 20);
-    
-    // 设置布局的对齐方式
-    cornerLayout->setAlignment(Qt::AlignVCenter);  // 垂直居中
-    cornerLayout->addWidget(runButton, 0, Qt::AlignVCenter);  // 添加按钮时也指定垂直居中
-
-    // 连接运行按钮的点击信号
-    connect(runButton, &RunButton::clicked, this, [this]() {
-        if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
-            qDebug() << "Running script:" << currentTab->getFilePath();
-        }
-    });
-    
-    // 设置corner widget
-    tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
-    
-    tab_widget_->setStyleSheet(R"(
-        QTabBar::tab {
-            height: 35px;
-            padding: 4px 8px;
-        }
-    )");
-
-    connect(tab_widget_, &QTabWidget::tabCloseRequested,
-            this, &DocumentArea::closeTab);
-
-    layout_->addWidget(tab_widget_);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-}*/
-
-/*DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
-    layout_ = new QVBoxLayout(this);
-    layout_->setContentsMargins(0, 0, 0, 0);
-    layout_->setSpacing(0);
-    
-    // 创建标签页
-    tab_widget_ = new QTabWidget();
-    tab_widget_->setTabsClosable(true);
-    tab_widget_->setMovable(true);
-    tab_widget_->setDocumentMode(true);
-
-    // 创建一个空的占位标签页，以确保tabBar始终显示
-    tab_widget_->addTab(new QWidget(), "");
-    tab_widget_->removeTab(0);
-
-    // 创建一个widget作为corner widget
-    auto* cornerWidget = new QWidget();
-    // cornerWidget->setFixedHeight(35);  // 设置固定高度与标签页一致
-    auto* cornerLayout = new QHBoxLayout(cornerWidget);
-    cornerLayout->setContentsMargins(4, 0, 8, 0);
-    cornerLayout->setSpacing(4);
-    
-    // 创建运行按钮
-    auto* runButton = new RunButton(this);
-    runButton->setFixedSize(20, 20);
-    cornerLayout->addWidget(runButton);
-    cornerLayout->setAlignment(Qt::AlignVCenter);  // 设置垂直居中对齐
-    // cornerLayout->addWidget(runButton, 0, Qt::AlignVCenter);
-
-    // 设置cornerWidget的样式以确保正确的对齐
-    cornerWidget->setStyleSheet(R"(
-        QWidget {
-            margin: 0;
-            padding: 0;
-        }
-    )");
-
-    
-    // 连接运行按钮的点击信号
-    connect(runButton, &RunButton::clicked, this, [this]() {
-        if (auto* currentTab = qobject_cast<DocumentTab*>(tab_widget_->currentWidget())) {
-            qDebug() << "Running script:" << currentTab->getFilePath();
-        }
-    });
-    
-    // 设置corner widget到标签栏的右侧
-    tab_widget_->setCornerWidget(cornerWidget, Qt::TopRightCorner);
-    
-    // 设置样式，强制tabBar始终显示
-    tab_widget_->setStyleSheet(R"(
-        QTabWidget::pane {
-            border: none;
-        }
-        QTabBar::tab {
-            height: 35px;
-            padding: 4px 8px;
-        }
-        QTabWidget::tab-bar {
-            alignment: left;
-        }
-        QTabBar::scroller {
-            width: 0px;
-        }
-    )");
-
-    connect(tab_widget_, &QTabWidget::tabCloseRequested,
-            this, &DocumentArea::closeTab);
-
-    layout_->addWidget(tab_widget_);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-}*/
-
 DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     layout_ = new QVBoxLayout(this);
     layout_->setContentsMargins(0, 0, 0, 0);
@@ -312,6 +120,7 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     
     // 创建标签页
     tab_widget_ = new DocumentTabWidget();
+    tab_widget_->tabBar()->setMinimumHeight(35);
     
     connect(tab_widget_, &QTabWidget::tabCloseRequested,
             this, &DocumentArea::closeTab);

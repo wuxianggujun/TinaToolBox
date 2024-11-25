@@ -7,11 +7,9 @@
 
 RunButton::RunButton(QWidget* parent) : QPushButton(parent), isRunning_(true) {
     // 设置固定大小
-    // setFixedSize(20, 20);
-
     // 设置颜色
-    runColor_ = QColor("#4CAF50");    // 绿色
-    pauseColor_ = QColor("#FF0000");   // 红色
+    runColor_ = QColor(0x4CAF50);    // 绿色
+    pauseColor_ = QColor(0xFF0000);   // 红色
 
     // 设置按钮属性
     setFlat(true);  // 设置为平面按钮

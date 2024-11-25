@@ -8,6 +8,7 @@
 #include <QTabWidget>
 #include <QHBoxLayout>
 #include "RunButton.hpp"
+#include <QTabBar>
 
 class DocumentTabWidget : public QTabWidget {
     Q_OBJECT
@@ -21,13 +22,15 @@ public:
     QWidget* currentDocument() const;
 
 protected:
-    void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 
 private:
-    void setupTabBar();
 
-    QWidget *tabBarContainer_;
-    QHBoxLayout *tabBarLayout_;
+    /*QWidget *tabBarContainer_;
+    QHBoxLayout *tabBarLayout_;*/
     RunButton *runButton_;
 };
 

@@ -54,7 +54,6 @@ private:
 
     void loadFileHistory();
 
-
     void openFile();
 
     void openTextFile(const QString &filePath);
@@ -64,13 +63,12 @@ private:
     void saveFileHistory(const QString &filePath);
 
     void updateFileHistory(const QString &filePath);
-    
 
     void updateFileTree();
-    
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
-    
+
     MainWindowMenuBar *m_menuBar;
     QTabWidget *tabWidget;
     QWidget *centerWidget;
@@ -82,7 +80,7 @@ protected:
     QTabWidget *leftPanelTab;
     QTreeWidget *fileTree;
     QTreeWidget *scriptTree;
-
+    
     DocumentArea *documentArea;
     QStackedWidget *propertyStack;
 
@@ -91,7 +89,8 @@ protected:
     QPushButton *maxButton;
 
     QPoint dragPosition;
+    bool isMaximized = false;
+    QSplitter *bottomSplitter;
 };
-
 
 #endif // TINA_TOOL_BOX_MAINWINDOW_HPP

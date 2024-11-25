@@ -32,7 +32,6 @@ public:
     QString getFilePath() const {return file_path_;}
 
     QWidget* getToolBar() const {return toolbar_;}
-    void setupToolBar(const QString& fileType);
     
 private slots:
     void changeSheet(int index);
@@ -73,7 +72,7 @@ private slots:
 private:
     QVBoxLayout* layout_;
     DocumentTabWidget* tab_widget_;
-    QWidget* toolbar_; // 添加工具栏
+    QWidget* toolbar_{}; // 添加工具栏
     QMap<QString,DocumentTab*> documents_;
     
 };

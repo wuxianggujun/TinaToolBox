@@ -54,11 +54,11 @@ void MainWindow::setUpUI() {
     mainContainerLayout->setContentsMargins(0, 0, 0, 0);
     mainContainerLayout->setSpacing(0);
 
-    // 创建主要的splitter
+    // 创建主分割器
     mainSplitter = new QSplitter(Qt::Horizontal);
     mainContainerLayout->addWidget(mainSplitter);
 
-    QWidget *leftPanel = new QWidget();
+    auto *leftPanel = new QWidget();
     leftPanel->setMaximumWidth(400);
     leftPanel->setMinimumWidth(200);
 
@@ -90,7 +90,9 @@ void MainWindow::setUpUI() {
 
     leftPanelTab->addTab(fileTree, tr("文件"));
     leftPanelTab->addTab(scriptTree, tr("脚本"));
-
+    // 设置标签栏自动扩展，使标签平分宽度
+    leftPanelTab->tabBar()->setExpanding(true);
+    
     mainSplitter->addWidget(leftPanel);
 
     rightSplitter = new QSplitter(Qt::Vertical);
@@ -100,7 +102,7 @@ void MainWindow::setUpUI() {
     documentArea = new DocumentArea();
     auto *centerSplitter = new QSplitter(Qt::Horizontal);
     centerSplitter->addWidget(documentArea);
-    
+
     // 设置属性面板
     QWidget *propertyPanel = new QWidget();
     propertyPanel->setMinimumWidth(200);
@@ -117,6 +119,7 @@ void MainWindow::setUpUI() {
 
     rightSplitter->addWidget(centerSplitter);
 
+    // 创建底部面板
     bottomPanel = new QWidget();
     bottomPanel->setMinimumHeight(150);
     auto *bottomPanelLayout = new QVBoxLayout(bottomPanel);
@@ -197,11 +200,10 @@ void MainWindow::handleMenuAction(const QString &actionName) {
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
-        if (m_menuBar->geometry().contains(event->pos())) {
-            dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-            event->accept();
-        }
+        dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
+        event->accept();
     }
+    QMainWindow::mousePressEvent(event);
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
@@ -211,6 +213,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
             event->accept();
         }
     }
+    QMainWindow::mouseMoveEvent(event);
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
@@ -219,7 +222,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void MainWindow::toggleMaximize() {
-    if (isMaximized()) {
+    if (isMaximized) {
         showNormal();
         if (m_menuBar) {
             m_menuBar->updateMaximizeButton(false);
@@ -234,16 +237,16 @@ void MainWindow::toggleMaximize() {
 
 void MainWindow::showBottomPanel() {
     bottomPanel->show();
-    logPanel->show();
-    QList<int> sizes = rightSplitter->sizes();
-    int total = sizes[0] + sizes[1];
-    rightSplitter->setSizes({total - 200, 200});
+    // logPanel->show();
+    // QList<int> sizes = rightSplitter->sizes();
+    // int total = sizes[0] + sizes[1];
+    // rightSplitter->setSizes({total - 200, 200});
 }
 
 void MainWindow::hideBottomPanel() {
     bottomPanel->hide();
-    QList<int> sizes = rightSplitter->sizes();
-    rightSplitter->setSizes({sizes[0] + sizes[1], 0});
+    // QList<int> sizes = rightSplitter->sizes();
+    // rightSplitter->setSizes({sizes[0] + sizes[1], 0});
 }
 
 void MainWindow::showFilePathToolTip(QTreeWidgetItem *item, int column) {
@@ -344,7 +347,7 @@ void MainWindow::updateFileTree() {
 void MainWindow::openTextFile(const QString &filePath) {
     try {
         QWidget *widget = documentArea->openDocument(filePath, "text");
-        QTextEdit *textEdit = qobject_cast<QTextEdit *>(widget);
+        auto *textEdit = qobject_cast<QTextEdit *>(widget);
         if (!textEdit) {
             throw std::runtime_error("Cannot cast to QTextEdit");
         }
@@ -373,16 +376,11 @@ void MainWindow::openTextFile(const QString &filePath) {
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (obj == this) {
-        switch (event->type()) {
-            case QEvent::MouseMove: {
-                QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-                return false; // 让事件继续传播
-            }
-            case QEvent::Leave: {
-                return false; // 让事件继续传播
-            }
-            default:
-                break;
+        if (event->type() == QEvent::MouseMove) {
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+            return false;
+        } else if (event->type() == QEvent::Leave) {
+            return false;
         }
     }
     return QMainWindow::eventFilter(obj, event);
@@ -391,7 +389,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
 void MainWindow::closeEvent(QCloseEvent *event) {
     // Cleanup and save any necessary state
     if (logPanel) {
-        logPanel->cleanup();
+        // logPanel->cleanup();
     }
     event->accept();
 }

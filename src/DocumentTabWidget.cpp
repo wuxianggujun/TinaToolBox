@@ -3,43 +3,75 @@
 //
 
 #include "DocumentTabWidget.hpp"
-#include <QTabBar>
+
+#include <QTimer>
+#include <QHBoxLayout>
+#include <QWidget>
+
+void DocumentTabWidget::showEvent(QShowEvent* event) {
+    QTabWidget::showEvent(event);
+}
+
+void DocumentTabWidget::resizeEvent(QResizeEvent* event) {
+    QTabWidget::resizeEvent(event);
+}
+
+QSize DocumentTabWidget::sizeHint() const {
+    QSize sz = QTabWidget::sizeHint();
+    sz.setHeight(sz.height() + 35);  // 确保总高度包含标签栏高度
+    return sz;
+}
+
+QSize DocumentTabWidget::minimumSizeHint() const {
+    QSize sz = QTabWidget::minimumSizeHint();
+    sz.setHeight(sz.height() + 35);  // 确保最小高度包含标签栏高度
+    return sz;
+}
 
 DocumentTabWidget::DocumentTabWidget(QWidget *parent): QTabWidget(parent) {
     setDocumentMode(true);
     setTabsClosable(true);
     setMovable(true);
-
-    // 创建一个容器来包含标签栏和工具栏
-    tabBarContainer_ = new QWidget(this);
-    tabBarLayout_ = new QHBoxLayout(tabBarContainer_);
-    tabBarLayout_->setContentsMargins(0, 0, 0, 0);
-    tabBarLayout_->setSpacing(0);
-
-    // 将原始的标签栏移动到新的容器中
-    QTabBar* bar = tabBar();
-    bar->setParent(tabBarContainer_);
-    tabBarLayout_->addWidget(bar, 1);  // 添加伸展因子1，使标签栏占据大部分空间
-
-    // 创建运行按钮
-    runButton_ = new RunButton(tabBarContainer_);
-    runButton_->setFixedSize(20, 20);
-    tabBarLayout_->addWidget(runButton_, 0, Qt::AlignVCenter);  // 添加到布局的右侧，垂直居中
-
-    // 设置样式
+    
+    // 设置QTabWidget的样式
     setStyleSheet(R"(
         QTabBar::tab {
             height: 35px;
+            padding: 0px 10px;
+            background: transparent;
+        }
+        
+        QTabBar::tab:selected {
+            background: #ffffff;
+            border-bottom: 2px solid #007acc;
+        }
+        
+        QTabBar::tab:hover:!selected {
+            background: #e0e0e0;
         }
     )");
-
-    // 添加一个空的占位标签页并立即移除，以确保tabBar始终显示
-    addTab(new QWidget(), "");
-    removeTab(0);
+    
+    // 创建运行按钮和容器
+    auto* cornerWidget = new QWidget(this);
+    auto* cornerLayout = new QHBoxLayout(cornerWidget);
+    cornerLayout->setContentsMargins(0, 0, 0, 0);
+    cornerLayout->setSpacing(0);
+    
+    runButton_ = new RunButton(this);
+    runButton_->setFixedSize(35, 35);
+    
+    // 将按钮添加到布局中，并设置垂直居中对齐
+    cornerLayout->addWidget(runButton_, 0, Qt::AlignVCenter);
+    cornerWidget->setFixedHeight(35);
+    
+    // 设置corner widget
+    setCornerWidget(cornerWidget, Qt::TopRightCorner);
 }
 
+
 int DocumentTabWidget::addDocumentTab(QWidget* widget, const QString& label) {
-    return addTab(widget, label);
+    int index = addTab(widget, label);
+    return index;
 }
 
 void DocumentTabWidget::removeDocumentTab(int index) {
@@ -48,14 +80,4 @@ void DocumentTabWidget::removeDocumentTab(int index) {
 
 QWidget* DocumentTabWidget::currentDocument() const {
     return currentWidget();
-}
-
-void DocumentTabWidget::resizeEvent(QResizeEvent *event) {
-    QTabWidget::resizeEvent(event);
-    // 确保tabBarContainer_与标签栏区域大小一致
-    QRect r = tabBar()->geometry();
-    tabBarContainer_->setGeometry(r);
-}
-
-void DocumentTabWidget::setupTabBar() {
 }

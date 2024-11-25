@@ -3,80 +3,127 @@
 //
 
 #include "LogPanel.hpp"
+#include <QScrollBar>
+#include <QTextCursor>
 
-LogPanel::LogPanel(QWidget *parent) : QWidget(parent) {
+LogPanel* LogPanel::instance_ = nullptr;
+
+template<typename Mutex>
+void LogPanelSink<Mutex>::sink_it_(const spdlog::details::log_msg& msg) {
+    if (!panel_) return;
+
+    spdlog::memory_buf_t formatted;
+    spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
+    QString text = QString::fromUtf8(formatted.data(), static_cast<int>(formatted.size()));
+
+    // 根据日志级别设置颜色
+    QColor color;
+    switch (msg.level) {
+        case spdlog::level::trace:
+            color = Qt::gray;
+            break;
+        case spdlog::level::debug:
+            color = Qt::darkGreen;
+            break;
+        case spdlog::level::info:
+            color = Qt::black;
+            break;
+        case spdlog::level::warn:
+            color = QColor(255, 165, 0);  // Orange
+            break;
+        case spdlog::level::err:
+            color = Qt::red;
+            break;
+        case spdlog::level::critical:
+            color = QColor(139, 0, 0);  // Dark red
+            break;
+        default:
+            color = Qt::black;
+    }
+
+    // 使用 Qt::QueuedConnection 确保在主线程中更新 UI
+    QMetaObject::invokeMethod(panel_, "logMessage", Qt::QueuedConnection,
+                            Q_ARG(QString, text), Q_ARG(QColor, color));
+}
+
+void LogPanel::qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg) {
+    if (!instance_) return;
+
+    QColor color;
+    QString prefix;
+    switch (type) {
+        case QtDebugMsg:
+            color = Qt::darkGreen;
+            prefix = "[Debug] ";
+            break;
+        case QtInfoMsg:
+            color = Qt::black;
+            prefix = "[Info] ";
+            break;
+        case QtWarningMsg:
+            color = QColor(255, 165, 0);
+            prefix = "[Warning] ";
+            break;
+        case QtCriticalMsg:
+            color = Qt::red;
+            prefix = "[Critical] ";
+            break;
+        case QtFatalMsg:
+            color = QColor(139, 0, 0);
+            prefix = "[Fatal] ";
+            break;
+    }
+
+    QString logMessage = prefix + msg;
+    if (context.file) {
+        logMessage += QString(" (%1:%2)").arg(context.file).arg(context.line);
+    }
+
+    QMetaObject::invokeMethod(instance_, "logMessage", Qt::QueuedConnection,
+                            Q_ARG(QString, logMessage), Q_ARG(QColor, color));
+}
+
+LogPanel::LogPanel(QWidget* parent) : QWidget(parent) {
+    instance_ = this;
     setupUI();
-    setupLogger();
+    setupLogHandlers();
+    
+    // 连接信号和槽
+    connect(this, &LogPanel::logMessage, this, [this](const QString& message, const QColor& color) {
+        appendLogWithColor(message, color);
+    });
 }
 
 LogPanel::~LogPanel() {
-    cleanup();
-}
-
-void LogPanel::cleanup() {
-    if (logger_) {
-        // 清除所有日志记录器
-        spdlog::drop_all();
-        logger_.reset();
+    if (instance_ == this) {
+        instance_ = nullptr;
     }
-    qt_sink_mt_.reset();
+    // 清理spdlog sink
+    if (sink_) {
+        spdlog::drop_all(); // 清理所有logger
+        sink_.reset();
+    }
+    // 恢复默认的消息处理器
+    qInstallMessageHandler(nullptr);
 }
 
-void LogPanel::appendLog(const QString &text) {
+void LogPanel::setupLogHandlers() {
+    // 创建并注册自定义sink
+    sink_ = std::make_shared<LogPanelSink<std::mutex>>(this);
+    auto logger = spdlog::default_logger();
+    logger->sinks().push_back(sink_);
+    
+    // 设置Qt消息处理器
+    qInstallMessageHandler(qtMessageHandler);
+}
+
+void LogPanel::appendLog(const QString& text) {
     logArea_->append(text);
 }
 
-void LogPanel::closeEvent(QCloseEvent *event) {
-    cleanup();
-    QWidget::closeEvent(event);
-}
-
-void LogPanel::onSearchTextChanged(const QString &text) {
-    emit searchTextChanged(text);
-    highlightSearchText(text);
-}
-
-void LogPanel::highlightSearchText(const QString &text) {
-    if (text.isEmpty()) {
-        // 清除所有高亮
-        QTextCursor cursor = logArea_->textCursor();
-        cursor.select(QTextCursor::Document);
-        QTextCharFormat format;
-        format.setBackground(Qt::white);
-        cursor.mergeCharFormat(format);
-        return;
-    }
-
-    // 保存滚动位置
-    QScrollBar *scrollbar = logArea_->verticalScrollBar();
-    int scrollPos = scrollbar->value();
-
-    // 高亮搜索文本
-    QTextCursor cursor = logArea_->textCursor();
-    cursor.movePosition(QTextCursor::Start);
-
-    // 清除之前的高亮
-    cursor.select(QTextCursor::Document);
-    QTextCharFormat format;
-    format.setBackground(Qt::white);
-    cursor.mergeCharFormat(format);
-    cursor.clearSelection();
-
-    // 高亮新的匹配项
-    QTextCharFormat highlightFormat;
-    highlightFormat.setBackground(QColor("#cce8ff"));
-
-    cursor.movePosition(QTextCursor::Start);
-    while (true) {
-        cursor = logArea_->document()->find(text, cursor);
-        if (cursor.isNull()) {
-            break;
-        }
-        cursor.mergeCharFormat(highlightFormat);
-    }
-
-    // 恢复滚动位置
-    scrollbar->setValue(scrollPos);
+void LogPanel::appendLogWithColor(const QString& text, const QColor& color) {
+    logArea_->setTextColor(color);
+    logArea_->append(text);
 }
 
 void LogPanel::clearLog() {
@@ -84,16 +131,40 @@ void LogPanel::clearLog() {
 }
 
 void LogPanel::closePanel() {
-    hide();
     emit closed();
 }
 
+void LogPanel::onSearchTextChanged(const QString& text) {
+    if (text.isEmpty()) {
+        // 清除所有高亮
+        QTextCursor cursor = logArea_->textCursor();
+        cursor.movePosition(QTextCursor::Start);
+        cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+        QTextCharFormat format;
+        format.setBackground(Qt::transparent);
+        cursor.mergeCharFormat(format);
+        return;
+    }
+
+    // 高亮匹配的文本
+    QTextCursor cursor(logArea_->document());
+    QTextCharFormat highlightFormat;
+    highlightFormat.setBackground(Qt::yellow);
+    
+    while (!cursor.isNull() && !cursor.atEnd()) {
+        cursor = logArea_->document()->find(text, cursor);
+        if (!cursor.isNull()) {
+            cursor.mergeCharFormat(highlightFormat);
+        }
+    }
+}
+
 void LogPanel::setupUI() {
-    auto *mainLayout = new QVBoxLayout(this);
+    auto* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
-    auto *toolbar = new QWidget();
+    auto* toolbar = new QWidget();
     toolbar->setStyleSheet(
         "QWidget {"
         "    background-color: #f5f5f5;"
@@ -101,10 +172,10 @@ void LogPanel::setupUI() {
         "}"
     );
 
-    auto *toolbarLayout = new QHBoxLayout(toolbar);
+    auto* toolbarLayout = new QHBoxLayout(toolbar);
     toolbarLayout->setContentsMargins(5, 2, 5, 2);
 
-    auto *outputLabel = new QLabel("输出");
+    auto* outputLabel = new QLabel("输出");
     outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
     toolbarLayout->addWidget(outputLabel);
 
@@ -146,7 +217,6 @@ void LogPanel::setupUI() {
 
     toolbarLayout->addWidget(clearButton_);
 
-    // 关闭按钮
     closeButton_ = new QPushButton("×");
     closeButton_->setStyleSheet(
         "QPushButton {"
@@ -163,8 +233,7 @@ void LogPanel::setupUI() {
         "}"
     );
 
-    connect(closeButton_, &QPushButton::clicked,
-            this, &LogPanel::closePanel);
+    connect(closeButton_, &QPushButton::clicked, this, &LogPanel::closePanel);
     toolbarLayout->addWidget(closeButton_);
 
     mainLayout->addWidget(toolbar);
@@ -182,21 +251,4 @@ void LogPanel::setupUI() {
         "}"
     );
     mainLayout->addWidget(logArea_);
-}
-
-void LogPanel::setupLogger() {
-    // 创建自定义 sink
-    qt_sink_mt_ = std::make_shared<qt_sink_mt>(logArea_);
-
-    // 创建日志记录器
-    logger_ = std::make_shared<spdlog::logger>("qt_logger", qt_sink_mt_);
-
-    // 设置日志格式
-    logger_->set_pattern("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %v");
-
-    // 设置为默认日志记录器
-    spdlog::set_default_logger(logger_);
-
-    // 设置日志级别
-    spdlog::set_level(spdlog::level::info);
 }
