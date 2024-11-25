@@ -22,7 +22,7 @@
 class DocumentTab : public QWidget {
     Q_OBJECT
 public:
-    explicit DocumentTab(const QString& filePath,QWidget* parent = nullptr);
+    explicit DocumentTab(QString  filePath,QWidget* parent = nullptr);
 
     QTextEdit* setupTextView();
     MergedTableView* setupExcelView();
@@ -45,8 +45,8 @@ private:
     QTabWidget* sheet_tab_;
 
     // 添加工具栏
-    QWidget* toolbar_;
-    RunButton* run_button_;
+    QWidget* toolbar_{};
+    RunButton* run_button_{};
 
     MergedTableView* table_view_{nullptr};
     QTextEdit*  text_edit_{nullptr};

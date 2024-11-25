@@ -6,17 +6,18 @@
 
 #include <qfileinfo.h>
 #include <QLabel>
+#include <utility>
 #include "DocumentTabWidget.hpp"
 #include "ExceptionHandler.hpp"
 
-DocumentTab::DocumentTab(const QString &filePath, QWidget *parent): QWidget(parent), file_path_(filePath) {
+DocumentTab::DocumentTab(QString filePath, QWidget *parent): QWidget(parent), file_path_(std::move(filePath)) {
     layout_ = new QVBoxLayout(this);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);
 
     stacked_widget_ = new QStackedWidget(this);
     layout_->addWidget(stacked_widget_);
-    
+
     sheet_tab_ = new QTabWidget();
     sheet_tab_->setMaximumHeight(35);
     sheet_tab_->setTabPosition(QTabWidget::South);
@@ -26,6 +27,8 @@ DocumentTab::DocumentTab(const QString &filePath, QWidget *parent): QWidget(pare
 QTextEdit *DocumentTab::setupTextView() {
     if (!text_edit_) {
         text_edit_ = new QTextEdit(this);
+        text_edit_->setObjectName("DocumentTabTextEdit"); // 添加这行
+        text_edit_->setParent(this); // 显式设置父对象（虽然构造函数中已经设置了）
         text_edit_->setReadOnly(false);
         text_edit_->setLineWrapMode(QTextEdit::NoWrap);
         text_edit_->setStyleSheet(R"(
@@ -117,11 +120,11 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     layout_ = new QVBoxLayout(this);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);
-    
+
     // 创建标签页
     tab_widget_ = new DocumentTabWidget();
     tab_widget_->tabBar()->setMinimumHeight(35);
-    
+
     connect(tab_widget_, &QTabWidget::tabCloseRequested,
             this, &DocumentArea::closeTab);
 
@@ -143,7 +146,7 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
 
     // 添加到标签页
     QFileInfo fileInfo(filePath);
-    tab_widget_->addDocumentTab(docTab,fileInfo.fileName());
+    tab_widget_->addDocumentTab(docTab, fileInfo.fileName());
     tab_widget_->setCurrentWidget(docTab);
 
     QWidget *view = nullptr;
@@ -152,6 +155,12 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
         view = docTab->setupExcelView();
     } else {
         view = docTab->setupTextView();
+    }
+    // 确保视图创建成功
+    if (!view) {
+        spdlog::error("Failed to create view for file: {}", filePath.toStdString());
+        closeTab(tab_widget_->count() - 1); // 关闭刚创建的标签
+        return nullptr;
     }
     return view;
 }

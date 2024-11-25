@@ -56,7 +56,7 @@ private:
 
     void openFile();
 
-    void openTextFile(const QString &filePath);
+    void openTextFile(const QString &filePath) const;
 
     void openExcelFile(const QString &filePath, bool updateHistory = true);
 

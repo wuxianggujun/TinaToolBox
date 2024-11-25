@@ -18,6 +18,7 @@
 
 #include "DocumentArea.hpp"
 #include "FileHistory.hpp"
+#include "ExceptionHandler.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -92,7 +93,7 @@ void MainWindow::setUpUI() {
     leftPanelTab->addTab(scriptTree, tr("脚本"));
     // 设置标签栏自动扩展，使标签平分宽度
     leftPanelTab->tabBar()->setExpanding(true);
-    
+
     mainSplitter->addWidget(leftPanel);
 
     rightSplitter = new QSplitter(Qt::Vertical);
@@ -166,7 +167,6 @@ void MainWindow::setUpUI() {
     connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
     connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
     connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
-
 }
 
 void MainWindow::createTileBar() {
@@ -183,6 +183,61 @@ void MainWindow::createTileBar() {
 
 
 void MainWindow::loadFileHistory() {
+    FileHistoryManager fileHistoryManager;
+    QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
+
+    // 清空现有的文件树
+    fileTree->clear();
+
+    for (const auto &file: recentFiles) {
+        auto *item = new QTreeWidgetItem(fileTree);
+
+        // 设置文件名
+        item->setText(0, file.fileName);
+
+        // 设置修改日期
+        item->setText(1, file.modifiedDate.toString("yyyy-MM-dd HH:mm:ss"));
+
+        // 设置文件类型
+        item->setText(2, file.fileType.toUpper());
+
+        // 设置文件大小
+        QString sizeStr;
+        if (file.fileSize < 1024) {
+            sizeStr = QString("%1 B").arg(file.fileSize);
+        } else if (file.fileSize < 1024 * 1024) {
+            sizeStr = QString("%1 KB").arg(file.fileSize / 1024.0, 0, 'f', 2);
+        } else {
+            sizeStr = QString("%1 MB").arg(file.fileSize / 1024.0 / 1024.0, 0, 'f', 2);
+        }
+        item->setText(3, sizeStr);
+
+        // 存储完整文件路径作为用户数据
+        item->setData(0, Qt::UserRole, file.filePath);
+
+        // 添加双击打开文件的功能
+        connect(fileTree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item) {
+            if (QString filePath = item->data(0, Qt::UserRole).toString(); !filePath.isEmpty()) {
+                QFileInfo fileInfo(filePath);
+                if (fileInfo.exists()) {
+                    QString extension = fileInfo.suffix().toLower();
+                    if (extension == "xlsx" || extension == "xls") {
+                        openExcelFile(filePath, false); // false 表示不更新历史记录
+                    } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
+                        .contains(extension)) {
+                        openTextFile(filePath);
+                    }
+                } else {
+                    // 文件不存在，从历史记录中删除
+                    FileHistoryManager fileHistoryManager;
+                    fileHistoryManager.deleteFileHistory(filePath);
+                    delete item; // 从树中删除项
+                    QMessageBox::warning(this, tr("文件不存在"),
+                                         tr("文件 %1 不存在或已被移动/删除").arg(filePath));
+                }
+            }
+        });
+    }
 }
 
 void MainWindow::handleMenuAction(const QString &actionName) {
@@ -304,7 +359,6 @@ void MainWindow::openFile() {
         } else {
             QMessageBox::warning(this, tr("警告"),
                                  tr("不支持的文件类型: %1").arg(extension));
-            return;
         }
     }
 }
@@ -344,32 +398,50 @@ void MainWindow::updateFileTree() {
     }
 }
 
-void MainWindow::openTextFile(const QString &filePath) {
-    try {
-        QWidget *widget = documentArea->openDocument(filePath, "text");
-        auto *textEdit = qobject_cast<QTextEdit *>(widget);
-        if (!textEdit) {
-            throw std::runtime_error("Cannot cast to QTextEdit");
+void MainWindow::openTextFile(const QString &filePath) const {
+    ExceptionHandler handler("打开文本文件失败");
+    handler([this, &filePath]() {
+        // 首先打开文档，获取视图
+        QWidget *view = documentArea->openDocument(filePath, "text");
+        if (!view) {
+            throw std::runtime_error("Failed to create document view");
         }
-
+        // 获取 QTextEdit
+        auto *textEdit = qobject_cast<QTextEdit *>(view);
+        if (!textEdit) {
+            throw std::runtime_error("Cannot get text editor");
+        }
+        // 读取文件内容
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            throw std::runtime_error("Cannot open file");
+            throw std::runtime_error("Cannot open file: " + filePath.toStdString());
         }
-
         QTextStream in(&file);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         in.setEncoding(QStringConverter::Utf8);
-#else
+#        else
         in.setCodec("UTF-8");
-#endif
+#       endif
         QString content = in.readAll();
         file.close();
-
         textEdit->setText(content);
-    } catch (const std::exception &e) {
-        QMessageBox::critical(this, tr("错误"),
-                              tr("打开文本文件时出错: %1").arg(e.what()));
+        return true;
+    });
+}
+
+void MainWindow::openExcelFile(const QString &filePath, bool updateHistory) {
+    // 暂时只是打印一条日志，表示尝试打开Excel文件
+    spdlog::info("Attempting to open Excel file: {}", filePath.toStdString());
+
+    // TODO: 实现Excel文件的打开逻辑
+    QMessageBox::information(this, tr("功能未实现"),
+                             tr("Excel文件打开功能尚未实现: %1").arg(filePath));
+
+    // 如果需要更新历史记录
+    if (updateHistory) {
+        FileHistoryManager fileHistoryManager;
+        fileHistoryManager.addFileHistory(filePath);
+        updateFileTree();
     }
 }
 
