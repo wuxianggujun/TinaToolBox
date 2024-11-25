@@ -18,13 +18,14 @@
 #include "ExcelProcessor.hpp"
 #include "RunButton.hpp"
 #include "DocumentTabWidget.hpp"
+#include "LineNumberTextEdit.hpp"
 
 class DocumentTab : public QWidget {
     Q_OBJECT
 public:
     explicit DocumentTab(QString  filePath,QWidget* parent = nullptr);
 
-    QTextEdit* setupTextView();
+    QPlainTextEdit* setupTextView();
     MergedTableView* setupExcelView();
     
     void moveSheetTabs(bool showAtTop);
@@ -49,7 +50,7 @@ private:
     RunButton* run_button_{};
 
     MergedTableView* table_view_{nullptr};
-    QTextEdit*  text_edit_{nullptr};
+    LineNumberTextEdit*  text_edit_{nullptr};
     TableModel* table_model_{nullptr};
     std::unique_ptr<ExcelProcessor> excel_processor_{nullptr};
 };

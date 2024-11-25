@@ -24,13 +24,12 @@ DocumentTab::DocumentTab(QString filePath, QWidget *parent): QWidget(parent), fi
     layout_->addWidget(sheet_tab_);
 }
 
-QTextEdit *DocumentTab::setupTextView() {
+QPlainTextEdit *DocumentTab::setupTextView() {
     if (!text_edit_) {
-        text_edit_ = new QTextEdit(this);
+        text_edit_ = new LineNumberTextEdit(this);
         text_edit_->setObjectName("DocumentTabTextEdit"); // 添加这行
         text_edit_->setParent(this); // 显式设置父对象（虽然构造函数中已经设置了）
-        text_edit_->setReadOnly(false);
-        text_edit_->setLineWrapMode(QTextEdit::NoWrap);
+        text_edit_->setLineWrapMode(QPlainTextEdit::NoWrap);
         text_edit_->setStyleSheet(R"(
             QTextEdit {
                 background-color: #1e1e1e;

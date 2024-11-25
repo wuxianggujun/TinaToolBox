@@ -19,6 +19,7 @@
 #include "DocumentArea.hpp"
 #include "FileHistory.hpp"
 #include "ExceptionHandler.hpp"
+#include "LineNumberTextEdit.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -407,7 +408,7 @@ void MainWindow::openTextFile(const QString &filePath) const {
             throw std::runtime_error("Failed to create document view");
         }
         // 获取 QTextEdit
-        auto *textEdit = qobject_cast<QTextEdit *>(view);
+        auto *textEdit = qobject_cast<LineNumberTextEdit *>(view);
         if (!textEdit) {
             throw std::runtime_error("Cannot get text editor");
         }
@@ -424,7 +425,7 @@ void MainWindow::openTextFile(const QString &filePath) const {
 #       endif
         QString content = in.readAll();
         file.close();
-        textEdit->setText(content);
+        textEdit->setPlainText(content);
         return true;
     });
 }
