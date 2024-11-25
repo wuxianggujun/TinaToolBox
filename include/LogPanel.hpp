@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
+#include <qcombobox.h>
 
 class LogPanel;
 
@@ -35,6 +36,13 @@ class LogPanel : public QWidget {
 
 Q_OBJECT
 
+private:
+    struct LogEntry {
+        QString text;
+        QColor color;
+        spdlog::level::level_enum level;
+    };
+
 public:
     explicit LogPanel(QWidget* parent = nullptr);
     ~LogPanel() override;
@@ -51,6 +59,8 @@ public slots:
     void closePanel();
     void onSearchTextChanged(const QString& text);
 
+    void onLogLevelChanged(int index);
+
 private:
     void setupUI();
     void setupLogHandlers();
@@ -59,7 +69,12 @@ private:
     QLineEdit* searchInput_;
     QPushButton* clearButton_;
     QPushButton* closeButton_;
-    
+
+    QComboBox* logLevelComboBox_;
+    void filterLogsByLevel();
+    int currentLogLevel_;
+
+    QVector<LogEntry> logEntries_;
     std::shared_ptr<LogPanelSink<std::mutex>> sink_;
     static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
     static LogPanel* instance_;

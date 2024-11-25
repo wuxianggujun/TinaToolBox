@@ -89,7 +89,6 @@ protected:
     QPushButton *maxButton;
 
     QPoint dragPosition;
-    bool isMaximized = false;
     QSplitter *bottomSplitter;
 };
 

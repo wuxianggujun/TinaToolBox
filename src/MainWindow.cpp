@@ -148,13 +148,13 @@ void MainWindow::setUpUI() {
 
     // 设置分割器的样式
     QString splitterStyle = R"(
-        QSplitter::handle {
-            background-color: #2d2d2d;
-        }
-        QSplitter::handle:hover {
-            background-color: #007acc;
-        }
-    )";
+       QSplitter::handle {
+           background-color: #e0e0e0;  /* 浅灰色 */
+       }
+       QSplitter::handle:hover {
+           background-color: #007acc;  /* 保持悬停时的蓝色 */
+       }
+   )";
 
     mainSplitter->setStyleSheet(splitterStyle);
     rightSplitter->setStyleSheet(splitterStyle);
@@ -222,7 +222,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void MainWindow::toggleMaximize() {
-    if (isMaximized) {
+    if (isMaximized()) {
         showNormal();
         if (m_menuBar) {
             m_menuBar->updateMaximizeButton(false);
