@@ -48,6 +48,8 @@ private slots:
     void showFileTreeContextMenu(const QPoint &pos);
 
 private:
+    bool isTitleBarArea(const QPoint& pos) const;
+
     void setUpUI();
 
     void createTileBar();
@@ -56,7 +58,9 @@ private:
 
     void openFile();
 
-    void openTextFile(const QString &filePath) const;
+    void openPdfFile(const QString &filePath);
+
+    void openTextFile(const QString &filePath);
 
     void openExcelFile(const QString &filePath, bool updateHistory = true);
 
@@ -66,9 +70,11 @@ private:
 
     void updateFileTree();
 
-protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
+private:
+    QPoint dragPosition;
+    bool isDragging = false;
     MainWindowMenuBar *m_menuBar;
     QTabWidget *tabWidget;
     QWidget *centerWidget;
@@ -83,12 +89,9 @@ protected:
     
     DocumentArea *documentArea;
     QStackedWidget *propertyStack;
-
     QWidget *bottomPanel;
     LogPanel *logPanel;
     QPushButton *maxButton;
-
-    QPoint dragPosition;
     QSplitter *bottomSplitter;
 };
 

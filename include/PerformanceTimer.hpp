@@ -46,7 +46,7 @@ private:
 
 class ScopeTimer {
 public:
-    ScopeTimer(const std::string &name);
+    explicit ScopeTimer(const std::string &name);
 
     ~ScopeTimer();
 

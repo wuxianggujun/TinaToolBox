@@ -11,11 +11,11 @@ PerformanceTimer::PerformanceTimer(const std::string &name): name_(name) {
 PerformanceTimer::~PerformanceTimer() = default;
 
 void PerformanceTimer::start() {
-    start_time_ = std::chrono::high_resolution_clock::now();
+    start_time_ = std::chrono::steady_clock::now();
 }
 
 double PerformanceTimer::stop() {
-    end_time_ = std::chrono::high_resolution_clock::now();
+    end_time_ = std::chrono::steady_clock::now();
     if (!name_.empty()) {
         log_performance();
     }

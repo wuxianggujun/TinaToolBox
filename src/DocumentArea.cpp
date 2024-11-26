@@ -94,6 +94,17 @@ MergedTableView *DocumentTab::setupExcelView() {
     }
 }
 
+PdfViewer *DocumentTab::setupPdfView() {
+    if (!pdf_view_) {
+        pdf_view_ = new PdfViewer(this);
+        pdf_view_->setParent(this);
+        stacked_widget_->addWidget(pdf_view_);
+        sheet_tab_->hide();  // PDF不需要显示sheet标签页
+    }
+    stacked_widget_->setCurrentWidget(pdf_view_);
+    return pdf_view_;
+}
+
 void DocumentTab::moveSheetTabs(bool showAtTop) {
 }
 
@@ -151,6 +162,8 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
     // 根据文件类型设置不同的视图
     if (QStringList{"xlsx", "xls"}.contains(fileType.toLower())) {
         view = docTab->setupExcelView();
+    } else if (QStringList{"pdf"}.contains(fileType.toLower())) {
+        view = docTab->setupPdfView();
     } else {
         view = docTab->setupTextView();
     }

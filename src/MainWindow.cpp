@@ -113,7 +113,6 @@ void MainWindow::setUpUI() {
     propertyPanelLayout->setContentsMargins(0, 0, 0, 0);
     propertyPanelLayout->setSpacing(0);
 
-
     propertyStack = new QStackedWidget();
     propertyPanelLayout->addWidget(propertyStack);
 
@@ -171,17 +170,51 @@ void MainWindow::setUpUI() {
 }
 
 void MainWindow::createTileBar() {
-    // 创建菜单栏
     m_menuBar = new MainWindowMenuBar(this);
+    setMenuWidget(m_menuBar);  // 使用 setMenuWidget 而不是 setMenuBar
+
     // 连接信号
     connect(m_menuBar, &MainWindowMenuBar::minimizeClicked, this, &MainWindow::showMinimized);
     connect(m_menuBar, &MainWindowMenuBar::maximizeClicked, this, &MainWindow::toggleMaximize);
     connect(m_menuBar, &MainWindowMenuBar::closeClicked, this, &MainWindow::close);
-    // 添加这个连接
     connect(m_menuBar, &MainWindowMenuBar::menuActionTriggered, this, &MainWindow::handleMenuAction);
-    mainLayout->addWidget(m_menuBar);
 }
 
+void MainWindow::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && m_menuBar && m_menuBar->geometry().contains(event->pos())) {
+        isDragging = true;
+        dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
+        event->accept();
+    }
+    QMainWindow::mousePressEvent(event);
+}
+
+void MainWindow::mouseMoveEvent(QMouseEvent *event) {
+    if (isDragging && (event->buttons() & Qt::LeftButton)) {
+        move(event->globalPosition().toPoint() - dragPosition);
+        event->accept();
+    }
+    QMainWindow::mouseMoveEvent(event);
+}
+
+void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
+    isDragging = false;
+    QMainWindow::mouseReleaseEvent(event);
+}
+
+void MainWindow::toggleMaximize() {
+    if (isMaximized()) {
+        showNormal();
+        if (m_menuBar) {
+            m_menuBar->updateMaximizeButton(false);
+        }
+    } else {
+        showMaximized();
+        if (m_menuBar) {
+            m_menuBar->updateMaximizeButton(true);
+        }
+    }
+}
 
 void MainWindow::loadFileHistory() {
     FileHistoryManager fileHistoryManager;
@@ -227,6 +260,8 @@ void MainWindow::loadFileHistory() {
                     } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
                         .contains(extension)) {
                         openTextFile(filePath);
+                    }else if (extension == "pdf") {
+                        openPdfFile(filePath);
                     }
                 } else {
                     // 文件不存在，从历史记录中删除
@@ -254,41 +289,9 @@ void MainWindow::handleMenuAction(const QString &actionName) {
     }
 }
 
-void MainWindow::mousePressEvent(QMouseEvent *event) {
-    if (event->button() == Qt::LeftButton) {
-        dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-        event->accept();
-    }
-    QMainWindow::mousePressEvent(event);
-}
-
-void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-    if (event->buttons() & Qt::LeftButton) {
-        if (!dragPosition.isNull()) {
-            move(event->globalPosition().toPoint() - dragPosition);
-            event->accept();
-        }
-    }
-    QMainWindow::mouseMoveEvent(event);
-}
-
-void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
-    dragPosition = QPoint();
-    QMainWindow::mouseReleaseEvent(event);
-}
-
-void MainWindow::toggleMaximize() {
-    if (isMaximized()) {
-        showNormal();
-        if (m_menuBar) {
-            m_menuBar->updateMaximizeButton(false);
-        }
-    } else {
-        showMaximized();
-        if (m_menuBar) {
-            m_menuBar->updateMaximizeButton(true);
-        }
-    }
+bool MainWindow::isTitleBarArea(const QPoint& pos) const {
+    if (!titleBar) return false;
+    return titleBar->geometry().contains(pos);
 }
 
 void MainWindow::showBottomPanel() {
@@ -330,7 +333,6 @@ void MainWindow::showFileTreeContextMenu(const QPoint &pos) {
     }
 }
 
-
 void MainWindow::openFile() {
     QString filePath = QFileDialog::getOpenFileName(
         this,
@@ -357,11 +359,32 @@ void MainWindow::openFile() {
         } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
             .contains(extension)) {
             openTextFile(filePath);
-        } else {
+        } else if (extension == "pdf") {
+            openPdfFile(filePath);
+        }else {
             QMessageBox::warning(this, tr("警告"),
                                  tr("不支持的文件类型: %1").arg(extension));
         }
     }
+}
+
+void MainWindow::openPdfFile(const QString &filePath) {
+        ExceptionHandler handler("打开PDF文件失败");
+        handler([this, &filePath]() {
+            // 首先打开文档，获取视图
+            QWidget *view = documentArea->openDocument(filePath, "pdf");
+            spdlog::info("打开PDF文件: {}", filePath.toStdString());
+            if (!view) {
+                throw std::runtime_error("Failed to create document view");
+            }
+            // 获取 QTextEdit
+            auto *pdf_view = qobject_cast<PdfViewer *>(view);
+            if (!pdf_view) {
+                throw std::runtime_error("Cannot get pdf viewer");
+            }
+            pdf_view->loadDocument(filePath);
+            return true;
+        });
 }
 
 void MainWindow::updateFileTree() {
@@ -399,7 +422,7 @@ void MainWindow::updateFileTree() {
     }
 }
 
-void MainWindow::openTextFile(const QString &filePath) const {
+void MainWindow::openTextFile(const QString &filePath) {
     ExceptionHandler handler("打开文本文件失败");
     handler([this, &filePath]() {
         // 首先打开文档，获取视图
@@ -445,7 +468,6 @@ void MainWindow::openExcelFile(const QString &filePath, bool updateHistory) {
         updateFileTree();
     }
 }
-
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (obj == this) {

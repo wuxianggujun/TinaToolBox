@@ -19,6 +19,7 @@
 #include "RunButton.hpp"
 #include "DocumentTabWidget.hpp"
 #include "LineNumberTextEdit.hpp"
+#include "PdfViewer.hpp"
 
 class DocumentTab : public QWidget {
     Q_OBJECT
@@ -27,6 +28,7 @@ public:
 
     QPlainTextEdit* setupTextView();
     MergedTableView* setupExcelView();
+    PdfViewer* setupPdfView();
     
     void moveSheetTabs(bool showAtTop);
 
@@ -49,9 +51,13 @@ private:
     QWidget* toolbar_{};
     RunButton* run_button_{};
 
+    // 视图组件
     MergedTableView* table_view_{nullptr};
     LineNumberTextEdit*  text_edit_{nullptr};
+    PdfViewer* pdf_view_{nullptr};
     TableModel* table_model_{nullptr};
+    
+    // Excel处理器
     std::unique_ptr<ExcelProcessor> excel_processor_{nullptr};
 };
 
