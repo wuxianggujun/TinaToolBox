@@ -65,7 +65,9 @@ source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${RESOURCES})
 
 target_include_directories(TinaToolBox PRIVATE ${QT_PREFIX_PATH}/include)
 target_include_directories(TinaToolBox PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(TinaToolBox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Sql)
+target_link_libraries(TinaToolBox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets 
+        Qt${QT_VERSION_MAJOR}::Network 
+        Qt${QT_VERSION_MAJOR}::Sql)
 #target_link_libraries(TinaToolBox PRIVATE QXlsx::QXlsx)
 target_link_libraries(TinaToolBox PRIVATE spdlog::spdlog)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

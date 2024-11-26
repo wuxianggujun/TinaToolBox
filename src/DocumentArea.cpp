@@ -132,7 +132,6 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
 }
 
 QWidget *DocumentArea::openDocument(const QString &filePath, const QString &fileType) {
-    // 检查文档是否已经打开
     if (documents_.contains(filePath)) {
         int index = tab_widget_->indexOf(documents_[filePath]);
         tab_widget_->setCurrentIndex(index);
