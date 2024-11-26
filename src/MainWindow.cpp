@@ -181,16 +181,39 @@ void MainWindow::createTileBar() {
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
-    if (event->button() == Qt::LeftButton && m_menuBar && m_menuBar->geometry().contains(event->pos())) {
-        isDragging = true;
-        dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-        event->accept();
+    if (m_menuBar && m_menuBar->geometry().contains(event->pos())) {
+        if (event->button() == Qt::LeftButton && !isMaximized()) {
+            isDragging = true;
+            dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
+            event->accept();
+        } else if (event->button() == Qt::LeftButton && isMaximized()) {
+            // 如果在最大化状态下点击标题栏，恢复窗口并开始拖动
+            showNormal();
+            if (m_menuBar) {
+                m_menuBar->updateMaximizeButton(false);
+            }
+            // 计算新的拖动位置，使鼠标保持在点击的相对位置
+            QPoint globalPos = event->globalPosition().toPoint();
+            QRect geometry = frameGeometry();
+            int clickX = event->pos().x();
+            geometry.moveLeft(globalPos.x() - clickX);
+            geometry.moveTop(globalPos.y() - m_menuBar->geometry().height() / 2);
+            setGeometry(geometry);
+            
+            isDragging = true;
+            dragPosition = QPoint(clickX, m_menuBar->geometry().height() / 2);
+            event->accept();
+        } else if (event->button() == Qt::RightButton) {
+            // 禁用右键点击的默认行为
+            event->accept();
+            return;
+        }
     }
     QMainWindow::mousePressEvent(event);
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-    if (isDragging && (event->buttons() & Qt::LeftButton)) {
+    if (isDragging && (event->buttons() & Qt::LeftButton) && !isMaximized()) {
         move(event->globalPosition().toPoint() - dragPosition);
         event->accept();
     }
@@ -200,6 +223,21 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
     isDragging = false;
     QMainWindow::mouseReleaseEvent(event);
+}
+
+void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && m_menuBar && m_menuBar->geometry().contains(event->pos())) {
+        // 如果窗口不是最大化状态，则最大化
+        if (!isMaximized()) {
+            showMaximized();
+            if (m_menuBar) {
+                m_menuBar->updateMaximizeButton(true);
+            }
+        }
+        event->accept();
+        return;
+    }
+    QMainWindow::mouseDoubleClickEvent(event);
 }
 
 void MainWindow::toggleMaximize() {
