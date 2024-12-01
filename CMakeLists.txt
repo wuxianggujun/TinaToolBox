@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 3.18...3.29 FATAL_ERROR)
 
-# 设置搜索路径优先级
-# MSYS2 Configuration
-
-set(MSYS2_PATH "D:、Programs/msys64" CACHE PATH "MSYS2 installation path")
-list(APPEND CMAKE_PREFIX_PATH "${MSYS2_PATH}/mingw64")
-list(APPEND CMAKE_LIBRARY_PATH "${MSYS2_PATH}/mingw64/lib")
-list(APPEND CMAKE_INCLUDE_PATH "${MSYS2_PATH}/mingw64/include")
-
 # vcpkg configuration
 set(CMAKE_TOOLCHAIN_FILE "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
-# 设置查找包的策略
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-
 project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
+
+set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
+set(CMAKE_PREFIX_PATH ${QT_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -23,22 +15,32 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
+
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${PROJECT_SOURCE_DIR}/ui)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(POPPLER_QT6 REQUIRED poppler-qt6)
-pkg_check_modules(POPPLER REQUIRED poppler)
+# 设置 PDFium_DIR 指向 PDFiumConfig.cmake 所在目录
+set(PDFium_DIR "${PROJECT_SOURCE_DIR}/dependencies/pdfium-win-x64" CACHE PATH "Path to PDFiumConfig.cmake")
 
+list(APPEND CMAKE_PREFIX_PATH ${PDFium_DIR})
+
+find_package(PDFium REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network SQL)
 
 set(PROJECT_SOURCES "")
 set(RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resource/*.rc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
 file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/*.hpp)
+
+# 创建可执行文件
+if (Qt${QT_VERSION_MAJOR}_USE_STATIC_RUNTIME)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 
@@ -47,7 +49,7 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 
 list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FILES} ${RESOURCES})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
+#add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(TinaToolBox
@@ -58,8 +60,6 @@ else ()
         add_library(TinaToolBox SHARED
                 ${PROJECT_SOURCES}
         )
-        # Define properties for Android with Qt 5 after find_package() calls as:
-        #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else ()
         add_executable(TinaToolBox
                 ${PROJECT_SOURCES}
@@ -74,19 +74,33 @@ source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${UI_FILES})
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${RESOURCES})
 
 find_package(unofficial-skia CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
-target_include_directories(TinaToolBox PRIVATE ${QT_PREFIX_PATH}/include)
-target_include_directories(TinaToolBox PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(TinaToolBox PRIVATE
+        ${QT_PREFIX_PATH}/include
+        ${PROJECT_SOURCE_DIR}/include
+        ${PDFium_INCLUDE_DIRS})
+target_compile_features(TinaToolBox PRIVATE cxx_std_20)
 
-target_include_directories(TinaToolBox PRIVATE ${POPPLER_QT6_INCLUDE_DIRS})
 target_link_libraries(TinaToolBox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Network
         Qt${QT_VERSION_MAJOR}::Sql)
-#target_link_libraries(TinaToolBox PRIVATE QXlsx::QXlsx)
-target_link_libraries(TinaToolBox PRIVATE spdlog::spdlog)
-target_link_libraries(TinaToolBox PRIVATE ${POPPLER_LIBRARIES} ${POPPLER_QT6_LIBRARIES})
-target_link_libraries(TinaToolBox PRIVATE unofficial::skia::skia)
-target_compile_definitions(-DCMAKE_TOOLCHAIN_FILE=D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake)
+
+target_link_libraries(TinaToolBox PRIVATE 
+        spdlog::spdlog 
+        unofficial::skia::skia
+        pdfium)
+
+target_compile_options(TinaToolBox PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-DNDEBUG>
+        $<$<COMPILE_LANGUAGE:CXX>:-DNDEBUG>
+        $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>
+        $<$<COMPILE_LANGUAGE:CXX>:/permissive->
+        $<$<COMPILE_LANGUAGE:CXX>:/utf-8>
+        $<$<COMPILE_LANGUAGE:CUDA>:-DNDEBUG>
+)
+target_compile_definitions(TinaToolBox PRIVATE CMAKE_TOOLCHAIN_FILE="D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
 if (${QT_VERSION} VERSION_LESS 6.1.0)
     set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.TinaToolBox)
 endif ()
@@ -108,3 +122,10 @@ install(TARGETS TinaToolBox
 if (QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(TinaToolBox)
 endif ()
+
+if (WIN32)
+    add_custom_command(TARGET TinaToolBox POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/dependencies/pdfium-win-x64/bin/pdfium.dll"
+            $<TARGET_FILE_DIR:TinaToolBox>)
+endif()
