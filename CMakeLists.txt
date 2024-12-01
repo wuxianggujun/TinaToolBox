@@ -126,6 +126,6 @@ endif ()
 if (WIN32)
     add_custom_command(TARGET TinaToolBox POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_SOURCE_DIR}/dependencies/pdfium-win-x64/bin/pdfium.dll"
+            "${PDFium_DIR}/bin/pdfium.dll"
             $<TARGET_FILE_DIR:TinaToolBox>)
 endif()
