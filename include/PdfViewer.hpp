@@ -6,6 +6,8 @@
 #include <memory>
 #include <fpdfview.h>
 #include <fpdf_formfill.h>
+#include <fpdf_text.h>
+#include <cmath>
 
 class QLabel;
 class QPushButton;
@@ -20,6 +22,14 @@ public:
     ~PdfViewer() override;
 
     bool loadDocument(const QString &filePath);
+
+    bool searchText(const QString &text, bool matchCase = false, bool wholeWord = false);
+
+    void clearSearch();
+
+    bool findNext();
+
+    bool findPrevious();
 
 private slots:
     void previousPage();
@@ -50,6 +60,20 @@ private:
     FPDF_DOCUMENT document_{nullptr};
     FPDF_FORMHANDLE formHandle_{nullptr};
     int pageCount_{0};
+
+    struct SearchResult {
+        int pageIndex;
+        QRectF rect;
+        double fontSize;
+    };
+
+    QString searchText_;
+    std::vector<SearchResult> searchResults_;
+    size_t currentSearchIndex_{0};
+
+    void highlightSearchResults(QPainter &painter, const QRectF &rect);
+
+    void renderSearchResults(QImage &image);
 
     int currentPage_{0};
     double zoomFactor_{1.0};

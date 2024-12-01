@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QFileInfo>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QPainter>
 
@@ -31,7 +32,8 @@ void PdfViewer::setupUI() {
 
     // 控制栏
     auto *controlLayout = new QHBoxLayout();
-
+    auto *searchEdit = new QLineEdit(this);
+    auto *searchButton = new QPushButton("搜索", this);
     prevButton_ = new QPushButton("上一页", this);
     nextButton_ = new QPushButton("下一页", this);
     pageSpinBox_ = new QSpinBox(this);
@@ -43,6 +45,9 @@ void PdfViewer::setupUI() {
 
     zoomInButton_ = new QPushButton("+", this);
     zoomOutButton_ = new QPushButton("-", this);
+
+    controlLayout->addWidget(searchEdit);
+    controlLayout->addWidget(searchButton);
 
     controlLayout->addWidget(prevButton_);
     controlLayout->addWidget(pageSpinBox_);
@@ -61,6 +66,10 @@ void PdfViewer::setupUI() {
     scrollArea_->setWidgetResizable(true);
 
     mainLayout->addWidget(scrollArea_);
+
+    connect(searchButton, &QPushButton::clicked, [this, searchEdit]() {
+        this->searchText(searchEdit->text());
+    });
 
     // 连接信号和槽
     connect(prevButton_, &QPushButton::clicked, this, &PdfViewer::previousPage);
@@ -121,6 +130,172 @@ bool PdfViewer::loadDocument(const QString &filePath) {
         QMessageBox::warning(this, "错误", "加载PDF文件时发生未知错误");
         spdlog::error("加载PDF文件时发生未知异常");
         return false;
+    }
+}
+
+bool PdfViewer::searchText(const QString& text, bool matchCase, bool wholeWord) {
+    if (!document_ || text.isEmpty()) {
+        return false;
+    }
+
+    searchText_ = text;
+    searchResults_.clear();
+    currentSearchIndex_ = 0;
+
+    for (int pageIndex = 0; pageIndex < pageCount_; ++pageIndex) {
+        FPDF_PAGE page = FPDF_LoadPage(document_, pageIndex);
+        if (!page) continue;
+
+        FPDF_TEXTPAGE textPage = FPDFText_LoadPage(page);
+        if (!textPage) {
+            FPDF_ClosePage(page);
+            continue;
+        }
+
+        std::wstring wtext = text.toStdWString();
+        unsigned long flags = 0;
+        if (matchCase) flags |= FPDF_MATCHCASE;
+        if (wholeWord) flags |= FPDF_MATCHWHOLEWORD;
+
+        FPDF_SCHHANDLE search = FPDFText_FindStart(textPage, 
+            reinterpret_cast<FPDF_WIDESTRING>(wtext.c_str()), flags, 0);
+
+        while (FPDFText_FindNext(search)) {
+            SearchResult result;
+            result.pageIndex = pageIndex;
+            
+            int startIndex = FPDFText_GetSchResultIndex(search);
+            int count = FPDFText_GetSchCount(search);
+
+            // 获取每个字符的边界框并合并
+            double left = DBL_MAX, top = DBL_MAX;
+            double right = -DBL_MAX, bottom = -DBL_MAX;
+            double avgFontSize = 0;
+            int validCharCount = 0;
+
+            for (int charIndex = startIndex; charIndex < startIndex + count; ++charIndex) {
+                double charLeft, charTop, charRight, charBottom;
+                if (FPDFText_GetCharBox(textPage, charIndex, &charLeft, &charRight, 
+                                      &charBottom, &charTop)) {
+                    left = min(left, charLeft);
+                    right = max(right, charRight);
+                    
+                    // 使用字体大小来确定合理的高度
+                    double fontSize = FPDFText_GetFontSize(textPage, charIndex);
+                    if (fontSize > 0) {
+                        avgFontSize += fontSize;
+                        validCharCount++;
+                        
+                        // 根据字体大小调整上下边界
+                        double centerY = (charTop + charBottom) / 2;
+                        double halfHeight = fontSize * 0.7; // 可以调整这个系数
+                        top = min(top, centerY - halfHeight);
+                        bottom = max(bottom, centerY + halfHeight);
+                    }
+                }
+            }
+
+            if (left != DBL_MAX && validCharCount > 0) {
+                avgFontSize /= validCharCount;
+                result.rect = QRectF(left, top, right - left, bottom - top);
+                result.fontSize = avgFontSize;
+                searchResults_.push_back(result);
+            }
+        }
+
+        FPDFText_FindClose(search);
+        FPDFText_ClosePage(textPage);
+        FPDF_ClosePage(page);
+    }
+
+    if (!searchResults_.empty()) {
+        currentPage_ = searchResults_[0].pageIndex;
+        pageSpinBox_->setValue(currentPage_ + 1);
+        renderPage();
+        return true;
+    }
+
+    return false;
+}
+
+bool PdfViewer::findNext() {
+    if (searchResults_.empty()) return false;
+
+    currentSearchIndex_ = (currentSearchIndex_ + 1) % searchResults_.size();
+    const auto &result = searchResults_[currentSearchIndex_];
+
+    if (result.pageIndex != currentPage_) {
+        currentPage_ = result.pageIndex;
+        pageSpinBox_->setValue(currentPage_ + 1);
+    }
+    renderPage();
+    return true;
+}
+
+
+bool PdfViewer::findPrevious() {
+    if (searchResults_.empty()) return false;
+
+    if (currentSearchIndex_ == 0)
+        currentSearchIndex_ = searchResults_.size() - 1;
+    else
+        currentSearchIndex_--;
+
+    const auto &result = searchResults_[currentSearchIndex_];
+
+    if (result.pageIndex != currentPage_) {
+        currentPage_ = result.pageIndex;
+        pageSpinBox_->setValue(currentPage_ + 1);
+    }
+    renderPage();
+    return true;
+}
+
+void PdfViewer::clearSearch() {
+    searchResults_.clear();
+    currentSearchIndex_ = 0;
+    searchText_.clear();
+    renderPage();
+}
+
+
+void PdfViewer::renderSearchResults(QImage& image) {
+    if (searchResults_.empty()) return;
+
+    FPDF_PAGE page = FPDF_LoadPage(document_, currentPage_);
+    if (!page) return;
+
+    double pageWidth = FPDF_GetPageWidth(page);
+    double pageHeight = FPDF_GetPageHeight(page);
+    FPDF_ClosePage(page);
+
+    double scaleX = (image.width() / pageWidth);
+    double scaleY = (image.height() / pageHeight);
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    for (size_t i = 0; i < searchResults_.size(); ++i) {
+        const auto& result = searchResults_[i];
+        if (result.pageIndex == currentPage_) {
+            // 计算正确的Y坐标（PDF坐标系从底部开始，Qt从顶部开始）
+            double y = pageHeight - result.rect.bottom(); // 翻转Y坐标
+            
+            QRectF scaledRect(
+                result.rect.x() * scaleX,
+                y * scaleY,  // 使用翻转后的Y坐标
+                result.rect.width() * scaleX,
+                result.rect.height() * scaleY  // 高度保持正值
+            );
+
+            QColor highlightColor = (i == currentSearchIndex_) 
+                ? QColor(255, 255, 0, 127)
+                : QColor(255, 200, 0, 80);
+            
+            painter.fillRect(scaledRect, highlightColor);
+            painter.setPen(QPen(Qt::darkYellow, 0.5));
+            painter.drawRect(scaledRect);
+        }
     }
 }
 
@@ -193,7 +368,7 @@ void PdfViewer::renderPage() {
     // 设置图像DPI
     image.setDotsPerMeterX(static_cast<int>(kDPI * 39.37));
     image.setDotsPerMeterY(static_cast<int>(kDPI * 39.37));
-    
+
     // 创建FPDF位图
     FPDF_BITMAP bitmap = FPDFBitmap_CreateEx(scaledWidth, scaledHeight,
                                              FPDFBitmap_BGRA, image.bits(), image.bytesPerLine());
@@ -206,6 +381,8 @@ void PdfViewer::renderPage() {
     if (formHandle_) {
         FPDF_FFLDraw(formHandle_, bitmap, page, 0, 0, scaledWidth, scaledHeight, 0, FPDF_ANNOT);
     }
+
+    renderSearchResults(image);
 
     // 显示图像
     pageLabel_->setPixmap(QPixmap::fromImage(std::move(image)));
