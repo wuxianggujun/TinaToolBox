@@ -6,6 +6,7 @@
 
 #include <qfileinfo.h>
 #include <QLabel>
+#include <QTimer>
 #include <utility>
 #include "DocumentTabWidget.hpp"
 #include "ExceptionHandler.hpp"
@@ -177,21 +178,50 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
 }
 
 void DocumentArea::closeTab(int index) {
-    QWidget *widget = tab_widget_->widget(index);
-    QString filePath;
-
-    // 查找对应的文件路径
-    for (auto it = documents_.begin(); it != documents_.end(); ++it) {
-        if (it.value() == widget) {
-            filePath = it.key();
-            break;
+    ExceptionHandler handler("关闭标签页失败");
+    handler([this, index]() {
+        QWidget* widget = tab_widget_->widget(index);
+        if (!widget) {
+            spdlog::warn("Attempting to close null widget at index {}", index);
+            return false;
         }
-    }
 
-    if (!filePath.isEmpty()) {
-        documents_.remove(filePath);
-    }
+        QString filePath;
+        // 查找对应的文件路径
+        for (auto it = documents_.begin(); it != documents_.end(); ++it) {
+            if (it.value() == widget) {
+                filePath = it.key();
+                break;
+            }
+        }
 
-    tab_widget_->removeDocumentTab(index);
-    delete widget;
+        // 从映射中移除
+        if (!filePath.isEmpty()) {
+            documents_.remove(filePath);
+        }
+
+        // 先从标签页移除
+        tab_widget_->removeDocumentTab(index);
+
+        // 使用智能指针确保资源正确释放
+        std::shared_ptr<QWidget> widgetPtr(widget, [](QWidget* w) {
+            ExceptionHandler cleanupHandler("清理widget资源失败");
+            cleanupHandler([w]() {
+                if (auto* docTab = qobject_cast<DocumentTab*>(w)) {
+                    if (auto* pdfViewer = docTab->getPdfViewer()) {
+                        pdfViewer->closeDocument();
+                    }
+                }
+                w->deleteLater();
+                return true;
+                });
+            });
+
+        // 使用QTimer延迟删除
+        QTimer::singleShot(0, [widgetPtr]() {
+            // 智能指针会在这里自动调用删除器
+            });
+
+        return true;
+        });
 }

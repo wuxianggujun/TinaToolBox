@@ -29,7 +29,8 @@ public:
     QPlainTextEdit* setupTextView();
     MergedTableView* setupExcelView();
     PdfViewer* setupPdfView();
-    
+
+    PdfViewer* getPdfViewer() const { return pdf_view_; }
     void moveSheetTabs(bool showAtTop);
 
     QString getFilePath() const {return file_path_;}

@@ -6,28 +6,70 @@
 #include <memory>
 #include <fpdfview.h>
 #include <fpdf_formfill.h>
+#include <fpdf_doc.h>
 #include <fpdf_text.h>
 #include <cmath>
+#include <mutex>
+#include <spdlog/spdlog.h>
 
 class QLabel;
 class QPushButton;
 class QSpinBox;
 
+
+
+
 class PdfViewer : public QWidget {
     Q_OBJECT
 
 public:
+    struct PdfInfo {
+        int pageCount;
+        int searchablePages;
+        bool hasText;
+        QString creator;
+        QString producer;
+    };
+
+    class PDFiumLibrary
+    {
+    public:
+        static void Initialize()
+        {
+            if (!initialized_)
+            {
+                FPDF_InitLibrary();
+                initialized_ = true;
+            }
+
+        }
+
+        static void Destroy() {
+            if (initialized_) {
+                FPDF_DestroyLibrary();
+                initialized_ = false;
+            }
+        }
+    private:
+        static bool initialized_;
+    };
+
     explicit PdfViewer(QWidget *parent = nullptr);
 
     ~PdfViewer() override;
 
     bool loadDocument(const QString &filePath);
+    bool loadPage(int pageIndex);
+
+    void closeDocument();
+    bool isPageSearchable(int pageIndex);
 
     bool searchText(const QString &text, bool matchCase = false, bool wholeWord = false);
 
     void clearSearch();
 
     bool findNext();
+    PdfInfo getPdfInfo();
 
     bool findPrevious();
 
@@ -43,8 +85,10 @@ private slots:
     void zoomOut();
 
     void renderPage();
+    void loadAndRenderPage();
 
 private:
+
     void setupUI();
 
     void updatePageInfo() const;
@@ -59,7 +103,12 @@ private:
 
     FPDF_DOCUMENT document_{nullptr};
     FPDF_FORMHANDLE formHandle_{nullptr};
-    int pageCount_{0};
+    FPDF_FORMFILLINFO formFillInfo_{};
+    FPDF_PAGE currentPage_{ nullptr };
+
+    int currentPageIndex_{ 0 }; 
+    int pageCount_{ 0 };        
+    double zoomFactor_{ 1.0 };  
 
     struct SearchResult {
         int pageIndex;
@@ -71,12 +120,14 @@ private:
     std::vector<SearchResult> searchResults_;
     size_t currentSearchIndex_{0};
 
+
+    void updateUIState(); 
+
     void highlightSearchResults(QPainter &painter, const QRectF &rect);
 
     void renderSearchResults(QImage &image);
-
-    int currentPage_{0};
-    double zoomFactor_{1.0};
 };
+
+
 
 #endif //TINA_TOOL_BOX_PDF_VIEWER_HPP

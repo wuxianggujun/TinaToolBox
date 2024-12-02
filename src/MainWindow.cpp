@@ -20,6 +20,7 @@
 #include "FileHistory.hpp"
 #include "ExceptionHandler.hpp"
 #include "LineNumberTextEdit.hpp"
+#include "PdfViewer.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -44,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+    // 在程序退出时清理PDFium库
+    PdfViewer::PDFiumLibrary::Destroy();
 }
 
 void MainWindow::setUpUI() {
@@ -300,6 +303,9 @@ void MainWindow::loadFileHistory() {
                         openTextFile(filePath);
                     }else if (extension == "pdf") {
                         openPdfFile(filePath);
+                    }else
+                    {
+                        spdlog::warn("当前不支持打开该文件!");
                     }
                 } else {
                     // 文件不存在，从历史记录中删除
