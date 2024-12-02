@@ -147,7 +147,15 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
     if (documents_.contains(filePath)) {
         int index = tab_widget_->indexOf(documents_[filePath]);
         tab_widget_->setCurrentIndex(index);
-        return documents_[filePath];
+
+        // 检查当前视图类型是否正确
+        QWidget *currentView = documents_[filePath];
+        if (fileType.toLower() == "pdf" && qobject_cast<PdfViewer *>(currentView)) {
+            return currentView;
+        }
+        // 如果视图类型不匹配，可能需要重新设置
+        // 这里可以根据需要添加逻辑来处理视图类型不匹配的情况
+        return currentView;
     }
 
     // 创建新的文档标签
@@ -168,6 +176,7 @@ QWidget *DocumentArea::openDocument(const QString &filePath, const QString &file
     } else {
         view = docTab->setupTextView();
     }
+    qDebug() << "Created view type:" << view->metaObject()->className();
     // 确保视图创建成功
     if (!view) {
         spdlog::error("Failed to create view for file: {}", filePath.toStdString());

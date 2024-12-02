@@ -417,16 +417,16 @@ void MainWindow::openPdfFile(const QString &filePath) {
         handler([this, &filePath]() {
             // 首先打开文档，获取视图
             QWidget *view = documentArea->openDocument(filePath, "pdf");
-            spdlog::info("打开PDF文件: {}", filePath.toStdString());
             if (!view) {
                 throw std::runtime_error("Failed to create document view");
             }
+            qDebug() << "View type:" << view->metaObject()->className(); // Add this line
             // 获取 QTextEdit
             auto *pdf_view = qobject_cast<PdfViewer *>(view);
             if (!pdf_view) {
                 throw std::runtime_error("Cannot get pdf viewer");
             }
-            pdf_view->loadDocument(filePath);
+            // pdf_view->loadDocument(filePath);
             return true;
         });
 }
@@ -439,7 +439,7 @@ void MainWindow::updateFileTree() {
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
 
     for (const auto &file: recentFiles) {
-        QTreeWidgetItem *item = new QTreeWidgetItem(fileTree);
+        auto *item = new QTreeWidgetItem(fileTree);
 
         // 设置文件名
         item->setText(0, file.fileName);

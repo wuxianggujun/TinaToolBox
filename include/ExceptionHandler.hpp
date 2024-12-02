@@ -10,44 +10,13 @@
 #include <exception>
 #include <QSqlDatabase>
 #include <QSqlError>
+#include <utility>
 #include <spdlog/spdlog.h>
-
-// 为 QSqlError::ErrorType 添加格式化支持
-template<>
-struct fmt::formatter<QSqlError::ErrorType> {
-    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
-    }
-
-    template<typename FormatContext>
-    auto format(const QSqlError::ErrorType& type, FormatContext& ctx) -> decltype(ctx.out()) {
-        const char* type_str = "Unknown";
-        switch (type) {
-            case QSqlError::NoError:
-                type_str = "NoError";
-            break;
-            case QSqlError::ConnectionError:
-                type_str = "ConnectionError";
-            break;
-            case QSqlError::StatementError:
-                type_str = "StatementError";
-            break;
-            case QSqlError::TransactionError:
-                type_str = "TransactionError";
-            break;
-            default:
-                type_str = "UnknownError";
-            break;
-        }
-        return fmt::format_to(ctx.out(), "{}", type_str);
-    }
-};
-
 
 class ExceptionHandler {
 public:
-    explicit ExceptionHandler(const std::string &errorMessage = "程序异常",
-                              spdlog::level::level_enum logLevel = spdlog::level::err) : errorMessage_(errorMessage),
+    explicit ExceptionHandler(std::string errorMessage = "程序异常",
+                              spdlog::level::level_enum logLevel = spdlog::level::err) : errorMessage_(std::move(errorMessage)),
         logLevel_(logLevel) {
     }
 
@@ -56,19 +25,20 @@ public:
     template<class Func, class... Args>
     auto operator()(Func &&func, Args &&... args) -> decltype(func(std::forward<Args>(args)...)) {
         try {
+            // 直接执行函数，不再使用全局标志
             return func(std::forward<Args>(args)...);
         } catch (const std::invalid_argument &e) {
             // 处理参数验证异常
             std::string error = errorMessage_ + ": " + e.what();
             spdlog::log(logLevel_, error);
             return {};
-        }catch (const std::exception &e) {
+        } catch (const std::exception &e) {
             // 处理其他标准异常
-            spdlog::log(logLevel_, "发生异常: {} \n堆栈信息: {}", e.what(), "获取堆栈");
+            spdlog::log(logLevel_, "{}: {}", errorMessage_, e.what());
             return {};
-        }catch (...) {
+        } catch (...) {
             // 处理未知异常
-            spdlog::log(logLevel_, "发生未知异常");
+            spdlog::log(logLevel_, "{}: 未知异常", errorMessage_);
             return {};
         }
     }
@@ -112,7 +82,7 @@ public:
 private:
     bool autoRollback_;
 
-    void handleRollback() {
+    void handleRollback() const {
         if (autoRollback_) {
             QSqlDatabase db = QSqlDatabase::database();
             if (db.isValid() && db.transaction()) {
@@ -121,6 +91,5 @@ private:
         }
     }
 };
-
 
 #endif //TINA_TOOL_BOX_EXCEPTION_HANDLER_HPP

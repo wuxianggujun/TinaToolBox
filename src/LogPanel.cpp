@@ -66,9 +66,23 @@ void LogPanel::onLogLevelChanged(int index) {
 void LogPanel::filterLogsByLevel() {
     // 清空当前显示
     logArea_->clear();
-    // 重新显示符合条件的日志
+    // 获取当前选择的日志级别
+    int selectedLevel = logLevelComboBox_->currentData().toInt();
+
+    spdlog::debug("当前选择的日志级别: {}", selectedLevel);
+
     for (const LogEntry& entry : logEntries_) {
-        if (currentLogLevel_ == -1 || entry.level == currentLogLevel_) {
+        bool shouldShow = false;
+
+        if (selectedLevel == -1) {  // ALL
+            shouldShow = true;
+        }
+        else {
+            // spdlog的级别：trace=0, debug=1, info=2, warn=3, error=4, critical=5
+            shouldShow = (entry.level == selectedLevel);
+        }
+
+        if (shouldShow) {
             logArea_->setTextColor(entry.color);
             logArea_->append(entry.text);
         }
@@ -116,8 +130,13 @@ void LogPanel::qtMessageHandler(QtMsgType type, const QMessageLogContext &contex
 
 LogPanel::LogPanel(QWidget *parent) : QWidget(parent) {
     instance_ = this;
+    // 初始化当前日志级别为 ALL (-1)
+    currentLogLevel_ = -1;
     setupUI();
     setupLogHandlers();
+
+    // 确保 ComboBox 初始选择为 "All"
+    logLevelComboBox_->setCurrentIndex(0);
 
     // 连接信号和槽
     connect(this, &LogPanel::logMessage, this, [this](const QString &message, const QColor &color) {
@@ -142,6 +161,7 @@ void LogPanel::setupLogHandlers() {
     // 创建并注册自定义sink
     sink_ = std::make_shared<LogPanelSink<std::mutex> >(this);
     auto logger = spdlog::default_logger();
+    logger->sinks().clear();
     logger->sinks().push_back(sink_);
 
     // 设置Qt消息处理器
@@ -155,28 +175,52 @@ void LogPanel::appendLog(const QString &text) {
 void LogPanel::appendLogWithColor(const QString &text, const QColor &color) {
     // 解析日志级别
     spdlog::level::level_enum level = spdlog::level::info;  // 默认级别
-    if (text.contains("[trace]", Qt::CaseInsensitive)) {
+    // 更精确的日志级别检测
+    QString lowerText = text.toLower();
+    if (lowerText.contains("[trace]")) {
         level = spdlog::level::trace;
-    } else if (text.contains("[debug]", Qt::CaseInsensitive)) {
+    }
+    else if (lowerText.contains("[debug]")) {
         level = spdlog::level::debug;
-    } else if (text.contains("[info]", Qt::CaseInsensitive)) {
+    }
+    else if (lowerText.contains("[info]")) {
         level = spdlog::level::info;
-    } else if (text.contains("[warning]", Qt::CaseInsensitive)) {
+    }
+    else if (lowerText.contains("[warning]") || lowerText.contains("[warn]")) {
         level = spdlog::level::warn;
-    } else if (text.contains("[error]", Qt::CaseInsensitive)) {
+    }
+    else if (lowerText.contains("[error]") || lowerText.contains("[err]")) {
         level = spdlog::level::err;
-    } else if (text.contains("[critical]", Qt::CaseInsensitive)) {
+    }
+    else if (lowerText.contains("[critical]")) {
         level = spdlog::level::critical;
     }
+
     // 存储日志条目
     logEntries_.append({text, color, level});
-    // 根据当前过滤级别决定是否显示
-    if (currentLogLevel_ == -1 || currentLogLevel_ == level) {
+
+    // 检查是否应该显示这条日志
+    int currentLevel = logLevelComboBox_->currentData().toInt();
+    bool shouldShow = (currentLevel == -1) || (level == currentLevel);
+
+    if (shouldShow) {
         logArea_->setTextColor(color);
         logArea_->append(text);
     }
 }
 
+// 在头文件中添加日志级别的调试辅助函数
+QString getLevelName(spdlog::level::level_enum level) {
+    switch (level) {
+    case spdlog::level::trace: return "TRACE";
+    case spdlog::level::debug: return "DEBUG";
+    case spdlog::level::info: return "INFO";
+    case spdlog::level::warn: return "WARN";
+    case spdlog::level::err: return "ERROR";
+    case spdlog::level::critical: return "CRITICAL";
+    default: return "UNKNOWN";
+    }
+}
 void LogPanel::clearLog() {
     logArea_->clear();
     logEntries_.clear();  // 同时清除存储的日志
