@@ -100,7 +100,7 @@ PdfViewer *DocumentTab::setupPdfView() {
         pdf_view_ = new PdfViewer(this);
         pdf_view_->setParent(this);
         stacked_widget_->addWidget(pdf_view_);
-        sheet_tab_->hide();  // PDF不需要显示sheet标签页
+        sheet_tab_->hide(); // PDF不需要显示sheet标签页
     }
     stacked_widget_->setCurrentWidget(pdf_view_);
     return pdf_view_;
@@ -137,100 +137,150 @@ DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     tab_widget_->tabBar()->setMinimumHeight(35);
 
     connect(tab_widget_, &QTabWidget::tabCloseRequested,
-            this, &DocumentArea::closeTab);
+            this, &DocumentArea::closeFile);
 
     layout_->addWidget(tab_widget_);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-QWidget *DocumentArea::openDocument(const QString &filePath, const QString &fileType) {
-    if (documents_.contains(filePath)) {
-        int index = tab_widget_->indexOf(documents_[filePath]);
-        tab_widget_->setCurrentIndex(index);
-
-        // 检查当前视图类型是否正确
-        QWidget *currentView = documents_[filePath];
-        if (fileType.toLower() == "pdf" && qobject_cast<PdfViewer *>(currentView)) {
-            return currentView;
+bool DocumentArea::openFile(const QString &filePath) {
+    ExceptionHandler handler("打开文件失败");
+    return handler([this,&filePath]() {
+        if (openDocuments_.contains(filePath)) {
+            int index = tab_widget_->indexOf(openDocuments_[filePath].view);
+            tab_widget_->setCurrentIndex(index);
+            emit currentFileChanged(filePath);
+            return true;
         }
-        // 如果视图类型不匹配，可能需要重新设置
-        // 这里可以根据需要添加逻辑来处理视图类型不匹配的情况
-        return currentView;
-    }
+        // 创建新的文档视图和处理器
+        QFileInfo fileInfo(filePath);
+        QString extension = fileInfo.suffix().toLower();
 
-    // 创建新的文档标签
-    auto *docTab = new DocumentTab(filePath, this);
-    documents_[filePath] = docTab;
-
-    // 添加到标签页
-    QFileInfo fileInfo(filePath);
-    tab_widget_->addDocumentTab(docTab, fileInfo.fileName());
-    tab_widget_->setCurrentWidget(docTab);
-
-    QWidget *view = nullptr;
-    // 根据文件类型设置不同的视图
-    if (QStringList{"xlsx", "xls"}.contains(fileType.toLower())) {
-        view = docTab->setupExcelView();
-    } else if (QStringList{"pdf"}.contains(fileType.toLower())) {
-        view = docTab->setupPdfView();
-    } else {
-        view = docTab->setupTextView();
-    }
-    qDebug() << "Created view type:" << view->metaObject()->className();
-    // 确保视图创建成功
-    if (!view) {
-        spdlog::error("Failed to create view for file: {}", filePath.toStdString());
-        closeTab(tab_widget_->count() - 1); // 关闭刚创建的标签
-        return nullptr;
-    }
-    return view;
-}
-
-void DocumentArea::closeTab(int index) {
-    ExceptionHandler handler("关闭标签页失败");
-    handler([this, index]() {
-        QWidget* widget = tab_widget_->widget(index);
-        if (!widget) {
-            spdlog::warn("Attempting to close null widget at index {}", index);
+        auto docHandler = DocumentHandlerFactory::createHandler(extension);
+        if (!docHandler) {
+            emit error(tr("不支持的文件类型:%1").arg(filePath));
             return false;
         }
 
-        QString filePath;
+        QWidget *view = createDocumentView(filePath);
+        if (!view || !docHandler->loadDocument(view, filePath)) {
+            if (view) view->deleteLater();
+            emit error(tr("加载文件失败:%1").arg(filePath));
+            return false;
+        }
+
+        DocumentInfo docInfo{view, docHandler};
+        openDocuments_[filePath] = docInfo;
+        
+        // 设置标签页
+        tab_widget_->addDocumentTab(view, fileInfo.fileName());
+        tab_widget_->setCurrentWidget(view);
+        
+        emit fileOpened(filePath);
+
+        return true;
+    });
+}
+
+void DocumentArea::closeFile(int index) {
+    if (index >= 0 && index < tab_widget_->count()) {
+        QWidget *widget = tab_widget_->widget(index);
+        
         // 查找对应的文件路径
-        for (auto it = documents_.begin(); it != documents_.end(); ++it) {
-            if (it.value() == widget) {
+        QString filePath;
+        for (auto it = openDocuments_.begin(); it != openDocuments_.end(); ++it) {
+            if (it.value().view == widget) {
                 filePath = it.key();
                 break;
             }
         }
 
-        // 从映射中移除
         if (!filePath.isEmpty()) {
-            documents_.remove(filePath);
+            // 清理资源
+            DocumentInfo &info = openDocuments_[filePath];
+            if (info.handler) {
+                info.handler->cleanup(info.view);
+            }
+            openDocuments_.remove(filePath);
         }
+        // 移除标签页
+        tab_widget_->removeTab(index);
+        widget->deleteLater();
 
-        // 先从标签页移除
-        tab_widget_->removeDocumentTab(index);
-
-        // 使用智能指针确保资源正确释放
-        std::shared_ptr<QWidget> widgetPtr(widget, [](QWidget* w) {
-            ExceptionHandler cleanupHandler("清理widget资源失败");
-            cleanupHandler([w]() {
-                if (auto* docTab = qobject_cast<DocumentTab*>(w)) {
-                    if (auto* pdfViewer = docTab->getPdfViewer()) {
-                        pdfViewer->closeDocument();
-                    }
-                }
-                w->deleteLater();
-                return true;
-                });
-            });
-
-        // 使用QTimer延迟删除
-        QTimer::singleShot(0, [widgetPtr]() {
-            // 智能指针会在这里自动调用删除器
-            });
-
-        return true;
-        });
+        emit fileClosed(filePath);
+    }
 }
+
+
+
+QString DocumentArea::currentFilePath() const {
+    QWidget *currentWidget = tab_widget_->currentWidget();
+    return openDocuments_.keys().at(tab_widget_->indexOf(currentWidget));
+}
+
+QWidget *DocumentArea::currentView() const {
+    return tab_widget_->currentWidget();
+}
+
+QWidget *DocumentArea::createDocumentView(const QString &filePath) {
+    QFileInfo file_info(filePath);
+    QString extension = file_info.suffix().toLower();
+    // 创建处理器
+    auto handler = DocumentHandlerFactory::createHandler(extension);
+    if (!handler) {
+        return nullptr;
+    }
+
+    openDocuments_[filePath].handler = handler;
+    return handler->createView(this);
+}
+
+
+// void DocumentArea::closeTab(int index) {
+//     ExceptionHandler handler("关闭标签页失败");
+//     handler([this, index]() {
+//         QWidget *widget = tab_widget_->widget(index);
+//         if (!widget) {
+//             spdlog::warn("Attempting to close null widget at index {}", index);
+//             return false;
+//         }
+//
+//         QString filePath;
+//         // 查找对应的文件路径
+//         for (auto it = documents_.begin(); it != documents_.end(); ++it) {
+//             if (it.value() == widget) {
+//                 filePath = it.key();
+//                 break;
+//             }
+//         }
+//
+//         // 从映射中移除
+//         if (!filePath.isEmpty()) {
+//             documents_.remove(filePath);
+//         }
+//
+//         // 先从标签页移除
+//         tab_widget_->removeDocumentTab(index);
+//
+//         // 使用智能指针确保资源正确释放
+//         std::shared_ptr<QWidget> widgetPtr(widget, [](QWidget *w) {
+//             ExceptionHandler cleanupHandler("清理widget资源失败");
+//             cleanupHandler([w]() {
+//                 if (auto *docTab = qobject_cast<DocumentTab *>(w)) {
+//                     if (auto *pdfViewer = docTab->getPdfViewer()) {
+//                         pdfViewer->closeDocument();
+//                     }
+//                 }
+//                 w->deleteLater();
+//                 return true;
+//             });
+//         });
+//
+//         // 使用QTimer延迟删除
+//         QTimer::singleShot(0, [widgetPtr]() {
+//             // 智能指针会在这里自动调用删除器
+//         });
+//
+//         return true;
+//     });
+// }

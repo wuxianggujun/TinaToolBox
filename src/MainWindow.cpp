@@ -21,6 +21,7 @@
 #include "ExceptionHandler.hpp"
 #include "LineNumberTextEdit.hpp"
 #include "PdfViewer.hpp"
+#include "DocumentHandler.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -170,11 +171,18 @@ void MainWindow::setUpUI() {
     connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
     connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
     connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
+
+
+    DocumentHandlerFactory::registerHandler(std::make_shared<PdfDocumentHandler>());
+    DocumentHandlerFactory::registerHandler(std::make_shared<TextDocumentHandler>());
+
+
+    setupConnections();
 }
 
 void MainWindow::createTileBar() {
     m_menuBar = new MainWindowMenuBar(this);
-    setMenuWidget(m_menuBar);  // 使用 setMenuWidget 而不是 setMenuBar
+    setMenuWidget(m_menuBar); // 使用 setMenuWidget 而不是 setMenuBar
 
     // 连接信号
     connect(m_menuBar, &MainWindowMenuBar::minimizeClicked, this, &MainWindow::showMinimized);
@@ -202,7 +210,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
             geometry.moveLeft(globalPos.x() - clickX);
             geometry.moveTop(globalPos.y() - m_menuBar->geometry().height() / 2);
             setGeometry(geometry);
-            
+
             isDragging = true;
             dragPosition = QPoint(clickX, m_menuBar->geometry().height() / 2);
             event->accept();
@@ -257,6 +265,17 @@ void MainWindow::toggleMaximize() {
     }
 }
 
+void MainWindow::onFileDoubleClicked(const QTreeWidgetItem* item) {
+    QString filePath = item->data(0,Qt::UserRole).toString();
+    if (!filePath.isEmpty()) {
+        if (documentArea) {
+            documentArea->openFile(filePath);
+            updateFileHistory(filePath);
+            updateUIState();
+        }
+    }
+}
+
 void MainWindow::loadFileHistory() {
     FileHistoryManager fileHistoryManager;
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
@@ -290,7 +309,7 @@ void MainWindow::loadFileHistory() {
         // 存储完整文件路径作为用户数据
         item->setData(0, Qt::UserRole, file.filePath);
 
-        // 添加双击打开文件的功能
+        /*// 添加双击打开文件的功能
         connect(fileTree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item) {
             if (QString filePath = item->data(0, Qt::UserRole).toString(); !filePath.isEmpty()) {
                 QFileInfo fileInfo(filePath);
@@ -316,7 +335,7 @@ void MainWindow::loadFileHistory() {
                                          tr("文件 %1 不存在或已被移动/删除").arg(filePath));
                 }
             }
-        });
+        });*/
     }
 }
 
@@ -333,23 +352,17 @@ void MainWindow::handleMenuAction(const QString &actionName) {
     }
 }
 
-bool MainWindow::isTitleBarArea(const QPoint& pos) const {
+bool MainWindow::isTitleBarArea(const QPoint &pos) const {
     if (!titleBar) return false;
     return titleBar->geometry().contains(pos);
 }
 
 void MainWindow::showBottomPanel() {
     bottomPanel->show();
-    // logPanel->show();
-    // QList<int> sizes = rightSplitter->sizes();
-    // int total = sizes[0] + sizes[1];
-    // rightSplitter->setSizes({total - 200, 200});
 }
 
 void MainWindow::hideBottomPanel() {
     bottomPanel->hide();
-    // QList<int> sizes = rightSplitter->sizes();
-    // rightSplitter->setSizes({sizes[0] + sizes[1], 0});
 }
 
 void MainWindow::showFilePathToolTip(QTreeWidgetItem *item, int column) {
@@ -384,51 +397,37 @@ void MainWindow::openFile() {
         QString(),
         tr("所有文件 (*.*)")
     );
+    if (filePath.isEmpty()) return;
 
-    if (!filePath.isEmpty()) {
-        QFileInfo fileInfo(filePath);
-        QString extension = fileInfo.suffix().toLower();
-
-        // 保存文件历史到数据库
-        FileHistoryManager fileHistoryManager;
-        if (fileHistoryManager.addFileHistory(filePath)) {
-            // 更新文件树显示
-            updateFileTree();
-        }
-
-        // 根据文件类型打开文件
-        if (extension == "xlsx" || extension == "xls") {
-            // openExcelFile(filePath);
-            // 暂时不处理Excel文件
-        } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
-            .contains(extension)) {
-            openTextFile(filePath);
-        } else if (extension == "pdf") {
-            openPdfFile(filePath);
-        }else {
-            QMessageBox::warning(this, tr("警告"),
-                                 tr("不支持的文件类型: %1").arg(extension));
-        }
+    if (documentArea->openFile(filePath)) {
+        updateFileHistory(filePath);
     }
 }
 
-void MainWindow::openPdfFile(const QString &filePath) {
-        ExceptionHandler handler("打开PDF文件失败");
-        handler([this, &filePath]() {
-            // 首先打开文档，获取视图
-            QWidget *view = documentArea->openDocument(filePath, "pdf");
-            if (!view) {
-                throw std::runtime_error("Failed to create document view");
-            }
-            qDebug() << "View type:" << view->metaObject()->className(); // Add this line
-            // 获取 QTextEdit
-            auto *pdf_view = qobject_cast<PdfViewer *>(view);
-            if (!pdf_view) {
-                throw std::runtime_error("Cannot get pdf viewer");
-            }
-            // pdf_view->loadDocument(filePath);
-            return true;
-        });
+void MainWindow::updateUIState() {
+}
+
+// 连接信号
+void MainWindow::setupConnections() {
+    connect(documentArea, &DocumentArea::error, this, [this](const QString &message) {
+        QMessageBox::warning(this, tr("错误"), message);
+    });
+
+    connect(documentArea, &DocumentArea::fileOpened, this, &MainWindow::updateFileHistory);
+
+    connect(documentArea, &DocumentArea::currentFileChanged, this, [this](const QString &filePath) {
+        // 更新UI状态，如工具栏等
+        updateUIState();
+    });
+
+    if (fileTree) {
+        connect(fileTree, &QTreeWidget::itemDoubleClicked,
+        this, &MainWindow::onFileDoubleClicked);
+    }
+    
+}
+
+void MainWindow::updateFileHistory(const QString &filePath) {
 }
 
 void MainWindow::updateFileTree() {
@@ -463,53 +462,6 @@ void MainWindow::updateFileTree() {
 
         // 存储完整文件路径
         item->setData(0, Qt::UserRole, file.filePath);
-    }
-}
-
-void MainWindow::openTextFile(const QString &filePath) {
-    ExceptionHandler handler("打开文本文件失败");
-    handler([this, &filePath]() {
-        // 首先打开文档，获取视图
-        QWidget *view = documentArea->openDocument(filePath, "text");
-        if (!view) {
-            throw std::runtime_error("Failed to create document view");
-        }
-        // 获取 QTextEdit
-        auto *textEdit = qobject_cast<LineNumberTextEdit *>(view);
-        if (!textEdit) {
-            throw std::runtime_error("Cannot get text editor");
-        }
-        // 读取文件内容
-        QFile file(filePath);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            throw std::runtime_error("Cannot open file: " + filePath.toStdString());
-        }
-        QTextStream in(&file);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        in.setEncoding(QStringConverter::Utf8);
-#        else
-        in.setCodec("UTF-8");
-#       endif
-        QString content = in.readAll();
-        file.close();
-        textEdit->setPlainText(content);
-        return true;
-    });
-}
-
-void MainWindow::openExcelFile(const QString &filePath, bool updateHistory) {
-    // 暂时只是打印一条日志，表示尝试打开Excel文件
-    spdlog::info("Attempting to open Excel file: {}", filePath.toStdString());
-
-    // TODO: 实现Excel文件的打开逻辑
-    QMessageBox::information(this, tr("功能未实现"),
-                             tr("Excel文件打开功能尚未实现: %1").arg(filePath));
-
-    // 如果需要更新历史记录
-    if (updateHistory) {
-        FileHistoryManager fileHistoryManager;
-        fileHistoryManager.addFileHistory(filePath);
-        updateFileTree();
     }
 }
 

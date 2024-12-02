@@ -11,7 +11,7 @@
 #include <QStackedWidget>
 #include <QMessageBox>
 #include <QTreeWidgetItem>
-
+#include "DocumentHandler.hpp"
 #include "MainWindowMenuBar.hpp"
 
 class LogPanel;
@@ -49,6 +49,8 @@ private slots:
 
     void showFileTreeContextMenu(const QPoint &pos);
 
+    void onFileDoubleClicked(const QTreeWidgetItem* item);
+
 private:
     bool isTitleBarArea(const QPoint& pos) const;
 
@@ -60,11 +62,9 @@ private:
 
     void openFile();
 
-    void openPdfFile(const QString &filePath);
+   void updateUIState();
 
-    void openTextFile(const QString &filePath);
-
-    void openExcelFile(const QString &filePath, bool updateHistory = true);
+    void setupConnections();
 
     void saveFileHistory(const QString &filePath);
 

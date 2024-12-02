@@ -13,6 +13,8 @@
 #include <QMap>
 #include <QStackedWidget>
 #include <memory>
+
+#include "DocumentHandler.hpp"
 #include "MergedTableView.hpp"
 #include "TableModel.hpp"
 #include "ExcelProcessor.hpp"
@@ -23,41 +25,45 @@
 
 class DocumentTab : public QWidget {
     Q_OBJECT
+
 public:
-    explicit DocumentTab(QString  filePath,QWidget* parent = nullptr);
+    explicit DocumentTab(QString filePath, QWidget *parent = nullptr);
 
-    QPlainTextEdit* setupTextView();
-    MergedTableView* setupExcelView();
-    PdfViewer* setupPdfView();
+    QPlainTextEdit *setupTextView();
 
-    PdfViewer* getPdfViewer() const { return pdf_view_; }
+    MergedTableView *setupExcelView();
+
+    PdfViewer *setupPdfView();
+
+    PdfViewer *getPdfViewer() const { return pdf_view_; }
+
     void moveSheetTabs(bool showAtTop);
 
-    QString getFilePath() const {return file_path_;}
+    QString getFilePath() const { return file_path_; }
 
-    QWidget* getToolBar() const {return toolbar_;}
-    
+    QWidget *getToolBar() const { return toolbar_; }
+
 private slots:
     void changeSheet(int index);
-private:
 
+private:
     void runScript() const;
-    
+
     QString file_path_;
-    QVBoxLayout* layout_;
-    QStackedWidget* stacked_widget_;
-    QTabWidget* sheet_tab_;
+    QVBoxLayout *layout_;
+    QStackedWidget *stacked_widget_;
+    QTabWidget *sheet_tab_;
 
     // 添加工具栏
-    QWidget* toolbar_{};
-    RunButton* run_button_{};
+    QWidget *toolbar_{};
+    RunButton *run_button_{};
 
     // 视图组件
-    MergedTableView* table_view_{nullptr};
-    LineNumberTextEdit*  text_edit_{nullptr};
-    PdfViewer* pdf_view_{nullptr};
-    TableModel* table_model_{nullptr};
-    
+    MergedTableView *table_view_{nullptr};
+    LineNumberTextEdit *text_edit_{nullptr};
+    PdfViewer *pdf_view_{nullptr};
+    TableModel *table_model_{nullptr};
+
     // Excel处理器
     std::unique_ptr<ExcelProcessor> excel_processor_{nullptr};
 };
@@ -69,22 +75,43 @@ inline void DocumentTab::runScript() const {
 
 class DocumentArea : public QWidget {
     Q_OBJECT
+
 public:
-    explicit DocumentArea(QWidget* parent = nullptr);
+    explicit DocumentArea(QWidget *parent = nullptr);
 
-    QWidget* openDocument(const QString& filePath,const QString& fileType);
+    // 简化的公共接口
+    bool openFile(const QString &filePath);
 
-private slots:
-    void closeTab(int index);
+    void closeFile(int index);
+
+    // 获取当前文档
+    QString currentFilePath() const;
+
+    QWidget *currentView() const;
+
+signals:
+    void fileOpened(const QString &filePath);
+
+    void fileClosed(const QString &filePath);
+
+    void currentFileChanged(const QString &filePath);
+
+    void error(const QString &message);
 
 private:
-    QVBoxLayout* layout_;
-    DocumentTabWidget* tab_widget_;
-    QWidget* toolbar_{}; // 添加工具栏
-    QMap<QString,DocumentTab*> documents_;
-    
-};
 
+    struct DocumentInfo {
+        QWidget* view;
+        std::shared_ptr<IDocumentHandler> handler;
+    };
+    
+    QWidget *createDocumentView(const QString &filePath);
+    
+    QVBoxLayout *layout_;
+    DocumentTabWidget *tab_widget_;
+    QWidget *toolbar_{}; // 添加工具栏
+    QMap<QString, DocumentInfo > openDocuments_;
+};
 
 
 #endif //TINA_TOOL_BOX_DOCUMENT_AREA_HPP
