@@ -104,12 +104,14 @@ QVector<FileHistory> FileHistory::getAllRecords(QSqlDatabase& db, int limit) {
     return records;
 }
 
-FileHistoryManager::FileHistoryManager(const QString& dbPath) {
-    db_ = std::make_unique<QSqlDatabase>(QSqlDatabase::addDatabase("QSQLITE"));
-    db_->setDatabaseName(dbPath.isEmpty() ? getDatabasePath() : dbPath);
-    
-    if (!initDatabase()) {
-        spdlog::error("Failed to initialize database");
+FileHistoryManager & FileHistoryManager::getInstance() {
+    static FileHistoryManager instance;
+    return instance;
+}
+
+FileHistoryManager::FileHistoryManager():isConnected_(false) {
+    if (!connectToDatabase()) {
+        spdlog::error("Failed to connect to database");
     }
 }
 
@@ -132,13 +134,36 @@ bool FileHistoryManager::initDatabase() {
 QString FileHistoryManager::getDatabasePath() const {
     QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir dir(dataPath);
+    // 如果目录不存在，尝试创建它
     if (!dir.exists()) {
-        dir.mkpath(".");
+        if (!dir.mkpath(".")) {  // 创建所有必需的父目录
+            spdlog::error("Failed to create data directory: {}", dataPath.toStdString());
+            return QString();
+        }
+        spdlog::info("Created data directory: {}", dataPath.toStdString());
     }
     return dir.filePath("file_history.db");
 }
 
+bool FileHistoryManager::connectToDatabase() {
+    if (isConnected_) {
+        return true;
+    }
+    db_ = std::make_unique<QSqlDatabase>(QSqlDatabase::addDatabase("QSQLITE"));
+    db_->setDatabaseName(getDatabasePath());
+    
+    if (!initDatabase()) {
+        spdlog::error("Failed to initialize database");
+        return false;
+    }
+    isConnected_ = true;
+    return true;
+}
+
 bool FileHistoryManager::addFileHistory(const QString& filePath) {
+    if (!connectToDatabase()) {
+        return false;
+    }
     QFileInfo fileInfo(filePath);
     if (!fileInfo.exists()) {
         return false;
@@ -155,6 +180,10 @@ bool FileHistoryManager::addFileHistory(const QString& filePath) {
 }
 
 bool FileHistoryManager::updateFileHistory(const QString& filePath) {
+    if (!connectToDatabase()) {
+        return false;
+    }
+
     QFileInfo fileInfo(filePath);
     if (!fileInfo.exists()) {
         return false;
@@ -171,13 +200,23 @@ bool FileHistoryManager::updateFileHistory(const QString& filePath) {
 }
 
 bool FileHistoryManager::deleteFileHistory(const QString& filePath) {
+    if (!connectToDatabase()) {
+        return false;
+    }
     return FileHistory::deleteRecord(*db_, filePath);
 }
 
 FileHistory FileHistoryManager::getFileHistory(const QString& filePath) {
+    if (!connectToDatabase()) {
+        return FileHistory();
+    }
     return FileHistory::getRecord(*db_, filePath);
 }
 
 QVector<FileHistory> FileHistoryManager::getRecentFiles(int limit) {
+    if (!connectToDatabase()) {
+        return QVector<FileHistory>();
+    }
     return FileHistory::getAllRecords(*db_, limit);
 }
+

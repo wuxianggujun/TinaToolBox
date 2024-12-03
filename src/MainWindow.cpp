@@ -280,7 +280,7 @@ void MainWindow::onFileDoubleClicked(const QTreeWidgetItem* item) {
 }
 
 void MainWindow::loadFileHistory() {
-    FileHistoryManager fileHistoryManager;
+    auto& fileHistoryManager = FileHistoryManager::getInstance();  // 使用 getInstance
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
 
     // 清空现有的文件树
@@ -311,34 +311,6 @@ void MainWindow::loadFileHistory() {
 
         // 存储完整文件路径作为用户数据
         item->setData(0, Qt::UserRole, file.filePath);
-
-        /*// 添加双击打开文件的功能
-        connect(fileTree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item) {
-            if (QString filePath = item->data(0, Qt::UserRole).toString(); !filePath.isEmpty()) {
-                QFileInfo fileInfo(filePath);
-                if (fileInfo.exists()) {
-                    QString extension = fileInfo.suffix().toLower();
-                    if (extension == "xlsx" || extension == "xls") {
-                        openExcelFile(filePath, false); // false 表示不更新历史记录
-                    } else if (QStringList{"txt", "md", "py", "json", "xml", "yaml", "yml"}
-                        .contains(extension)) {
-                        openTextFile(filePath);
-                    }else if (extension == "pdf") {
-                        openPdfFile(filePath);
-                    }else
-                    {
-                        spdlog::warn("当前不支持打开该文件!");
-                    }
-                } else {
-                    // 文件不存在，从历史记录中删除
-                    FileHistoryManager fileHistoryManager;
-                    fileHistoryManager.deleteFileHistory(filePath);
-                    delete item; // 从树中删除项
-                    QMessageBox::warning(this, tr("文件不存在"),
-                                         tr("文件 %1 不存在或已被移动/删除").arg(filePath));
-                }
-            }
-        });*/
     }
 }
 
@@ -431,13 +403,33 @@ void MainWindow::setupConnections() {
 }
 
 void MainWindow::updateFileHistory(const QString &filePath) {
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    auto& fileHistoryManager = FileHistoryManager::getInstance();  // 使用 getInstance
+    FileHistory existingRecord = fileHistoryManager.getFileHistory(filePath);
+    if (existingRecord.filePath.isEmpty()) {
+        if (!fileHistoryManager.addFileHistory(filePath)) {
+            spdlog::error("Failed to add file to history: {}", filePath.toStdString());
+            return;
+        }
+    }else {
+        // 如果记录存在，更新记录
+        if (!fileHistoryManager.updateFileHistory(filePath)) {
+            spdlog::error("Failed to update file history: {}", filePath.toStdString());
+            return;
+        }
+    }
+    // 更新文件树显示
+    updateFileTree();
 }
 
 void MainWindow::updateFileTree() {
     fileTree->clear();
 
     // 从数据库获取最近文件记录
-    FileHistoryManager fileHistoryManager;
+    auto& fileHistoryManager = FileHistoryManager::getInstance();  // 使用 getInstance
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
 
     for (const auto &file: recentFiles) {

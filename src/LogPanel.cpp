@@ -158,14 +158,33 @@ LogPanel::~LogPanel() {
 }
 
 void LogPanel::setupLogHandlers() {
-    // 创建并注册自定义sink
-    sink_ = std::make_shared<LogPanelSink<std::mutex> >(this);
+    // 1. 只保留一个日志输出途径
+    sink_ = std::make_shared<LogPanelSink<std::mutex>>(this);
     auto logger = spdlog::default_logger();
     logger->sinks().clear();
     logger->sinks().push_back(sink_);
-
-    // 设置Qt消息处理器
-    qInstallMessageHandler(qtMessageHandler);
+    
+    // 2. 设置 spdlog 作为 Qt 消息的处理器
+    qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+        // 将 Qt 消息转发给 spdlog
+        switch (type) {
+            case QtDebugMsg:
+                spdlog::debug(msg.toStdString());
+                break;
+            case QtInfoMsg:
+                spdlog::info(msg.toStdString());
+                break;
+            case QtWarningMsg:
+                spdlog::warn(msg.toStdString());
+                break;
+            case QtCriticalMsg:
+                spdlog::error(msg.toStdString());
+                break;
+            case QtFatalMsg:
+                spdlog::critical(msg.toStdString());
+                break;
+        }
+    });
 }
 
 void LogPanel::appendLog(const QString &text) {

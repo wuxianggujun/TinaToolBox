@@ -32,9 +32,12 @@ public:
 
 class FileHistoryManager {
 public:
-    explicit FileHistoryManager(const QString& dbPath = "file_history.db");
-    ~FileHistoryManager();
+    static FileHistoryManager& getInstance();
 
+    // 删除拷贝构造和赋值操作
+    FileHistoryManager(const FileHistoryManager&) = delete;
+    FileHistoryManager& operator=(const FileHistoryManager&) = delete;
+    
     bool addFileHistory(const QString& filePath);
     bool updateFileHistory(const QString& filePath);
     bool deleteFileHistory(const QString& filePath);
@@ -42,10 +45,17 @@ public:
     QVector<FileHistory> getRecentFiles(int limit = 10);
 
 private:
+    FileHistoryManager();
+    ~FileHistoryManager();
+    
     bool initDatabase();
+    
     QString getDatabasePath() const;
 
+    bool connectToDatabase();
+    
     std::unique_ptr<QSqlDatabase> db_;
+    bool isConnected_;
 };
 
 
