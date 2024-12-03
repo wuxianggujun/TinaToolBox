@@ -67,6 +67,8 @@ public:
 
     [[nodiscard]] QWidget *currentView() const;
 
+    void closeAllDocuments();
+    
 signals:
     void fileOpened(const QString &filePath);
 
@@ -82,6 +84,8 @@ private:
         QWidget* view;
         std::shared_ptr<IDocumentHandler> handler;
     };
+
+    bool canCloseDocument(int index) const;
     
     QWidget *createDocumentView(const QString &filePath);
     

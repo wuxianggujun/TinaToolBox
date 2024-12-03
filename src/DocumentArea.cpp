@@ -132,6 +132,18 @@ QWidget *DocumentArea::currentView() const {
     return tab_widget_->currentWidget();
 }
 
+void DocumentArea::closeAllDocuments() {
+    for (int i = tab_widget_->count() - 1; i >= 0; --i) {
+        if (canCloseDocument(i)) {
+            closeFile(i);
+        }
+    }
+}
+
+bool DocumentArea::canCloseDocument(int index) const {
+    return true;
+}
+
 QWidget *DocumentArea::createDocumentView(const QString &filePath) {
     QFileInfo file_info(filePath);
     QString extension = file_info.suffix().toLower();
@@ -144,53 +156,3 @@ QWidget *DocumentArea::createDocumentView(const QString &filePath) {
     openDocuments_[filePath].handler = handler;
     return handler->createView(this);
 }
-
-
-// void DocumentArea::closeTab(int index) {
-//     ExceptionHandler handler("关闭标签页失败");
-//     handler([this, index]() {
-//         QWidget *widget = tab_widget_->widget(index);
-//         if (!widget) {
-//             spdlog::warn("Attempting to close null widget at index {}", index);
-//             return false;
-//         }
-//
-//         QString filePath;
-//         // 查找对应的文件路径
-//         for (auto it = documents_.begin(); it != documents_.end(); ++it) {
-//             if (it.value() == widget) {
-//                 filePath = it.key();
-//                 break;
-//             }
-//         }
-//
-//         // 从映射中移除
-//         if (!filePath.isEmpty()) {
-//             documents_.remove(filePath);
-//         }
-//
-//         // 先从标签页移除
-//         tab_widget_->removeDocumentTab(index);
-//
-//         // 使用智能指针确保资源正确释放
-//         std::shared_ptr<QWidget> widgetPtr(widget, [](QWidget *w) {
-//             ExceptionHandler cleanupHandler("清理widget资源失败");
-//             cleanupHandler([w]() {
-//                 if (auto *docTab = qobject_cast<DocumentTab *>(w)) {
-//                     if (auto *pdfViewer = docTab->getPdfViewer()) {
-//                         pdfViewer->closeDocument();
-//                     }
-//                 }
-//                 w->deleteLater();
-//                 return true;
-//             });
-//         });
-//
-//         // 使用QTimer延迟删除
-//         QTimer::singleShot(0, [widgetPtr]() {
-//             // 智能指针会在这里自动调用删除器
-//         });
-//
-//         return true;
-//     });
-// }

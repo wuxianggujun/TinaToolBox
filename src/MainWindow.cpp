@@ -46,6 +46,9 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+    if (documentArea) {
+        documentArea->closeAllDocuments();
+    }
     // 在程序退出时清理PDFium库
     PdfViewer::PDFiumLibrary::Destroy();
 }
@@ -468,7 +471,7 @@ void MainWindow::updateFileTree() {
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (obj == this) {
         if (event->type() == QEvent::MouseMove) {
-            QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+            auto *mouseEvent = static_cast<QMouseEvent *>(event);
             return false;
         } else if (event->type() == QEvent::Leave) {
             return false;
