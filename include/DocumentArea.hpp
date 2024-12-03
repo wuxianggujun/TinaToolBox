@@ -29,22 +29,11 @@ class DocumentTab : public QWidget {
 public:
     explicit DocumentTab(QString filePath, QWidget *parent = nullptr);
 
-    QPlainTextEdit *setupTextView();
-
-    MergedTableView *setupExcelView();
-
-    PdfViewer *setupPdfView();
-
-    PdfViewer *getPdfViewer() const { return pdf_view_; }
-
     void moveSheetTabs(bool showAtTop);
 
-    QString getFilePath() const { return file_path_; }
+    [[nodiscard]] QString getFilePath() const { return file_path_; }
 
-    QWidget *getToolBar() const { return toolbar_; }
-
-private slots:
-    void changeSheet(int index);
+    [[nodiscard]] QWidget *getToolBar() const { return toolbar_; }
 
 private:
     void runScript() const;
@@ -57,21 +46,10 @@ private:
     // 添加工具栏
     QWidget *toolbar_{};
     RunButton *run_button_{};
-
-    // 视图组件
-    MergedTableView *table_view_{nullptr};
-    LineNumberTextEdit *text_edit_{nullptr};
-    PdfViewer *pdf_view_{nullptr};
-    TableModel *table_model_{nullptr};
-
     // Excel处理器
     std::unique_ptr<ExcelProcessor> excel_processor_{nullptr};
 };
 
-inline void DocumentTab::runScript() const {
-    // TODO: 实现脚本运行逻辑
-    qDebug() << "Running script:" << file_path_;
-}
 
 class DocumentArea : public QWidget {
     Q_OBJECT
@@ -85,9 +63,9 @@ public:
     void closeFile(int index);
 
     // 获取当前文档
-    QString currentFilePath() const;
+    [[nodiscard]] QString currentFilePath() const;
 
-    QWidget *currentView() const;
+    [[nodiscard]] QWidget *currentView() const;
 
 signals:
     void fileOpened(const QString &filePath);

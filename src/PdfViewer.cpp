@@ -28,7 +28,10 @@ PdfViewer::PdfViewer(QWidget *parent)
 }
 
 PdfViewer::~PdfViewer() {
-    closeDocument();
+    std::lock_guard<std::mutex> lock(cleanupMutex_);
+    if (!isCleaningUp_) {
+        closeDocument();
+    }
 };
 
 void PdfViewer::setupUI() {
@@ -163,52 +166,15 @@ bool PdfViewer::loadPage(int pageIndex) {
 }
 
 void PdfViewer::closeDocument() {
+    std::lock_guard<std::mutex> lock(cleanupMutex_);
+    if (isCleaningUp_) {
+        return;
+    }
+    isCleaningUp_ = true;
+
     ExceptionHandler handler("清理PDF文档资源失败");
     handler([this]() {
-
-        if (!document_) {
-            return false;
-        }
-
-        spdlog::info("开始清理PDF文档资源");
-
-        // 1. 关闭当前页面
-        if (currentPage_) {
-            spdlog::info("关闭当前页面");
-            FORM_DoPageAAction(currentPage_, formHandle_, FPDFPAGE_AACTION_CLOSE);
-            FORM_OnBeforeClosePage(currentPage_, formHandle_);
-            FPDF_ClosePage(currentPage_);
-            currentPage_ = nullptr;
-        }
-
-        // 2. 执行文档关闭操作并清理表单环境
-        if (formHandle_) {
-            spdlog::info("执行文档关闭动作");
-            FORM_DoDocumentAAction(formHandle_, FPDFDOC_AACTION_WC);
-
-            spdlog::info("清理表单环境");
-            FPDFDOC_ExitFormFillEnvironment(formHandle_);
-            formHandle_ = nullptr;
-        }
-
-        // 3. 关闭文档
-        if (document_) {
-            spdlog::info("关闭文档");
-            FPDF_CloseDocument(document_);
-            document_ = nullptr;
-        }
-
-        pageCount_ = 0;
-        currentPage_ = nullptr;
-
-        spdlog::info("PDF文档资源清理完成");
-
-
-        // 重置状态和UI
-        currentPage_ = 0;
-        pageCount_ = 0;
-        zoomFactor_ = 1.0;
-
+        // 重置UI状态
         if (pageLabel_) {
             pageLabel_->clear();
         }
@@ -222,7 +188,34 @@ void PdfViewer::closeDocument() {
         if (zoomInButton_) zoomInButton_->setEnabled(false);
         if (zoomOutButton_) zoomOutButton_->setEnabled(false);
 
-        spdlog::info("PDF文档资源清理完成");
+        // 按照正确的顺序清理PDFium资源
+        if (currentPage_) {
+            if (formHandle_) {
+                FORM_DoPageAAction(currentPage_, formHandle_, FPDFPAGE_AACTION_CLOSE);
+                FORM_OnBeforeClosePage(currentPage_, formHandle_);
+            }
+            FPDF_ClosePage(currentPage_);
+            currentPage_ = nullptr;
+        }
+
+        if (formHandle_) {
+            FORM_DoDocumentAAction(formHandle_, FPDFDOC_AACTION_WC);
+            FPDFDOC_ExitFormFillEnvironment(formHandle_);
+            formHandle_ = nullptr;
+        }
+
+        if (document_) {
+            FPDF_CloseDocument(document_);
+            document_ = nullptr;
+        }
+
+        // 重置其他状态
+        pageCount_ = 0;
+        currentPageIndex_ = 0;
+        zoomFactor_ = 1.0;
+        searchResults_.clear();
+        currentSearchIndex_ = 0;
+        searchText_.clear();
 
         return true;
         });

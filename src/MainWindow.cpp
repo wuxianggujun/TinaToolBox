@@ -478,9 +478,5 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    // Cleanup and save any necessary state
-    if (logPanel) {
-        // logPanel->cleanup();
-    }
     event->accept();
 }

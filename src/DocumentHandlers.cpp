@@ -23,12 +23,11 @@ QString PdfDocumentHandler::getFileTypeName() const {
 
 void PdfDocumentHandler::cleanup(QWidget *view) {
     if (auto* pdfViewer = qobject_cast<PdfViewer*>(view)) {
-        // 先关闭PDF文档
-        pdfViewer->closeDocument();
-
-        if (pdfViewer) {
+        // 确保在主线程中执行清理
+        QMetaObject::invokeMethod(pdfViewer, [pdfViewer]() {
+            pdfViewer->closeDocument();
             pdfViewer->deleteLater();
-        }
+            }, Qt::QueuedConnection);
     }
 }
 

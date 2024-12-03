@@ -126,6 +126,9 @@ private:
     void highlightSearchResults(QPainter &painter, const QRectF &rect);
 
     void renderSearchResults(QImage &image);
+
+    bool isCleaningUp_ = false;
+    std::mutex cleanupMutex_;
 };
 
 
