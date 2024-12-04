@@ -73,20 +73,27 @@ source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${RC_FILES})
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${UI_FILES})
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${RESOURCES})
 
+find_path(SIMPLEINI_INCLUDE_DIRS "ConvertUTF.c")
 find_package(unofficial-skia CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(pybind11 CONFIG)
 
 target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
+        ${SIMPLEINI_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}/include
-        ${PDFium_INCLUDE_DIRS})
+        ${PDFium_INCLUDE_DIRS}
+        ${Python3_INCLUDE_DIRS})
+
 target_compile_features(TinaToolBox PRIVATE cxx_std_20)
 
 target_link_libraries(TinaToolBox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Network
         Qt${QT_VERSION_MAJOR}::Sql)
 
-target_link_libraries(TinaToolBox PRIVATE 
+target_link_libraries(TinaToolBox PRIVATE
+        Python3::Python
         spdlog::spdlog 
         unofficial::skia::skia
         pdfium)

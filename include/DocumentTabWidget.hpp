@@ -20,7 +20,9 @@ public:
     int addDocumentTab(QWidget* widget, const QString& label);
     void removeDocumentTab(int index);
     QWidget* currentDocument() const;
-
+signals:
+    void runButtonStateChanged(bool isRunning);
+    
 protected:
     void showEvent(QShowEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
@@ -28,7 +30,6 @@ protected:
     QSize minimumSizeHint() const override;
 
 private:
-
     /*QWidget *tabBarContainer_;
     QHBoxLayout *tabBarLayout_;*/
     RunButton *runButton_;

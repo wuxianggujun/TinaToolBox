@@ -36,8 +36,6 @@ public:
     [[nodiscard]] QWidget *getToolBar() const { return toolbar_; }
 
 private:
-    void runScript() const;
-
     QString file_path_;
     QVBoxLayout *layout_;
     QStackedWidget *stacked_widget_;
@@ -68,6 +66,8 @@ public:
     [[nodiscard]] QWidget *currentView() const;
 
     void closeAllDocuments();
+
+    [[nodiscard]] DocumentTabWidget* getTabWidget() const { return tab_widget_; }
     
 signals:
     void fileOpened(const QString &filePath);
@@ -77,6 +77,8 @@ signals:
     void currentFileChanged(const QString &filePath);
 
     void error(const QString &message);
+
+  
 
 private:
 

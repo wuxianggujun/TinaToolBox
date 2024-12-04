@@ -1,27 +1,21 @@
 #include "MainWindow.hpp"
 
 #include <QApplication>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QSqlTableModel>
 #include <QFileDialog>
 #include <QDebug>
 #include <QMenu>
-#include <QMenuBar>
 #include <QStackedWidget>
 #include <QMdiSubWindow>
-#include <QPushButton>
 #include <QClipboard>
 #include "LogPanel.hpp"
 #include <QCloseEvent>
-
 #include "DocumentArea.hpp"
 #include "FileHistory.hpp"
 #include "ExceptionHandler.hpp"
 #include "LineNumberTextEdit.hpp"
 #include "PdfViewer.hpp"
 #include "DocumentHandler.hpp"
+#include "SimpleIni.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -175,10 +169,14 @@ void MainWindow::setUpUI() {
     connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
     connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
 
-
     DocumentHandlerFactory::registerHandler(std::make_shared<PdfDocumentHandler>());
     DocumentHandlerFactory::registerHandler(std::make_shared<TextDocumentHandler>());
 
+    bool success = manager_.initialize("venv/Lib/site-packages");
+    if (!success) {
+        spdlog::error("Failed to initialize Python environment.");
+        return;
+    }
 
     setupConnections();
 }
@@ -268,8 +266,8 @@ void MainWindow::toggleMaximize() {
     }
 }
 
-void MainWindow::onFileDoubleClicked(const QTreeWidgetItem* item) {
-    QString filePath = item->data(0,Qt::UserRole).toString();
+void MainWindow::onFileDoubleClicked(const QTreeWidgetItem *item) {
+    QString filePath = item->data(0, Qt::UserRole).toString();
     if (!filePath.isEmpty()) {
         if (documentArea) {
             documentArea->openFile(filePath);
@@ -279,8 +277,25 @@ void MainWindow::onFileDoubleClicked(const QTreeWidgetItem* item) {
     }
 }
 
+void MainWindow::onRunButtonStateChanged(bool isRunning) {
+   auto success = manager_.addScript("/path/to/myscript.py", "/path/to/requirements.txt");
+    if (!success) {
+        spdlog::error("Failed to add script and dependencies.");
+        return;
+    }
+    spdlog::info("Run button state changed: {}", isRunning);
+    
+    success = manager_.runScript("/path/to/myscript.py", "config.ini");
+    if (!success) {
+        spdlog::error("Failed to run script.");
+        return;
+    } else {
+        spdlog::info("Script result:");
+    }
+}
+
 void MainWindow::loadFileHistory() {
-    auto& fileHistoryManager = FileHistoryManager::getInstance();  // 使用 getInstance
+    auto &fileHistoryManager = FileHistoryManager::getInstance(); // 使用 getInstance
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
 
     // 清空现有的文件树
@@ -390,6 +405,9 @@ void MainWindow::setupConnections() {
 
     connect(documentArea, &DocumentArea::fileOpened, this, &MainWindow::updateFileHistory);
 
+    connect(documentArea->getTabWidget(), &DocumentTabWidget::runButtonStateChanged, this,
+            &MainWindow::onRunButtonStateChanged);
+
     connect(documentArea, &DocumentArea::currentFileChanged, this, [this](const QString &filePath) {
         // 更新UI状态，如工具栏等
         updateUIState();
@@ -397,9 +415,8 @@ void MainWindow::setupConnections() {
 
     if (fileTree) {
         connect(fileTree, &QTreeWidget::itemDoubleClicked,
-        this, &MainWindow::onFileDoubleClicked);
+                this, &MainWindow::onFileDoubleClicked);
     }
-    
 }
 
 void MainWindow::updateFileHistory(const QString &filePath) {
@@ -407,14 +424,14 @@ void MainWindow::updateFileHistory(const QString &filePath) {
         return;
     }
 
-    auto& fileHistoryManager = FileHistoryManager::getInstance();  // 使用 getInstance
+    auto &fileHistoryManager = FileHistoryManager::getInstance(); // 使用 getInstance
     FileHistory existingRecord = fileHistoryManager.getFileHistory(filePath);
     if (existingRecord.filePath.isEmpty()) {
         if (!fileHistoryManager.addFileHistory(filePath)) {
             spdlog::error("Failed to add file to history: {}", filePath.toStdString());
             return;
         }
-    }else {
+    } else {
         // 如果记录存在，更新记录
         if (!fileHistoryManager.updateFileHistory(filePath)) {
             spdlog::error("Failed to update file history: {}", filePath.toStdString());
@@ -429,7 +446,7 @@ void MainWindow::updateFileTree() {
     fileTree->clear();
 
     // 从数据库获取最近文件记录
-    auto& fileHistoryManager = FileHistoryManager::getInstance();  // 使用 getInstance
+    auto &fileHistoryManager = FileHistoryManager::getInstance(); // 使用 getInstance
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
 
     for (const auto &file: recentFiles) {

@@ -28,12 +28,6 @@ DocumentTab::DocumentTab(QString filePath, QWidget *parent): QWidget(parent), fi
 void DocumentTab::moveSheetTabs(bool showAtTop) {
 }
 
-inline void DocumentTab::runScript() const {
-    // TODO: 实现脚本运行逻辑
-    qDebug() << "Running script:" << file_path_;
-}
-
-
 DocumentArea::DocumentArea(QWidget *parent): QWidget(parent) {
     layout_ = new QVBoxLayout(this);
     layout_->setContentsMargins(0, 0, 0, 0);

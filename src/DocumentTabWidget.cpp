@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QHBoxLayout>
 #include <QWidget>
+#include <spdlog/spdlog.h>
 
 void DocumentTabWidget::showEvent(QShowEvent* event) {
     QTabWidget::showEvent(event);
@@ -63,6 +64,8 @@ DocumentTabWidget::DocumentTabWidget(QWidget *parent): QTabWidget(parent) {
     // 将按钮添加到布局中，并设置垂直居中对齐
     cornerLayout->addWidget(runButton_, 0, Qt::AlignVCenter);
     cornerWidget->setFixedHeight(35);
+
+    connect(runButton_,&RunButton::stateChanged,this,&DocumentTabWidget::runButtonStateChanged);
     
     // 设置corner widget
     setCornerWidget(cornerWidget, Qt::TopRightCorner);

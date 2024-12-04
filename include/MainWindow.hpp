@@ -13,6 +13,7 @@
 #include <QTreeWidgetItem>
 #include "DocumentHandler.hpp"
 #include "MainWindowMenuBar.hpp"
+#include "PythonScriptManager.hpp"
 
 class LogPanel;
 class DocumentArea;
@@ -51,6 +52,8 @@ private slots:
 
     void onFileDoubleClicked(const QTreeWidgetItem* item);
 
+    void onRunButtonStateChanged(bool isRunning);
+    
 private:
     bool isTitleBarArea(const QPoint& pos) const;
 
@@ -73,7 +76,7 @@ private:
     void updateFileTree();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
-
+    
 private:
     QPoint dragPosition;
     bool isDragging = false;
@@ -95,6 +98,9 @@ private:
     LogPanel *logPanel;
     QPushButton *maxButton;
     QSplitter *bottomSplitter;
+
+    PythonScriptManager manager_;
+
 };
 
 #endif // TINA_TOOL_BOX_MAINWINDOW_HPP
