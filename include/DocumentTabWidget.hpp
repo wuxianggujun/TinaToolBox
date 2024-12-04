@@ -24,7 +24,7 @@ signals:
     void runButtonStateChanged(bool isRunning);
     
 protected:
-    void showEvent(QShowEvent* event) override;
+    void showEvent(QShowEvent* event) override; 
     void resizeEvent(QResizeEvent* event) override;
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;

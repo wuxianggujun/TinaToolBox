@@ -12,7 +12,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
@@ -79,6 +79,9 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG)
 
+message(STATUS "Python Include_dirs: ${Python3_INCLUDE_DIRS}")
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
 target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
         ${SIMPLEINI_INCLUDE_DIRS}
@@ -86,7 +89,7 @@ target_include_directories(TinaToolBox PRIVATE
         ${PDFium_INCLUDE_DIRS}
         ${Python3_INCLUDE_DIRS})
 
-target_compile_features(TinaToolBox PRIVATE cxx_std_20)
+target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
 target_link_libraries(TinaToolBox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Network

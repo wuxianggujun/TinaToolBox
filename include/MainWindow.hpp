@@ -1,6 +1,7 @@
 #ifndef TINA_TOOL_BOX_MAINWINDOW_HPP
 #define TINA_TOOL_BOX_MAINWINDOW_HPP
 
+#include "PythonScriptManager.hpp"
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QSplitter>
@@ -13,7 +14,7 @@
 #include <QTreeWidgetItem>
 #include "DocumentHandler.hpp"
 #include "MainWindowMenuBar.hpp"
-#include "PythonScriptManager.hpp"
+
 
 class LogPanel;
 class DocumentArea;

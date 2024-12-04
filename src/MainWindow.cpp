@@ -172,7 +172,7 @@ void MainWindow::setUpUI() {
     DocumentHandlerFactory::registerHandler(std::make_shared<PdfDocumentHandler>());
     DocumentHandlerFactory::registerHandler(std::make_shared<TextDocumentHandler>());
 
-    bool success = manager_.initialize("venv/Lib/site-packages");
+    bool success = manager_.initialize("C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/scripts");
     if (!success) {
         spdlog::error("Failed to initialize Python environment.");
         return;
