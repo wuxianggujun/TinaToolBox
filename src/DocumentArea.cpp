@@ -153,7 +153,6 @@ QWidget *DocumentArea::createDocumentView(const QString &filePath) {
 void DocumentArea::showSettingsPanel() {
     if (!settingsPanel_) {
         settingsPanel_ = new SettingsPanel(this);
-        tab_widget_->addDocumentTab(settingsPanel_, "设置");
     }
     
     // 查找设置面板的索引
@@ -163,5 +162,6 @@ void DocumentArea::showSettingsPanel() {
     } else {
         // 如果找不到，重新添加
         tab_widget_->addDocumentTab(settingsPanel_, "设置");
+        tab_widget_->tabBar()->setTabButton(index, QTabBar::RightSide, nullptr);
     }
 }

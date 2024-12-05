@@ -9,6 +9,9 @@
 #include <QWidget>
 #include <spdlog/spdlog.h>
 
+#include "SettingsPanel.hpp"
+
+
 void DocumentTabWidget::showEvent(QShowEvent* event) {
     QTabWidget::showEvent(event);
 }
@@ -65,8 +68,28 @@ DocumentTabWidget::DocumentTabWidget(QWidget *parent): QTabWidget(parent) {
     cornerLayout->addWidget(runButton_, 0, Qt::AlignVCenter);
     cornerWidget->setFixedHeight(35);
 
-    connect(runButton_,&RunButton::stateChanged,this,&DocumentTabWidget::runButtonStateChanged);
-    
+    connect(runButton_,&RunButton::stateChanged,this,[this](bool running)
+    {
+            if (count() > 0 && currentIndex() >= 0)
+            {
+                QWidget* currentDoc = currentWidget();
+                if (currentDoc && !qobject_cast<SettingsPanel*>(currentDoc))
+                {
+                    emit runButtonStateChanged(true);
+                }
+            }
+    });
+
+    connect(this, &QTabWidget::currentChanged, this, [this](int index)
+    {
+    	// 只在当前标签页是可编辑文档时显示运行按钮
+	    if (runButton_)
+	    {
+		    bool isSettingTab = (widget(index) && qobject_cast<SettingsPanel*>(widget(index)));
+            runButton_->setVisible(!isSettingTab);
+	    }
+    });
+
     // 设置corner widget
     setCornerWidget(cornerWidget, Qt::TopRightCorner);
 }

@@ -249,7 +249,7 @@ void MainWindow::createTileBar() {
     connect(m_menuBar, &MainWindowMenuBar::closeClicked, this, &MainWindow::close);
     connect(m_menuBar, &MainWindowMenuBar::menuActionTriggered, this, &MainWindow::handleMenuAction);
 }
-inline void MainWindow::onSettingsClicked() {
+void MainWindow::onSettingsClicked() {
     if (documentArea) {
         documentArea->showSettingsPanel();
     }

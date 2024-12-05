@@ -22,7 +22,8 @@ public:
     QWidget* currentDocument() const;
 signals:
     void runButtonStateChanged(bool isRunning);
-    
+
+
 protected:
     void showEvent(QShowEvent* event) override; 
     void resizeEvent(QResizeEvent* event) override;

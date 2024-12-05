@@ -94,7 +94,7 @@ private:
     
     QWidget *createDocumentView(const QString &filePath);
 
-    SettingsPanel* settingsPanel_;
+    SettingsPanel* settingsPanel_{ nullptr };
     
     QVBoxLayout *layout_;
     DocumentTabWidget *tab_widget_;
