@@ -14,6 +14,7 @@
 #include <QTreeWidgetItem>
 #include "DocumentHandler.hpp"
 #include "MainWindowMenuBar.hpp"
+#include "Tokenizer.hpp"
 
 
 class LogPanel;
@@ -100,7 +101,7 @@ private:
     QPushButton *maxButton;
     QSplitter *bottomSplitter;
 
-    PythonScriptManager manager_;
+    // PythonScriptManager manager_;
 
 };
 

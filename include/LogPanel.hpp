@@ -78,6 +78,10 @@ private:
     std::shared_ptr<LogPanelSink<std::mutex>> sink_;
     static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
     static LogPanel* instance_;
+
+    static std::streambuf* oldCoutBuf;
+    static std::streambuf* oldCerrBuf;
+    
 };
 
 #endif //TINA_TOOL_BOX_LOG_PANEL_HPP

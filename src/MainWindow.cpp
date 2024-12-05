@@ -171,13 +171,7 @@ void MainWindow::setUpUI() {
 
     DocumentHandlerFactory::registerHandler(std::make_shared<PdfDocumentHandler>());
     DocumentHandlerFactory::registerHandler(std::make_shared<TextDocumentHandler>());
-
-    bool success = manager_.initialize("C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/scripts");
-    if (!success) {
-        spdlog::error("Failed to initialize Python environment.");
-        return;
-    }
-
+    
     setupConnections();
 }
 
@@ -278,19 +272,24 @@ void MainWindow::onFileDoubleClicked(const QTreeWidgetItem *item) {
 }
 
 void MainWindow::onRunButtonStateChanged(bool isRunning) {
-   auto success = manager_.addScript("/path/to/myscript.py", "/path/to/requirements.txt");
-    if (!success) {
-        spdlog::error("Failed to add script and dependencies.");
+
+    FILE* fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)","r");
+    if (!fh) {
+   qDebug() << "Failed to open file";
         return;
     }
-    spdlog::info("Run button state changed: {}", isRunning);
-    
-    success = manager_.runScript("/path/to/myscript.py", "config.ini");
-    if (!success) {
-        spdlog::error("Failed to run script.");
-        return;
-    } else {
-        spdlog::info("Script result:");
+    fseek(fh, 0, SEEK_END);
+    size_t fileSize = ftell(fh);
+    fseek(fh, 0, SEEK_SET);
+    std::string fileContents(fileSize, ' ');
+    fread(fileContents.data(), 1, fileSize, fh);
+
+    spdlog::info(fileContents);
+    simpleparser::Tokenizer tokenizer;
+    std::vector<simpleparser::Token> tokens = tokenizer.parse(fileContents);
+
+    for(const simpleparser::Token& currToken : tokens) {
+        currToken.debugPrint();
     }
 }
 

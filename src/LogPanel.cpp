@@ -4,6 +4,7 @@
 
 #include "LogPanel.hpp"
 
+#include <iostream>
 #include <QDateTime>
 #include <QTextBlock>
 #include <QScrollBar>
@@ -12,6 +13,8 @@
 #include <spdlog/pattern_formatter.h>
 
 LogPanel *LogPanel::instance_ = nullptr;
+std::streambuf* LogPanel::oldCoutBuf = nullptr;
+std::streambuf* LogPanel::oldCerrBuf = nullptr;
 
 template<typename Mutex>
 void LogPanelSink<Mutex>::sink_it_(const spdlog::details::log_msg &msg) {
@@ -185,6 +188,43 @@ void LogPanel::setupLogHandlers() {
                 break;
         }
     });
+
+    // 3. 重定向 std::cout 和 std::cerr
+    static std::streambuf* oldCoutBuf = std::cout.rdbuf();
+    static std::streambuf* oldCerrBuf = std::cerr.rdbuf();
+
+    // 创建自定义的 streambuf
+    class LogBuf : public std::streambuf {
+    protected:
+        std::string buffer;
+        bool isError;
+
+        int_type overflow(int_type c) override {
+            if (c != EOF) {
+                if (c == '\n') {
+                    if (isError) {
+                        spdlog::error(buffer);
+                    } else {
+                        spdlog::info(buffer);
+                    }
+                    buffer.clear();
+                } else {
+                    buffer += static_cast<char>(c);
+                }
+            }
+            return c;
+        }
+
+    public:
+        explicit LogBuf(bool error = false) : isError(error) {}
+    };
+
+    static LogBuf coutBuf(false);
+    static LogBuf cerrBuf(true);
+
+    // 重定向标准输出和错误输出
+    std::cout.rdbuf(&coutBuf);
+    std::cerr.rdbuf(&cerrBuf);
 }
 
 void LogPanel::appendLog(const QString &text) {
