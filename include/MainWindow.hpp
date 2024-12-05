@@ -38,7 +38,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) override;
 
     void closeEvent(QCloseEvent *event) override;
-
+    
 private slots:
     void handleMenuAction(const QString &actionName);
 
@@ -67,19 +67,21 @@ private:
 
     void openFile();
 
-   void updateUIState();
+    void updateScriptTree(const QString& filePath);
+    bool isScriptFile(const QString& filePath) const;
+    void handleScriptFileOpen(const QString& filePath);
+    void onScriptTreeItemDoubleClicked(const QTreeWidgetItem* item,int column);
+
+    void updateUIState();
 
     void setupConnections();
-
-    void saveFileHistory(const QString &filePath);
-
+    
     void updateFileHistory(const QString &filePath);
 
     void updateFileTree();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
     
-private:
     QPoint dragPosition;
     bool isDragging = false;
     MainWindowMenuBar *m_menuBar;

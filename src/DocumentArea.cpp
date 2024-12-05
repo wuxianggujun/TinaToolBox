@@ -117,12 +117,12 @@ void DocumentArea::closeFile(int index) {
 
 
 
-QString DocumentArea::currentFilePath() const {
+QString DocumentArea::getCurrentFilePath() const {
     QWidget *currentWidget = tab_widget_->currentWidget();
     return openDocuments_.keys().at(tab_widget_->indexOf(currentWidget));
 }
 
-QWidget *DocumentArea::currentView() const {
+QWidget *DocumentArea::getCurrentDocument() const {
     return tab_widget_->currentWidget();
 }
 

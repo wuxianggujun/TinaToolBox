@@ -61,9 +61,9 @@ public:
     void closeFile(int index);
 
     // 获取当前文档
-    [[nodiscard]] QString currentFilePath() const;
-
-    [[nodiscard]] QWidget *currentView() const;
+    [[nodiscard]] QString getCurrentFilePath() const;
+    
+    [[nodiscard]] QWidget *getCurrentDocument() const;
 
     void closeAllDocuments();
 

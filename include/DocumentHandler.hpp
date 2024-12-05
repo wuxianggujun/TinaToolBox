@@ -48,6 +48,19 @@ public:
     void cleanup(QWidget *view) override;
 };
 
+class ScriptDocumentHandler : public IDocumentHandler {
+public:
+    bool canHandle(const QString &fileType) const override;
+
+    QString getFileTypeName() const override;
+
+    QWidget * createView(QWidget *parent) override;
+
+    bool loadDocument(QWidget *view, const QString &filePath) override;
+
+    void cleanup(QWidget *view) override;
+};
+
 // 文档处理器工厂
 class DocumentHandlerFactory {
 public:

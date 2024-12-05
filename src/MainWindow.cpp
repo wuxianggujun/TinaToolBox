@@ -171,7 +171,8 @@ void MainWindow::setUpUI() {
 
     DocumentHandlerFactory::registerHandler(std::make_shared<PdfDocumentHandler>());
     DocumentHandlerFactory::registerHandler(std::make_shared<TextDocumentHandler>());
-    
+    DocumentHandlerFactory::registerHandler(std::make_shared<ScriptDocumentHandler>());
+
     setupConnections();
 }
 
@@ -273,9 +274,17 @@ void MainWindow::onFileDoubleClicked(const QTreeWidgetItem *item) {
 
 void MainWindow::onRunButtonStateChanged(bool isRunning) {
 
-    FILE* fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)","r");
+    if (!documentArea || !documentArea->getCurrentDocument()) return;
+    
+    QString currentFile = documentArea->getCurrentFilePath();
+    if (!isScriptFile(currentFile)) {
+        QMessageBox::warning(this, "无法执行","当前文件不是脚本文件");
+        return;
+    }
+    
+    FILE *fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)", "r");
     if (!fh) {
-   qDebug() << "Failed to open file";
+        qDebug() << "Failed to open file";
         return;
     }
     fseek(fh, 0, SEEK_END);
@@ -288,7 +297,7 @@ void MainWindow::onRunButtonStateChanged(bool isRunning) {
     simpleparser::Tokenizer tokenizer;
     std::vector<simpleparser::Token> tokens = tokenizer.parse(fileContents);
 
-    for(const simpleparser::Token& currToken : tokens) {
+    for (const simpleparser::Token &currToken: tokens) {
         currToken.debugPrint();
     }
 }
@@ -381,15 +390,54 @@ void MainWindow::showFileTreeContextMenu(const QPoint &pos) {
 
 void MainWindow::openFile() {
     QString filePath = QFileDialog::getOpenFileName(
-        this,
-        tr("打开文件"),
-        QString(),
-        tr("所有文件 (*.*)")
-    );
+       this,
+       tr("打开文件"),
+       QString(),
+       tr("所有文件 (*.*);;脚本文件 (*.ttd)")
+   );
     if (filePath.isEmpty()) return;
 
-    if (documentArea->openFile(filePath)) {
+    if (isScriptFile(filePath)) {
+        handleScriptFileOpen(filePath);
+    } else if (documentArea->openFile(filePath)) {
         updateFileHistory(filePath);
+    }
+}
+
+void MainWindow::updateScriptTree(const QString &filePath) {
+    QFileInfo fileInfo(filePath);
+
+    QList<QTreeWidgetItem *> items = scriptTree->findItems(
+        fileInfo.fileName(), Qt::MatchExactly, 0);
+
+    if (items.isEmpty()) {
+        auto *item = new QTreeWidgetItem(scriptTree);
+        item->setText(0, fileInfo.fileName());
+        item->setData(0, Qt::UserRole, fileInfo.filePath());
+        scriptTree->addTopLevelItem(item);
+    }
+}
+
+bool MainWindow::isScriptFile(const QString &filePath) const {
+    return QFileInfo(filePath).suffix().toLower() == "ttb";
+}
+
+void MainWindow::handleScriptFileOpen(const QString &filePath) {
+    updateScriptTree(filePath);
+    if (documentArea) {
+        documentArea->openFile(filePath);
+        updateFileHistory(filePath);
+        updateUIState();
+    }
+}
+
+void MainWindow::onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column) {
+    if (!item) return;
+
+    QString filePath = item->data(0, Qt::UserRole).toString();
+    if (!filePath.isEmpty()) {
+        documentArea->openFile(filePath);
+        updateUIState();
     }
 }
 
@@ -415,6 +463,10 @@ void MainWindow::setupConnections() {
     if (fileTree) {
         connect(fileTree, &QTreeWidget::itemDoubleClicked,
                 this, &MainWindow::onFileDoubleClicked);
+    }
+
+    if (scriptTree) {
+        connect(scriptTree, &QTreeWidget::itemDoubleClicked, this, &MainWindow::onScriptTreeItemDoubleClicked);
     }
 }
 

@@ -64,6 +64,43 @@ void TextDocumentHandler::cleanup(QWidget *view) {
     }
 }
 
+bool ScriptDocumentHandler::canHandle(const QString &fileType) const {
+    return fileType.toLower() == "ttb";
+}
+
+QString ScriptDocumentHandler::getFileTypeName() const {
+    return "SCRIPT";
+}
+
+QWidget * ScriptDocumentHandler::createView(QWidget *parent) {
+    return new LineNumberTextEdit(parent);
+}
+
+bool ScriptDocumentHandler::loadDocument(QWidget *view, const QString &filePath) {
+    auto* textEdit = qobject_cast<LineNumberTextEdit*>(view);
+    if (!textEdit) return false;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+
+    QTextStream in(&file);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    in.setEncoding(QStringConverter::Utf8);
+#else
+    in.setCodec("UTF-8");
+#endif
+    textEdit->setPlainText(in.readAll());
+    return true;
+}
+
+void ScriptDocumentHandler::cleanup(QWidget *view) {
+    if (view) {
+        view->deleteLater();
+    }
+}
+
 std::shared_ptr<IDocumentHandler> DocumentHandlerFactory::createHandler(const QString &fileType) {
     for (const auto& handler : handlers_) {
         if (handler->canHandle(fileType)) {
