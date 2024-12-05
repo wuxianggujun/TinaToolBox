@@ -38,7 +38,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) override;
 
     void closeEvent(QCloseEvent *event) override;
-    
+
 private slots:
     void handleMenuAction(const QString &actionName);
 
@@ -52,12 +52,12 @@ private slots:
 
     void showFileTreeContextMenu(const QPoint &pos);
 
-    void onFileDoubleClicked(const QTreeWidgetItem* item);
+    void onFileDoubleClicked(const QTreeWidgetItem *item);
 
     void onRunButtonStateChanged(bool isRunning);
-    
+
 private:
-    bool isTitleBarArea(const QPoint& pos) const;
+    bool isTitleBarArea(const QPoint &pos) const;
 
     void setUpUI();
 
@@ -66,22 +66,25 @@ private:
     void loadFileHistory();
 
     void openFile();
+    
+    bool isScriptFile(const QString &filePath) const;
 
-    void updateScriptTree(const QString& filePath);
-    bool isScriptFile(const QString& filePath) const;
-    void handleScriptFileOpen(const QString& filePath);
-    void onScriptTreeItemDoubleClicked(const QTreeWidgetItem* item,int column);
+    void handleScriptFileOpen(const QString &filePath);
+
+    void onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column);
 
     void updateUIState();
 
     void setupConnections();
-    
+
     void updateFileHistory(const QString &filePath);
 
     void updateFileTree();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
-    
+
+    void filterTreeItems(bool showScriptsOnly);
+
     QPoint dragPosition;
     bool isDragging = false;
     MainWindowMenuBar *m_menuBar;
@@ -94,7 +97,7 @@ private:
 
     QTabWidget *leftPanelTab;
     QTreeWidget *fileTree;
-    QTreeWidget *scriptTree;
+    QComboBox *viewModeComboBox;
     
     DocumentArea *documentArea;
     QStackedWidget *propertyStack;
@@ -102,9 +105,6 @@ private:
     LogPanel *logPanel;
     QPushButton *maxButton;
     QSplitter *bottomSplitter;
-
-    // PythonScriptManager manager_;
-
 };
 
 #endif // TINA_TOOL_BOX_MAINWINDOW_HPP

@@ -47,6 +47,7 @@ MainWindow::~MainWindow() {
     PdfViewer::PDFiumLibrary::Destroy();
 }
 
+
 void MainWindow::setUpUI() {
     createTileBar();
 
@@ -69,16 +70,65 @@ void MainWindow::setUpUI() {
     leftPanelLayout->setContentsMargins(0, 0, 0, 0);
     leftPanelLayout->setSpacing(0);
 
-    leftPanelTab = new QTabWidget();
-    leftPanelTab->setDocumentMode(true);
-    leftPanelTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    leftPanelTab->setStyleSheet(R"(
-        QTabBar::tab {
-            height: 35px;  /* 与工具栏高度一致 */
-        }
-    )");
-    leftPanelLayout->addWidget(leftPanelTab);
+    auto *toolBar = new QWidget();
+    toolBar->setStyleSheet(
+        "QWidget {"
+        "    background-color: #f5f5f5;"
+        "    border-top: 1px solid #e0e0e0;"
+        "}"
+    );
+    auto *toolBarLayout = new QHBoxLayout(toolBar);
+    toolBarLayout->setContentsMargins(5, 2, 5, 2);
 
+    auto* outputLabel = new QLabel("文件列表");
+    outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
+    toolBarLayout->addWidget(outputLabel);
+
+    
+    viewModeComboBox = new QComboBox();
+    viewModeComboBox->addItem("所有文件", "all");
+    viewModeComboBox->addItem("脚本文件", "scripts");
+    viewModeComboBox->setStyleSheet(
+        "QComboBox {"
+        "    background-color: white;"
+        "    border: 1px solid #cccccc;"
+        "    border-radius: 2px;"
+        "    padding: 2px 5px;"
+        "    min-width: 100px;"
+        "}"
+        "QComboBox:focus {"
+        "    border: 1px solid #0078d7;"
+        "}"
+        "QComboBox::drop-down {"
+        "    border: none;"
+        "    width: 20px;"
+        "}"
+        "QComboBox::down-arrow {"
+        "    width: 8px;"
+        "    height: 8px;"
+        "    background: none;"
+        "    border-top: 2px solid #666;"
+        "    border-right: 2px solid #666;"
+        "    margin-top: -2px;"
+        "}"
+        "QComboBox QAbstractItemView {"
+        "    border: 1px solid #cccccc;"
+        "    selection-background-color: #e5f3ff;"
+        "    selection-color: black;"
+        "    background-color: white;"
+        "    outline: 0px;"
+        "}"
+    );
+    
+    connect(viewModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index) {
+                filterTreeItems(index == 1); // 1 表示"脚本文件"选项
+            });
+    toolBarLayout->addWidget(viewModeComboBox);
+    toolBarLayout->addStretch();
+
+    leftPanelLayout->addWidget(toolBar);
+    
     fileTree = new QTreeWidget();
     fileTree->setHeaderLabels({"文件名", "修改日期", "类型", "大小"});
     fileTree->setColumnWidth(0, 200);
@@ -87,14 +137,26 @@ void MainWindow::setUpUI() {
     fileTree->setColumnWidth(3, 100);
     fileTree->setIndentation(0);
     fileTree->setMouseTracking(true);
+    fileTree->setContextMenuPolicy(Qt::CustomContextMenu);
+    fileTree->setStyleSheet(
+    "QTreeWidget {"
+    "    background-color: white;"
+    "    border: none;"
+    "}"
+    "QTreeWidget::item {"
+    "    height: 25px;"
+    "}"
+    "QTreeWidget::item:hover {"
+    "    background-color: #e5f3ff;"
+    "}"
+    "QTreeWidget::item:selected {"
+    "    background-color: #cce8ff;"
+    "}"
+);
 
-    scriptTree = new QTreeWidget();
-    scriptTree->setHeaderHidden(true);
+    leftPanelLayout->addWidget(fileTree);
 
-    leftPanelTab->addTab(fileTree, tr("文件"));
-    leftPanelTab->addTab(scriptTree, tr("脚本"));
-    // 设置标签栏自动扩展，使标签平分宽度
-    leftPanelTab->tabBar()->setExpanding(true);
+
 
     mainSplitter->addWidget(leftPanel);
 
@@ -273,15 +335,14 @@ void MainWindow::onFileDoubleClicked(const QTreeWidgetItem *item) {
 }
 
 void MainWindow::onRunButtonStateChanged(bool isRunning) {
-
     if (!documentArea || !documentArea->getCurrentDocument()) return;
-    
+
     QString currentFile = documentArea->getCurrentFilePath();
     if (!isScriptFile(currentFile)) {
-        QMessageBox::warning(this, "无法执行","当前文件不是脚本文件");
+        QMessageBox::warning(this, "无法执行", "当前文件不是脚本文件");
         return;
     }
-    
+
     FILE *fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)", "r");
     if (!fh) {
         qDebug() << "Failed to open file";
@@ -390,40 +451,42 @@ void MainWindow::showFileTreeContextMenu(const QPoint &pos) {
 
 void MainWindow::openFile() {
     QString filePath = QFileDialog::getOpenFileName(
-       this,
-       tr("打开文件"),
-       QString(),
-       tr("所有文件 (*.*);;脚本文件 (*.ttd)")
-   );
+        this,
+        tr("打开文件"),
+        QString(),
+        tr("所有文件 (*.*);;脚本文件 (*.ttd)")
+    );
     if (filePath.isEmpty()) return;
 
-    if (isScriptFile(filePath)) {
-        handleScriptFileOpen(filePath);
-    } else if (documentArea->openFile(filePath)) {
+    if (documentArea->openFile(filePath)) {
         updateFileHistory(filePath);
+        // 如果当前是脚本视图且打开的是非脚本文件，切换到所有文件视图
+        if (viewModeComboBox->currentIndex() == 1 && !isScriptFile(filePath)) {
+            viewModeComboBox->setCurrentIndex(0);
+        }
     }
 }
 
-void MainWindow::updateScriptTree(const QString &filePath) {
-    QFileInfo fileInfo(filePath);
-
-    QList<QTreeWidgetItem *> items = scriptTree->findItems(
-        fileInfo.fileName(), Qt::MatchExactly, 0);
-
-    if (items.isEmpty()) {
-        auto *item = new QTreeWidgetItem(scriptTree);
-        item->setText(0, fileInfo.fileName());
-        item->setData(0, Qt::UserRole, fileInfo.filePath());
-        scriptTree->addTopLevelItem(item);
-    }
-}
+// void MainWindow::updateScriptTree(const QString &filePath) {
+//     QFileInfo fileInfo(filePath);
+//
+//     QList<QTreeWidgetItem *> items = scriptTree->findItems(
+//         fileInfo.fileName(), Qt::MatchExactly, 0);
+//
+//     if (items.isEmpty()) {
+//         auto *item = new QTreeWidgetItem(scriptTree);
+//         item->setText(0, fileInfo.fileName());
+//         item->setData(0, Qt::UserRole, fileInfo.filePath());
+//         scriptTree->addTopLevelItem(item);
+//     }
+// }
 
 bool MainWindow::isScriptFile(const QString &filePath) const {
     return QFileInfo(filePath).suffix().toLower() == "ttb";
 }
 
 void MainWindow::handleScriptFileOpen(const QString &filePath) {
-    updateScriptTree(filePath);
+    // updateScriptTree(filePath);
     if (documentArea) {
         documentArea->openFile(filePath);
         updateFileHistory(filePath);
@@ -465,9 +528,9 @@ void MainWindow::setupConnections() {
                 this, &MainWindow::onFileDoubleClicked);
     }
 
-    if (scriptTree) {
+    /*if (scriptTree) {
         connect(scriptTree, &QTreeWidget::itemDoubleClicked, this, &MainWindow::onScriptTreeItemDoubleClicked);
-    }
+    }*/
 }
 
 void MainWindow::updateFileHistory(const QString &filePath) {
@@ -496,20 +559,13 @@ void MainWindow::updateFileHistory(const QString &filePath) {
 void MainWindow::updateFileTree() {
     fileTree->clear();
 
-    // 从数据库获取最近文件记录
-    auto &fileHistoryManager = FileHistoryManager::getInstance(); // 使用 getInstance
+    auto &fileHistoryManager = FileHistoryManager::getInstance();
     QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
 
     for (const auto &file: recentFiles) {
         auto *item = new QTreeWidgetItem(fileTree);
-
-        // 设置文件名
         item->setText(0, file.fileName);
-
-        // 设置修改日期
         item->setText(1, file.modifiedDate.toString("yyyy-MM-dd HH:mm:ss"));
-
-        // 设置文件类型
         item->setText(2, file.fileType.toUpper());
 
         // 设置文件大小
@@ -522,9 +578,12 @@ void MainWindow::updateFileTree() {
             sizeStr = QString("%1 MB").arg(file.fileSize / 1024.0 / 1024.0, 0, 'f', 2);
         }
         item->setText(3, sizeStr);
-
-        // 存储完整文件路径
         item->setData(0, Qt::UserRole, file.filePath);
+
+        // 如果当前是脚本视图，隐藏非脚本文件
+        if (viewModeComboBox->currentIndex() == 1 && !isScriptFile(file.filePath)) {
+            item->setHidden(true);
+        }
     }
 }
 
@@ -538,6 +597,20 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         }
     }
     return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::filterTreeItems(bool showScriptsOnly) {
+    for (int i = 0; i < fileTree->topLevelItemCount(); ++i) {
+        QTreeWidgetItem *item = fileTree->topLevelItem(i);
+        QString filePath = item->data(0, Qt::UserRole).toString();
+        bool isScript = isScriptFile(filePath);
+
+        if (showScriptsOnly) {
+            item->setHidden(!isScript);
+        } else {
+            item->setHidden(false);
+        }
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
