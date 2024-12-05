@@ -52,6 +52,7 @@ private slots:
 
     void showFileTreeContextMenu(const QPoint &pos);
 
+    void onSettingsClicked();
     void onFileDoubleClicked(const QTreeWidgetItem *item);
 
     void onRunButtonStateChanged(bool isRunning);
@@ -106,5 +107,6 @@ private:
     QPushButton *maxButton;
     QSplitter *bottomSplitter;
 };
+
 
 #endif // TINA_TOOL_BOX_MAINWINDOW_HPP

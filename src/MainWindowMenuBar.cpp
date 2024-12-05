@@ -130,6 +130,7 @@ void MainWindowMenuBar::setupWindowControls() {
     m_settingsBtn = new QPushButton("⚙", this);
     m_settingsBtn->setProperty("class", "control-button"); // 设置为控制按钮类
     m_settingsBtn->setFixedSize(45, 30);
+    connect(m_settingsBtn, &QPushButton::clicked, this, &MainWindowMenuBar::settingsClicked);
     m_layout->addWidget(m_settingsBtn);
 
     // 最小化按钮

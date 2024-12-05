@@ -146,7 +146,22 @@ QWidget *DocumentArea::createDocumentView(const QString &filePath) {
     if (!handler) {
         return nullptr;
     }
-
     openDocuments_[filePath].handler = handler;
     return handler->createView(this);
+}
+
+void DocumentArea::showSettingsPanel() {
+    if (!settingsPanel_) {
+        settingsPanel_ = new SettingsPanel(this);
+        tab_widget_->addDocumentTab(settingsPanel_, "设置");
+    }
+    
+    // 查找设置面板的索引
+    int index = tab_widget_->indexOf(settingsPanel_);
+    if (index >= 0) {
+        tab_widget_->setCurrentIndex(index);
+    } else {
+        // 如果找不到，重新添加
+        tab_widget_->addDocumentTab(settingsPanel_, "设置");
+    }
 }

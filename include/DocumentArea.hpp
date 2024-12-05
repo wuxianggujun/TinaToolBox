@@ -22,6 +22,7 @@
 #include "DocumentTabWidget.hpp"
 #include "LineNumberTextEdit.hpp"
 #include "PdfViewer.hpp"
+#include "SettingsPanel.hpp"
 
 class DocumentTab : public QWidget {
     Q_OBJECT
@@ -66,6 +67,8 @@ public:
     [[nodiscard]] QWidget *getCurrentDocument() const;
 
     void closeAllDocuments();
+    
+    void showSettingsPanel();
 
     [[nodiscard]] DocumentTabWidget* getTabWidget() const { return tab_widget_; }
     
@@ -78,7 +81,7 @@ signals:
 
     void error(const QString &message);
 
-  
+
 
 private:
 
@@ -90,6 +93,8 @@ private:
     bool canCloseDocument(int index) const;
     
     QWidget *createDocumentView(const QString &filePath);
+
+    SettingsPanel* settingsPanel_;
     
     QVBoxLayout *layout_;
     DocumentTabWidget *tab_widget_;

@@ -29,6 +29,8 @@ signals:
 
     void minimizeClicked();
 
+    void settingsClicked();
+
     void maximizeClicked();
 
     void closeClicked();

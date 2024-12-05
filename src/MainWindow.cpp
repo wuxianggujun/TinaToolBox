@@ -241,12 +241,18 @@ void MainWindow::setUpUI() {
 void MainWindow::createTileBar() {
     m_menuBar = new MainWindowMenuBar(this);
     setMenuWidget(m_menuBar); // 使用 setMenuWidget 而不是 setMenuBar
-
+    
     // 连接信号
+    connect(m_menuBar, &MainWindowMenuBar::settingsClicked, this,&MainWindow::onSettingsClicked);
     connect(m_menuBar, &MainWindowMenuBar::minimizeClicked, this, &MainWindow::showMinimized);
     connect(m_menuBar, &MainWindowMenuBar::maximizeClicked, this, &MainWindow::toggleMaximize);
     connect(m_menuBar, &MainWindowMenuBar::closeClicked, this, &MainWindow::close);
     connect(m_menuBar, &MainWindowMenuBar::menuActionTriggered, this, &MainWindow::handleMenuAction);
+}
+inline void MainWindow::onSettingsClicked() {
+    if (documentArea) {
+        documentArea->showSettingsPanel();
+    }
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
