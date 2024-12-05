@@ -341,11 +341,17 @@ void MainWindow::onFileDoubleClicked(const QTreeWidgetItem *item) {
 }
 
 void MainWindow::onRunButtonStateChanged(bool isRunning) {
-    if (!documentArea || !documentArea->getCurrentDocument()) return;
+    if (!documentArea ) return;
 
-    QString currentFile = documentArea->getCurrentFilePath();
-    if (!isScriptFile(currentFile)) {
-        QMessageBox::warning(this, "无法执行", "当前文件不是脚本文件");
+    QWidget* currentDoc = documentArea->getCurrentDocument();
+    if (!currentDoc) return;
+
+        
+    QString filePath = currentDoc->property("filePath").toString();
+    if (filePath.isEmpty()) return;
+    
+    if (!filePath.endsWith(".ttb", Qt::CaseInsensitive)) {
+        QMessageBox::warning(this, "错误", "当前文件不是脚本文件");
         return;
     }
 

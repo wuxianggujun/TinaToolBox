@@ -16,7 +16,7 @@ RunButton::RunButton(QWidget* parent) : QPushButton(parent), isRunning_(true) {
     setCursor(Qt::PointingHandCursor);  // 设置鼠标悬停时的光标
 
     // 设置工具提示
-    setToolTip(tr("点击切换运行/暂停状态"));
+    setToolTip(tr("运行"));
     QFont tooltipFont;
     tooltipFont.setPointSize(10);
     QToolTip::setFont(tooltipFont);

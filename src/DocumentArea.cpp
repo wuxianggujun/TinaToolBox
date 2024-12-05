@@ -70,13 +70,16 @@ bool DocumentArea::openFile(const QString &filePath) {
             return false;
         }
 
+        // 存储文件路径作为视图的属性
+        view->setProperty("filePath", filePath);
+
         DocumentInfo docInfo{view, docHandler};
         openDocuments_[filePath] = docInfo;
-        
+
         // 设置标签页
         tab_widget_->addDocumentTab(view, fileInfo.fileName());
         tab_widget_->setCurrentWidget(view);
-        
+
         emit fileOpened(filePath);
 
         return true;
@@ -85,7 +88,7 @@ bool DocumentArea::openFile(const QString &filePath) {
 
 void DocumentArea::closeFile(int index) {
     if (index >= 0 && index < tab_widget_->count()) {
-        QWidget* widget = tab_widget_->widget(index);
+        QWidget *widget = tab_widget_->widget(index);
         QString filePath;
 
         // 查找对应的文件路径
@@ -103,18 +106,17 @@ void DocumentArea::closeFile(int index) {
             // 从映射中获取并移除文档信息
             auto docInfo = std::move(openDocuments_[filePath]);
             openDocuments_.remove(filePath);
-    
+
             // 使用QTimer延迟清理资源，确保所有事件都处理完毕
             QTimer::singleShot(0, this, [docInfo = std::move(docInfo)]() mutable {
                 if (docInfo.handler) {
                     docInfo.handler->cleanup(docInfo.view);
                 }
-                });
+            });
             emit fileClosed(filePath);
         }
     }
 }
-
 
 
 QString DocumentArea::getCurrentFilePath() const {
@@ -154,7 +156,7 @@ void DocumentArea::showSettingsPanel() {
     if (!settingsPanel_) {
         settingsPanel_ = new SettingsPanel(this);
     }
-    
+
     // 查找设置面板的索引
     int index = tab_widget_->indexOf(settingsPanel_);
     if (index >= 0) {
