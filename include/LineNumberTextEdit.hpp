@@ -1,59 +1,53 @@
-#ifndef TINA_TOOL_BOX_LINE_NUMBER_TEXT_EDIT_HPP
-#define TINA_TOOL_BOX_LINE_NUMBER_TEXT_EDIT_HPP
-
+#pragma once
 #include <QPlainTextEdit>
-#include <QTextEdit>
-#include <QPointer>
-#include <QTextEdit>
 
-#include <QPlainTextEdit>
-class LineNumberArea;
+namespace TinaToolBox {
+    class LineNumberArea;
 
-class LineNumberTextEdit : public QPlainTextEdit {
-    Q_OBJECT
+    class LineNumberTextEdit : public QPlainTextEdit {
+        Q_OBJECT
 
-public:
-    explicit LineNumberTextEdit(QWidget *parent = nullptr);
+    public:
+        explicit LineNumberTextEdit(QWidget *parent = nullptr);
 
-    void lineNumberAreaPaintEvent(QPaintEvent *event);
+        void lineNumberAreaPaintEvent(QPaintEvent *event);
 
-    int lineNumberAreaWidth();
-protected:
-    void resizeEvent(QResizeEvent *event) override;
-    void wheelEvent(QWheelEvent *event) override;
-private slots:
-    void updateLineNumberAreaWidth(int newBlockCount);
+        int lineNumberAreaWidth();
+    protected:
+        void resizeEvent(QResizeEvent *event) override;
+        void wheelEvent(QWheelEvent *event) override;
+        private slots:
+            void updateLineNumberAreaWidth(int newBlockCount);
 
-    void updateLineNumberArea(const QRect &rect, int dy);
+        void updateLineNumberArea(const QRect &rect, int dy);
 
-    void highlightCurrentLine();
+        void highlightCurrentLine();
 
-private:
-    QWidget *lineNumberArea;
-    void zoomIn(int range);
-    void zoomOut(int range);
+    private:
+        QWidget *lineNumberArea;
+        void zoomIn(int range);
+        void zoomOut(int range);
     
-    // 字体大小限制
-    const int MIN_FONT_SIZE = 8;
-    const int MAX_FONT_SIZE = 32;
-};
+        // 字体大小限制
+        const int MIN_FONT_SIZE = 8;
+        const int MAX_FONT_SIZE = 32;
+    };
 
-class LineNumberArea : public QWidget {
-public:
-    explicit LineNumberArea(LineNumberTextEdit *editor) : QWidget(editor), codeEditor(editor) {
-    }
+    class LineNumberArea : public QWidget {
+    public:
+        explicit LineNumberArea(LineNumberTextEdit *editor) : QWidget(editor), codeEditor(editor) {
+        }
 
-    [[nodiscard]] QSize sizeHint() const override {
-        return {codeEditor->lineNumberAreaWidth(), 0};
-    }
+        [[nodiscard]] QSize sizeHint() const override {
+            return {codeEditor->lineNumberAreaWidth(), 0};
+        }
 
-protected:
-    void paintEvent(QPaintEvent *event) override {
-        codeEditor->lineNumberAreaPaintEvent(event);
-    }
+    protected:
+        void paintEvent(QPaintEvent *event) override {
+            codeEditor->lineNumberAreaPaintEvent(event);
+        }
 
-private:
-    LineNumberTextEdit *codeEditor;
-};
-
-#endif
+    private:
+        LineNumberTextEdit *codeEditor;
+    };
+}

@@ -2,8 +2,7 @@
 // Created by wuxianggujun on 2024/11/23.
 //
 
-#ifndef TINA_TOOL_BOX_LOG_PANEL_HPP
-#define TINA_TOOL_BOX_LOG_PANEL_HPP
+#pragma once
 
 #include <QWidget>
 #include <QTextEdit>
@@ -16,72 +15,72 @@
 #include <spdlog/sinks/base_sink.h>
 #include <qcombobox.h>
 
-class LogPanel;
+namespace TinaToolBox {
+    class LogPanel;
 
-// 创建一个自定义的spdlog sink
-template<typename Mutex>
-class LogPanelSink : public spdlog::sinks::base_sink<Mutex> {
-public:
-    explicit LogPanelSink(LogPanel* panel) : panel_(panel) {}
+    // 创建一个自定义的spdlog sink
+    template<typename Mutex>
+    class LogPanelSink : public spdlog::sinks::base_sink<Mutex> {
+    public:
+        explicit LogPanelSink(LogPanel* panel) : panel_(panel) {}
 
-protected:
-    void sink_it_(const spdlog::details::log_msg& msg) override;
-    void flush_() override {}
+    protected:
+        void sink_it_(const spdlog::details::log_msg& msg) override;
+        void flush_() override {}
 
-private:
-    LogPanel* panel_;
-};
-
-class LogPanel : public QWidget {
-
-Q_OBJECT
-
-private:
-    struct LogEntry {
-        QString text;
-        QColor color;
-        spdlog::level::level_enum level;
+    private:
+        LogPanel* panel_;
     };
 
-public:
-    explicit LogPanel(QWidget* parent = nullptr);
-    ~LogPanel() override;
+    class LogPanel : public QWidget {
 
-    void appendLog(const QString& text);
-    void appendLogWithColor(const QString& text, const QColor& color);
+        Q_OBJECT
 
-signals:
-    void closed();
-    void logMessage(const QString& message, const QColor& color);
+        private:
+        struct LogEntry {
+            QString text;
+            QColor color;
+            spdlog::level::level_enum level;
+        };
 
-public slots:
-    void clearLog();
-    void closePanel();
-    void onSearchTextChanged(const QString& text);
+    public:
+        explicit LogPanel(QWidget* parent = nullptr);
+        ~LogPanel() override;
 
-    void onLogLevelChanged(int index);
+        void appendLog(const QString& text);
+        void appendLogWithColor(const QString& text, const QColor& color);
 
-private:
-    void setupUI();
-    void setupLogHandlers();
+        signals:
+            void closed();
+        void logMessage(const QString& message, const QColor& color);
 
-    QTextEdit* logArea_;
-    QLineEdit* searchInput_;
-    QPushButton* clearButton_;
-    QPushButton* closeButton_;
+        public slots:
+            void clearLog();
+        void closePanel();
+        void onSearchTextChanged(const QString& text);
 
-    QComboBox* logLevelComboBox_;
-    void filterLogsByLevel();
-    int currentLogLevel_;
+        void onLogLevelChanged(int index);
 
-    QVector<LogEntry> logEntries_;
-    std::shared_ptr<LogPanelSink<std::mutex>> sink_;
-    static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
-    static LogPanel* instance_;
+    private:
+        void setupUI();
+        void setupLogHandlers();
 
-    static std::streambuf* oldCoutBuf;
-    static std::streambuf* oldCerrBuf;
+        QTextEdit* logArea_;
+        QLineEdit* searchInput_;
+        QPushButton* clearButton_;
+        QPushButton* closeButton_;
+
+        QComboBox* logLevelComboBox_;
+        void filterLogsByLevel();
+        int currentLogLevel_;
+
+        QVector<LogEntry> logEntries_;
+        std::shared_ptr<LogPanelSink<std::mutex>> sink_;
+        static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+        static LogPanel* instance_;
+
+        static std::streambuf* oldCoutBuf;
+        static std::streambuf* oldCerrBuf;
     
-};
-
-#endif //TINA_TOOL_BOX_LOG_PANEL_HPP
+    };
+}

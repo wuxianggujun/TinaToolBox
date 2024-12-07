@@ -1,7 +1,5 @@
-#ifndef TINA_TOOL_BOX_MAINWINDOW_HPP
-#define TINA_TOOL_BOX_MAINWINDOW_HPP
+#pragma once
 
-#include "PythonScriptManager.hpp"
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QSplitter>
@@ -12,101 +10,98 @@
 #include <QStackedWidget>
 #include <QMessageBox>
 #include <QTreeWidgetItem>
-#include "DocumentHandler.hpp"
 #include "MainWindowMenuBar.hpp"
 #include "Tokenizer.hpp"
 
+namespace TinaToolBox {
+    class LogPanel;
+    class DocumentArea;
 
-class LogPanel;
-class DocumentArea;
+    class MainWindow : public QMainWindow {
+        Q_OBJECT
 
-class MainWindow : public QMainWindow {
-    Q_OBJECT
+    public:
+        MainWindow(QWidget *parent = nullptr);
 
-public:
-    MainWindow(QWidget *parent = nullptr);
+        ~MainWindow();
 
-    ~MainWindow();
+    protected:
+        void mousePressEvent(QMouseEvent *event) override;
 
-protected:
-    void mousePressEvent(QMouseEvent *event) override;
+        void mouseMoveEvent(QMouseEvent *event) override;
 
-    void mouseMoveEvent(QMouseEvent *event) override;
+        void mouseReleaseEvent(QMouseEvent *event) override;
 
-    void mouseReleaseEvent(QMouseEvent *event) override;
+        void mouseDoubleClickEvent(QMouseEvent *event) override;
 
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
+        void closeEvent(QCloseEvent *event) override;
 
-    void closeEvent(QCloseEvent *event) override;
+        private slots:
+            void handleMenuAction(const QString &actionName);
 
-private slots:
-    void handleMenuAction(const QString &actionName);
+        void toggleMaximize();
 
-    void toggleMaximize();
+        void showBottomPanel();
 
-    void showBottomPanel();
+        void hideBottomPanel();
 
-    void hideBottomPanel();
+        void showFilePathToolTip(QTreeWidgetItem *item, int column);
 
-    void showFilePathToolTip(QTreeWidgetItem *item, int column);
+        void showFileTreeContextMenu(const QPoint &pos);
 
-    void showFileTreeContextMenu(const QPoint &pos);
+        void onSettingsClicked();
+        void onFileDoubleClicked(const QTreeWidgetItem *item);
 
-    void onSettingsClicked();
-    void onFileDoubleClicked(const QTreeWidgetItem *item);
+        void onRunButtonStateChanged(bool isRunning);
 
-    void onRunButtonStateChanged(bool isRunning);
+    private:
+        bool isTitleBarArea(const QPoint &pos) const;
 
-private:
-    bool isTitleBarArea(const QPoint &pos) const;
+        void setUpUI();
 
-    void setUpUI();
+        void createTileBar();
 
-    void createTileBar();
+        void loadFileHistory();
 
-    void loadFileHistory();
-
-    void openFile();
+        void openFile();
     
-    bool isScriptFile(const QString &filePath) const;
+        bool isScriptFile(const QString &filePath) const;
 
-    void handleScriptFileOpen(const QString &filePath);
+        void handleScriptFileOpen(const QString &filePath);
 
-    void onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column);
+        void onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column);
 
-    void updateUIState();
+        void updateUIState();
 
-    void setupConnections();
+        void setupConnections();
 
-    void updateFileHistory(const QString &filePath);
+        void updateFileHistory(const QString &filePath);
 
-    void updateFileTree();
+        void updateFileTree();
 
-    bool eventFilter(QObject *obj, QEvent *event) override;
+        bool eventFilter(QObject *obj, QEvent *event) override;
 
-    void filterTreeItems(bool showScriptsOnly);
+        void filterTreeItems(bool showScriptsOnly);
 
-    QPoint dragPosition;
-    bool isDragging = false;
-    MainWindowMenuBar *m_menuBar;
-    QTabWidget *tabWidget;
-    QWidget *centerWidget;
-    QVBoxLayout *mainLayout;
-    QWidget *titleBar;
-    QSplitter *mainSplitter;
-    QSplitter *rightSplitter;
+        QPoint dragPosition;
+        bool isDragging = false;
+        MainWindowMenuBar *m_menuBar;
+        QTabWidget *tabWidget;
+        QWidget *centerWidget;
+        QVBoxLayout *mainLayout;
+        QWidget *titleBar;
+        QSplitter *mainSplitter;
+        QSplitter *rightSplitter;
 
-    QTabWidget *leftPanelTab;
-    QTreeWidget *fileTree;
-    QComboBox *viewModeComboBox;
+        QTabWidget *leftPanelTab;
+        QTreeWidget *fileTree;
+        QComboBox *viewModeComboBox;
     
-    DocumentArea *documentArea;
-    QStackedWidget *propertyStack;
-    QWidget *bottomPanel;
-    LogPanel *logPanel;
-    QPushButton *maxButton;
-    QSplitter *bottomSplitter;
-};
-
-
-#endif // TINA_TOOL_BOX_MAINWINDOW_HPP
+        DocumentArea *documentArea;
+        QStackedWidget *propertyStack;
+        QWidget *bottomPanel;
+        LogPanel *logPanel;
+        QPushButton *maxButton;
+        QSplitter *bottomSplitter;
+    };
+}

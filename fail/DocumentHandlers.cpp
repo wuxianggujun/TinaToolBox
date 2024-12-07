@@ -1,6 +1,6 @@
 #include "DocumentHandler.hpp"
-#include "PdfViewer.hpp"
-#include "LineNumberTextEdit.hpp"
+#include "../include/PdfViewer.hpp"
+#include "../include/LineNumberTextEdit.hpp"
 #include <QFile>
 
 
