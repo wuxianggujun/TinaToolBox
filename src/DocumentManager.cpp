@@ -11,14 +11,27 @@ namespace TinaToolBox {
     std::shared_ptr<Document> DocumentManager::openDocument(const QString &path) {
         if (documents_.contains(path)) {
             currentDocument_ = documents_[path];
-        } else {
-            auto document = std::make_shared<Document>(path);
-            documents_[path] = document;
+            auto doc = documents_[path];
+            if (doc->getState() == Document::State::Ready) {
+                currentDocument_ = doc;
+                emit currentDocumentChanged(doc);
+                return doc;
+            }
+        }
+
+        auto document = std::make_shared<Document>(path);
+
+        connect(document.get(), &Document::stateChanged, this, &DocumentManager::onDocumentStateChanged);
+        connect(document.get(), &Document::errorOccurred, this, &DocumentManager::onDocumentError);
+
+        documents_[path] = document;
+
+        if (document->getState() == Document::State::Ready) {
             currentDocument_ = document;
             emit documentOpened(document);
+            emit currentDocumentChanged(document);
         }
-        emit currentDocumentChanged(currentDocument_);
-        return currentDocument_;
+        return document;
     }
 
     void DocumentManager::closeDocument(const std::shared_ptr<Document> &document) {
@@ -49,7 +62,33 @@ namespace TinaToolBox {
         }
     }
 
-    QMap<QString, std::shared_ptr<Document>> DocumentManager::getDocuments() const {
+    QMap<QString, std::shared_ptr<Document> > DocumentManager::getDocuments() const {
         return documents_;
+    }
+
+    void DocumentManager::onDocumentStateChanged(Document::State state) {
+        auto *document = qobject_cast<Document *>(sender());
+        if (!document) return;
+
+        // 查找对应的文档
+        for (const auto& [path, doc] : documents_.asKeyValueRange()) {
+            if (doc.get() == document) {
+                emit documentStateChanged(doc);
+                break;
+            }
+        }
+    }
+
+    void DocumentManager::onDocumentError(const QString &error) {
+        auto *document = qobject_cast<Document *>(sender());
+        if (!document) return;
+
+        // 查找对应的文档
+        for (const auto& [path, doc] : documents_.asKeyValueRange()) {
+            if (doc.get() == document) {
+                emit documentError(doc, error);
+                break;
+            }
+        }
     }
 }
