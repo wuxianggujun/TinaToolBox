@@ -22,8 +22,16 @@ namespace TinaToolBox {
         void setCurrentDocument(const std::shared_ptr<Document> &document);
 
         QMap<QString, std::shared_ptr<Document>> getDocuments() const;
+
+    private slots:
+        void onDocumentStateChanged(Document::State state);
+        void onDocumentError(const QString &error);
         
     signals:
+        void documentStateChanged(std::shared_ptr<Document> document);
+
+        void documentError(std::shared_ptr<Document> document, const QString &error);
+        
         void documentOpened(std::shared_ptr<Document> document);
 
         void documentClosed(std::shared_ptr<Document> document);

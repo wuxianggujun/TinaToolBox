@@ -588,12 +588,10 @@ namespace TinaToolBox {
     void MainWindow::closeEvent(QCloseEvent *event) {
         // 关闭所有打开的文档
         auto &manager = DocumentManager::getInstance();
-        // 创建文档列表的副本，因为在关闭过程中会修改原始列表
-        auto documents = manager.getDocuments();
-        for (auto it = documents.begin(); it != documents.end(); ++it) {
-            if (auto doc = it.value()) {
-                manager.closeDocument(doc);
-            }
+        const auto documents = manager.getDocuments().values();
+        
+        for (const auto& doc : documents) {
+            manager.closeDocument(doc);
         }
         event->accept();
     }
