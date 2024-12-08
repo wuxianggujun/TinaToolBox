@@ -16,19 +16,7 @@ namespace TinaToolBox {
         };
 
         explicit Document(const QString &filePath);
-
-        void setContent(const QString &content);
-
-        bool save();
-
-        bool reload();
-
-        bool saveAs(const QString &newPath);
-
-        [[nodiscard]] QString content() const;
-
-        [[nodiscard]] bool isModified() const;
-
+        
         [[nodiscard]] QString filePath() const;
 
         [[nodiscard]] QString fileName() const;
@@ -49,25 +37,12 @@ namespace TinaToolBox {
         [[nodiscard]] bool isReadable() const;
 
         [[nodiscard]] bool isWritable() const;
-
-    signals:
-        void documentModified();
-
-        void documentSaved();
-
-        void documentRenamed(const QString &newFilePath);
-
+    
     private:
         QString filePath_;
         QFileInfo fileInfo_;
         Type type_;
-        QString content_;
-        bool isModified_ = false;
-
-        bool saveToFile(const QString &path);
-
-        bool loadFromFile(const QString &path);
-
+        
         [[nodiscard]] Type determineType(const QString &extension) const;
     };
 }

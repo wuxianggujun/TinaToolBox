@@ -19,10 +19,17 @@ namespace TinaToolBox {
         bool saveContent() override;
 
         QWidget *widget() override;
-    
+        
+
+    private slots:
+        void onTextModified();
+
     private:
-        void onTextChanged();
+        bool loadFileContext();
+        bool saveFileContext();
+
         LineNumberTextEdit *textEdit_;
         std::shared_ptr<Document> document_;
+        static constexpr qint64 BLOCK_SIZE = 1024*1024; // 1MB per block
     };
 }
