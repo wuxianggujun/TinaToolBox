@@ -18,19 +18,20 @@
 #include "ExcelProcessor.hpp"
 #include "RunButton.hpp"
 #include "DocumentTabWidget.hpp"
+#include "DocumentView.hpp"
 #include "LineNumberTextEdit.hpp"
 #include "PdfViewer.hpp"
 #include "SettingsPanel.hpp"
 
 
 namespace TinaToolBox {
-    class DocumentView;
-
+    
     class DocumentArea : public QWidget {
         Q_OBJECT
 
     public:
         explicit DocumentArea(QWidget *parent = nullptr);
+        ~DocumentArea() override;
         
     public slots:
         void onDocumentOpened(std::shared_ptr<Document> document);
@@ -38,9 +39,11 @@ namespace TinaToolBox {
         void onCurrentDocumentChanged(std::shared_ptr<Document> document);
 
     private:
+        
         void setupConnections();
 
         DocumentView* createDocumentView(const std::shared_ptr<Document>& document);
+        void cleanupDocumentView(const QString& filePath);
         
         DocumentTabWidget *tabWidget_;
         QMap<QString,DocumentView*> documentViews_;

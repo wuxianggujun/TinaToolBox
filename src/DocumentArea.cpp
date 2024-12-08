@@ -17,12 +17,18 @@ namespace TinaToolBox {
         setupConnections();
     }
 
+    DocumentArea::~DocumentArea() {
+        // 清理所有资源
+        qDeleteAll(documentViews_);
+        documentViews_.clear();
+    }
+
     void DocumentArea::onDocumentOpened(std::shared_ptr<Document> document) {
         if (!document) return;
 
         auto *view = createDocumentView(document);
         if (!view) return;
-        
+
         documentViews_[document->filePath()] = view;
         tabWidget_->addTab(view, document->fileName());
         tabWidget_->setCurrentWidget(view);
@@ -30,18 +36,12 @@ namespace TinaToolBox {
 
     void DocumentArea::onDocumentClosed(std::shared_ptr<Document> document) {
         if (!document) return;
-
-        auto it = documentViews_.find(document->filePath());
-        if (it != documentViews_.end()) {
-            tabWidget_->removeTab(tabWidget_->indexOf(it.value()));
-            delete it.value();
-            documentViews_.erase(it);
-        }
+        cleanupDocumentView(document->filePath());
     }
 
     void DocumentArea::onCurrentDocumentChanged(std::shared_ptr<Document> document) {
         if (!document) return;
-        
+
         auto it = documentViews_.find(document->filePath());
         if (it != documentViews_.end()) {
             tabWidget_->setCurrentWidget(it.value());
@@ -67,12 +67,24 @@ namespace TinaToolBox {
         });
     }
 
-    DocumentView * DocumentArea::createDocumentView(const std::shared_ptr<Document> &document) {
-        auto* view = new DocumentView(document);
+    DocumentView *DocumentArea::createDocumentView(const std::shared_ptr<Document> &document) {
+        auto *view = new DocumentView(document);
         auto docView = DocumentViewFactory::createDocumentView(document);
         if (docView) {
             view->setDocumentView(std::move(docView));
         }
         return view;
+    }
+
+    void DocumentArea::cleanupDocumentView(const QString &filePath) {
+        auto it = documentViews_.find(filePath);
+        if (it != documentViews_.end()) {
+            int index = tabWidget_->indexOf(it.value());
+            if (index != -1) {
+                tabWidget_->removeTab(index);
+            }
+            delete it.value();
+            documentViews_.erase(it);
+        }
     }
 }

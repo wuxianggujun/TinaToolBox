@@ -15,7 +15,9 @@ namespace TinaToolBox {
     }
 
     TextDocumentView::~TextDocumentView() {
-        textEdit_->deleteLater();
+        spdlog::debug("TextDocumentView destroyed");
+        delete textEdit_;
+        textEdit_ = nullptr;
     }
 
     void TextDocumentView::updateContent() {

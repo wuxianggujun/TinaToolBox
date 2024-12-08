@@ -76,11 +76,11 @@ namespace TinaToolBox {
         auto *toolBarLayout = new QHBoxLayout(toolBar);
         toolBarLayout->setContentsMargins(5, 2, 5, 2);
 
-        auto* outputLabel = new QLabel("文件列表");
+        auto *outputLabel = new QLabel("文件列表");
         outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
         toolBarLayout->addWidget(outputLabel);
 
-    
+
         viewModeComboBox = new QComboBox();
         viewModeComboBox->addItem("所有文件", "all");
         viewModeComboBox->addItem("脚本文件", "scripts");
@@ -115,7 +115,7 @@ namespace TinaToolBox {
             "    outline: 0px;"
             "}"
         );
-    
+
         connect(viewModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this](int index) {
                     filterTreeItems(index == 1); // 1 表示"脚本文件"选项
@@ -124,7 +124,7 @@ namespace TinaToolBox {
         toolBarLayout->addStretch();
 
         leftPanelLayout->addWidget(toolBar);
-    
+
         fileTree = new QTreeWidget();
         fileTree->setHeaderLabels({"文件名", "修改日期", "类型", "大小"});
         fileTree->setColumnWidth(0, 200);
@@ -135,23 +135,22 @@ namespace TinaToolBox {
         fileTree->setMouseTracking(true);
         fileTree->setContextMenuPolicy(Qt::CustomContextMenu);
         fileTree->setStyleSheet(
-        "QTreeWidget {"
-        "    background-color: white;"
-        "    border: none;"
-        "}"
-        "QTreeWidget::item {"
-        "    height: 25px;"
-        "}"
-        "QTreeWidget::item:hover {"
-        "    background-color: #e5f3ff;"
-        "}"
-        "QTreeWidget::item:selected {"
-        "    background-color: #cce8ff;"
-        "}"
-    );
+            "QTreeWidget {"
+            "    background-color: white;"
+            "    border: none;"
+            "}"
+            "QTreeWidget::item {"
+            "    height: 25px;"
+            "}"
+            "QTreeWidget::item:hover {"
+            "    background-color: #e5f3ff;"
+            "}"
+            "QTreeWidget::item:selected {"
+            "    background-color: #cce8ff;"
+            "}"
+        );
 
         leftPanelLayout->addWidget(fileTree);
-
 
 
         mainSplitter->addWidget(leftPanel);
@@ -226,21 +225,22 @@ namespace TinaToolBox {
         connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
         connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
         connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
-        
+
         setupConnections();
     }
 
     void MainWindow::createTileBar() {
         m_menuBar = new MainWindowMenuBar(this);
         setMenuWidget(m_menuBar); // 使用 setMenuWidget 而不是 setMenuBar
-    
+
         // 连接信号
-        connect(m_menuBar, &MainWindowMenuBar::settingsClicked, this,&MainWindow::onSettingsClicked);
+        connect(m_menuBar, &MainWindowMenuBar::settingsClicked, this, &MainWindow::onSettingsClicked);
         connect(m_menuBar, &MainWindowMenuBar::minimizeClicked, this, &MainWindow::showMinimized);
         connect(m_menuBar, &MainWindowMenuBar::maximizeClicked, this, &MainWindow::toggleMaximize);
         connect(m_menuBar, &MainWindowMenuBar::closeClicked, this, &MainWindow::close);
         connect(m_menuBar, &MainWindowMenuBar::menuActionTriggered, this, &MainWindow::handleMenuAction);
     }
+
     void MainWindow::onSettingsClicked() {
         /*if (documentArea) {
             documentArea->showSettingsPanel();
@@ -333,19 +333,18 @@ namespace TinaToolBox {
     }
 
     void MainWindow::onRunButtonStateChanged(bool isRunning) {
-
         auto doc = TinaToolBox::DocumentManager::getInstance().getCurrentDocument();
         if (!doc || !doc->isScript()) {
             return;
         }
-    
+
         /*if (isRunning) {
             // 处理脚本运行
             scriptRunner_->run(doc);
         } else {
             scriptRunner_->stop();
         }*/
-        
+
         FILE *fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)", "r");
         if (!fh) {
             qDebug() << "Failed to open file";
@@ -460,7 +459,7 @@ namespace TinaToolBox {
             tr("所有文件 (*.*);;脚本文件 (*.ttd)")
         );
         if (!filePath.isEmpty()) {
-            auto& manager = DocumentManager::getInstance();
+            auto &manager = DocumentManager::getInstance();
             auto document = manager.openDocument(filePath);
             if (document) {
                 updateFileHistory(filePath);
@@ -471,7 +470,7 @@ namespace TinaToolBox {
             }
         }
     }
-    
+
     bool MainWindow::isScriptFile(const QString &filePath) const {
         return QFileInfo(filePath).suffix().toLower() == "ttb";
     }
@@ -493,8 +492,6 @@ namespace TinaToolBox {
             documentArea->openFile(filePath);
             updateUIState();
         }*/
-
-        
     }
 
     void MainWindow::updateUIState() {
@@ -506,7 +503,6 @@ namespace TinaToolBox {
             connect(fileTree, &QTreeWidget::itemDoubleClicked,
                     this, &MainWindow::onFileDoubleClicked);
         }
-        
     }
 
     void MainWindow::updateFileHistory(const QString &filePath) {
@@ -590,6 +586,15 @@ namespace TinaToolBox {
     }
 
     void MainWindow::closeEvent(QCloseEvent *event) {
+        // 关闭所有打开的文档
+        auto &manager = DocumentManager::getInstance();
+        // 创建文档列表的副本，因为在关闭过程中会修改原始列表
+        auto documents = manager.getDocuments();
+        for (auto it = documents.begin(); it != documents.end(); ++it) {
+            if (auto doc = it.value()) {
+                manager.closeDocument(doc);
+            }
+        }
         event->accept();
     }
 }

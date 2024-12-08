@@ -18,7 +18,7 @@ namespace TinaToolBox {
         Q_OBJECT
     public:
         explicit DocumentView(std::shared_ptr<Document> document);
-
+        ~DocumentView() override;
         void setDocumentView(std::unique_ptr<IDocumentView> documentView);
         [[nodiscard]] IDocumentView* getDocumentView() const { return documentView_.get();}
 

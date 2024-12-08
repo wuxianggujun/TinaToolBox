@@ -21,6 +21,8 @@ namespace TinaToolBox {
 
         void setCurrentDocument(const std::shared_ptr<Document> &document);
 
+        QMap<QString, std::shared_ptr<Document>> getDocuments() const;
+        
     signals:
         void documentOpened(std::shared_ptr<Document> document);
 
