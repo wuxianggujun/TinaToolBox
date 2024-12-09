@@ -3,7 +3,7 @@
 #include <QMouseEvent>
 
 namespace TinaToolBox {
-    StatusBar::StatusBar(QWidget *parent):QWidget(parent) {
+    StatusBar::StatusBar(QWidget *parent): QWidget(parent) {
         setFixedHeight(25);
         setupUI();
         createEncodingMenu();
@@ -14,7 +14,7 @@ namespace TinaToolBox {
     }
 
     void StatusBar::setupUI() {
-        auto* layout = new QHBoxLayout(this);
+        auto *layout = new QHBoxLayout(this);
         layout->setContentsMargins(5, 0, 5, 0);
         layout->setSpacing(5);
 
@@ -40,7 +40,7 @@ namespace TinaToolBox {
             "cursor: pointer;"
         );
         encodingLabel_->setCursor(Qt::PointingHandCursor);
-        encodingLabel_->hide();  // 初始状态隐藏编码标签
+        encodingLabel_->hide(); // 初始状态隐藏编码标签
         layout->addWidget(encodingLabel_);
 
         // 设置整个状态栏的样式
@@ -54,7 +54,7 @@ namespace TinaToolBox {
 
     void StatusBar::createEncodingMenu() {
         encodingMenu_ = new QMenu(this);
-    
+
         // 主要编码列表
         QStringList mainEncodings = {
             "ANSI",
@@ -72,8 +72,8 @@ namespace TinaToolBox {
         };
 
         // 添加主要编码
-        for (const auto& encoding : mainEncodings) {
-            QAction* action = encodingMenu_->addAction(encoding);
+        for (const auto &encoding: mainEncodings) {
+            QAction *action = encodingMenu_->addAction(encoding);
             connect(action, &QAction::triggered, this, [this, encoding]() {
                 setEncoding(encoding);
                 emit encodingChanged(encoding);
@@ -84,27 +84,27 @@ namespace TinaToolBox {
         encodingMenu_->addSeparator();
 
         // 创建"更多编码"子菜单
-        auto* moreMenu = new QMenu("更多编码", encodingMenu_);
-        for (const auto& encoding : moreEncodings) {
-            QAction* action = moreMenu->addAction(encoding);
+        auto *moreMenu = new QMenu("更多编码", encodingMenu_);
+        for (const auto &encoding: moreEncodings) {
+            QAction *action = moreMenu->addAction(encoding);
             connect(action, &QAction::triggered, this, [this, encoding]() {
                 setEncoding(encoding);
                 emit encodingChanged(encoding);
             });
         }
-    
+
         encodingMenu_->addMenu(moreMenu);
     }
 
 
-    void StatusBar::mousePressEvent(QMouseEvent* event) {
+    void StatusBar::mousePressEvent(QMouseEvent *event) {
         if (encodingLabel_->geometry().contains(event->pos())) {
             // 计算菜单显示位置：在编码标签正上方
             QPoint pos = encodingLabel_->mapToGlobal(QPoint(0, 0));
             pos.setY(pos.y() - encodingMenu_->sizeHint().height());
-        
+
             // 确保菜单不会超出屏幕
-            QScreen* screen = QGuiApplication::screenAt(pos);
+            QScreen *screen = QGuiApplication::screenAt(pos);
             if (screen) {
                 QRect screenGeometry = screen->geometry();
                 if (pos.y() < screenGeometry.top()) {
@@ -116,7 +116,7 @@ namespace TinaToolBox {
         }
     }
 
-    void StatusBar::setFilePath(const QString& path) const {
+    void StatusBar::setFilePath(const QString &path) const {
         if (!path.isEmpty()) {
             filePathLabel_->setText(path);
             filePathLabel_->show();
@@ -128,7 +128,7 @@ namespace TinaToolBox {
         }
     }
 
-    void StatusBar::setEncoding(const QString& encoding) const {
+    void StatusBar::setEncoding(const QString &encoding) const {
         if (!encoding.isEmpty()) {
             encodingLabel_->setText(encoding);
             encodingLabel_->show();
@@ -140,4 +140,5 @@ namespace TinaToolBox {
     void StatusBar::setEncodingVisible(bool visible) const {
         encodingLabel_->setVisible(visible);
     }
+    
 }

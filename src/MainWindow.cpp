@@ -328,7 +328,7 @@ namespace TinaToolBox {
         connect(recentFilesWidget, &RecentFilesWidget::removeFileRequested,
                 this, &MainWindow::onRemoveFileRequested);
 
-        // 连接文档变化信号
+        // 监听文档变化
         connect(&DocumentManager::getInstance(), &DocumentManager::currentDocumentChanged,
                 this, [this](std::shared_ptr<Document> document) {
             if (document) {
@@ -337,10 +337,14 @@ namespace TinaToolBox {
                 // 获取当前文档视图
                 if (auto* docView = documentArea->getCurrentDocumentView()) {
                     if (auto* textView = dynamic_cast<TextDocumentView*>(docView->getDocumentView())) {
-                        // 如果是文本文档，显示编码选项
+                        // 显示当前编码
+                        statusBar->setEncoding(textView->getCurrentEncoding());
                         statusBar->setEncodingVisible(true);
+                    
+                        // 连接编码变化信号
+                        connect(textView, &TextDocumentView::encodingChanged,
+                                statusBar, &StatusBar::setEncoding);
                     } else {
-                        // 非文本文档隐藏编码选项
                         statusBar->setEncodingVisible(false);
                     }
                 }
@@ -350,7 +354,7 @@ namespace TinaToolBox {
             }
         });
 
-        // 连接编码变化信号
+        // 连接 StatusBar 的编码变化到文档视图
         connect(statusBar, &StatusBar::encodingChanged,
                 this, [this](const QString& encoding) {
             if (auto* docView = documentArea->getCurrentDocumentView()) {

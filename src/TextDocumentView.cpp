@@ -6,6 +6,8 @@
 #include <QTextCodec>
 #include <QStringConverter>  // Qt6 的新头文件
 
+#include "EncodingDetector.hpp"
+
 namespace TinaToolBox {
     TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(document) {
         textEdit_ = new LineNumberTextEdit(parent);
@@ -43,6 +45,10 @@ namespace TinaToolBox {
         loadFileContext(); // 重新加载文件内容
     }
 
+    QString TextDocumentView::getCurrentEncoding() const {
+        return currentEncoding_;
+    }
+
     bool TextDocumentView::loadFileContext() {
         if (!document_) {
             spdlog::error("No document available");
@@ -58,27 +64,30 @@ namespace TinaToolBox {
         QByteArray data = file.readAll();
         file.close();
 
+        // 自动检测编码
+        currentEncoding_ = EncodingDetector::detect(data);
+        spdlog::debug("Detected encoding for {}: {}", 
+                      document_->filePath().toStdString(), 
+                      currentEncoding_.toStdString());
+
+        emit encodingChanged(currentEncoding_);
+        
         QString content;
-        if (currentEncoding_ == "ANSI") {
-            // 使用系统默认编码
-            auto encoding = QStringConverter::System;
-            auto decoder = QStringDecoder(encoding);
-            content = decoder.decode(data);
-        } else if (currentEncoding_ == "UTF-8") {
-            auto decoder = QStringDecoder(QStringConverter::Utf8);
-            content = decoder.decode(data);
-        } else if (currentEncoding_ == "GB18030" || currentEncoding_ == "GBK" || currentEncoding_ == "GB2312") {
-            // 对于中文编码，使用 System 编码
-            auto decoder = QStringDecoder(QStringConverter::System);
-            content = decoder.decode(data);
-        } else if (currentEncoding_ == "Latin1") {
-            auto decoder = QStringDecoder(QStringConverter::Latin1);
-            content = decoder.decode(data);
-        } else {
-            // 默认使用系统编码
-            auto decoder = QStringDecoder(QStringConverter::System);
-            content = decoder.decode(data);
-        }
+        if (currentEncoding_ == "ANSI" || currentEncoding_ == "GBK" || 
+            currentEncoding_ == "GB2312" || currentEncoding_ == "GB18030") {
+            QTextCodec *codec = QTextCodec::codecForName(currentEncoding_.toLatin1());
+            if (codec) {
+                content = codec->toUnicode(data);
+            }
+            } else if (currentEncoding_ == "UTF-8") {
+                content = QString::fromUtf8(data);
+            } else if (currentEncoding_ == "UTF-16LE" || currentEncoding_ == "UTF-16BE") {
+                // 使用 char16_t* 重载
+                content = QString::fromUtf16(reinterpret_cast<const char16_t*>(data.constData()));
+            } else {
+                // 默认使用UTF-8
+                content = QString::fromUtf8(data);
+            }
 
         textEdit_->clear();
         textEdit_->setPlainText(content);
@@ -88,9 +97,6 @@ namespace TinaToolBox {
         cursor.movePosition(QTextCursor::Start);
         textEdit_->setTextCursor(cursor);
 
-        spdlog::debug("File loaded with encoding {}: {}", 
-                      currentEncoding_.toStdString(), 
-                      document_->filePath().toStdString());
         return true;
     }
 

@@ -21,9 +21,14 @@ namespace TinaToolBox {
         QWidget *widget() override;
 
         void setEncoding(const QString &encoding);
+        
+        [[nodiscard]] QString getCurrentEncoding() const;
 
     private slots:
         void onTextModified();
+
+    signals:
+        void encodingChanged(const QString &encoding);
 
     private:
         bool loadFileContext();
