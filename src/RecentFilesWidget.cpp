@@ -110,7 +110,7 @@ namespace TinaToolBox {
         contextMenu_ = new QMenu(this);
         contextMenu_->addAction("打开", [this]() {
             if (auto *item = currentItem()) {
-                emit fileSelected(item->data(1, Qt::UserRole).toString());
+                emit fileSelected(item->data(0,Qt::UserRole).toString());
             }
         });
             
