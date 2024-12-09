@@ -14,6 +14,7 @@
 #include "ExceptionHandler.hpp"
 #include "LineNumberTextEdit.hpp"
 #include "PdfViewer.hpp"
+#include "RecentFilesWidget.hpp"
 #include "SimpleIni.h"
 
 namespace TinaToolBox {
@@ -34,8 +35,6 @@ namespace TinaToolBox {
         mainLayout->setSpacing(0);
 
         setUpUI();
-
-        loadFileHistory();
     }
 
     MainWindow::~MainWindow() {
@@ -58,100 +57,7 @@ namespace TinaToolBox {
         mainSplitter = new QSplitter(Qt::Horizontal);
         mainContainerLayout->addWidget(mainSplitter);
 
-        auto *leftPanel = new QWidget();
-        leftPanel->setMaximumWidth(400);
-        leftPanel->setMinimumWidth(200);
-
-        auto *leftPanelLayout = new QVBoxLayout(leftPanel);
-        leftPanelLayout->setContentsMargins(0, 0, 0, 0);
-        leftPanelLayout->setSpacing(0);
-
-        auto *toolBar = new QWidget();
-        toolBar->setStyleSheet(
-            "QWidget {"
-            "    background-color: #f5f5f5;"
-            "    border-top: 1px solid #e0e0e0;"
-            "}"
-        );
-        auto *toolBarLayout = new QHBoxLayout(toolBar);
-        toolBarLayout->setContentsMargins(5, 2, 5, 2);
-
-        auto *outputLabel = new QLabel("文件列表");
-        outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
-        toolBarLayout->addWidget(outputLabel);
-
-
-        viewModeComboBox = new QComboBox();
-        viewModeComboBox->addItem("所有文件", "all");
-        viewModeComboBox->addItem("脚本文件", "scripts");
-        viewModeComboBox->setStyleSheet(
-            "QComboBox {"
-            "    background-color: white;"
-            "    border: 1px solid #cccccc;"
-            "    border-radius: 2px;"
-            "    padding: 2px 5px;"
-            "    min-width: 100px;"
-            "}"
-            "QComboBox:focus {"
-            "    border: 1px solid #0078d7;"
-            "}"
-            "QComboBox::drop-down {"
-            "    border: none;"
-            "    width: 20px;"
-            "}"
-            "QComboBox::down-arrow {"
-            "    width: 8px;"
-            "    height: 8px;"
-            "    background: none;"
-            "    border-top: 2px solid #666;"
-            "    border-right: 2px solid #666;"
-            "    margin-top: -2px;"
-            "}"
-            "QComboBox QAbstractItemView {"
-            "    border: 1px solid #cccccc;"
-            "    selection-background-color: #e5f3ff;"
-            "    selection-color: black;"
-            "    background-color: white;"
-            "    outline: 0px;"
-            "}"
-        );
-
-        connect(viewModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                this, [this](int index) {
-                    filterTreeItems(index == 1); // 1 表示"脚本文件"选项
-                });
-        toolBarLayout->addWidget(viewModeComboBox);
-        toolBarLayout->addStretch();
-
-        leftPanelLayout->addWidget(toolBar);
-
-        fileTree = new QTreeWidget();
-        fileTree->setHeaderLabels({"文件名", "修改日期", "类型", "大小"});
-        fileTree->setColumnWidth(0, 200);
-        fileTree->setColumnWidth(1, 150);
-        fileTree->setColumnWidth(2, 80);
-        fileTree->setColumnWidth(3, 100);
-        fileTree->setIndentation(0);
-        fileTree->setMouseTracking(true);
-        fileTree->setContextMenuPolicy(Qt::CustomContextMenu);
-        fileTree->setStyleSheet(
-            "QTreeWidget {"
-            "    background-color: white;"
-            "    border: none;"
-            "}"
-            "QTreeWidget::item {"
-            "    height: 25px;"
-            "}"
-            "QTreeWidget::item:hover {"
-            "    background-color: #e5f3ff;"
-            "}"
-            "QTreeWidget::item:selected {"
-            "    background-color: #cce8ff;"
-            "}"
-        );
-
-        leftPanelLayout->addWidget(fileTree);
-
+        auto *leftPanel = createLeftPanel();
 
         mainSplitter->addWidget(leftPanel);
 
@@ -220,10 +126,9 @@ namespace TinaToolBox {
         centerSplitter->setStyleSheet(splitterStyle);
 
         installEventFilter(this);
-
-
-        connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
-        connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
+        
+        // connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
+        // connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
         connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
 
         setupConnections();
@@ -327,7 +232,6 @@ namespace TinaToolBox {
             if (documentArea) {
                 DocumentManager::getInstance().openDocument(filePath);
                 updateFileHistory(filePath);
-                updateUIState();
             }
         }
     }
@@ -364,42 +268,7 @@ namespace TinaToolBox {
             currToken.debugPrint();
         }
     }
-
-    void MainWindow::loadFileHistory() {
-        auto &fileHistoryManager = FileHistoryManager::getInstance(); // 使用 getInstance
-        QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
-
-        // 清空现有的文件树
-        fileTree->clear();
-
-        for (const auto &file: recentFiles) {
-            auto *item = new QTreeWidgetItem(fileTree);
-
-            // 设置文件名
-            item->setText(0, file.fileName);
-
-            // 设置修改日期
-            item->setText(1, file.modifiedDate.toString("yyyy-MM-dd HH:mm:ss"));
-
-            // 设置文件类型
-            item->setText(2, file.fileType.toUpper());
-
-            // 设置文件大小
-            QString sizeStr;
-            if (file.fileSize < 1024) {
-                sizeStr = QString("%1 B").arg(file.fileSize);
-            } else if (file.fileSize < 1024 * 1024) {
-                sizeStr = QString("%1 KB").arg(file.fileSize / 1024.0, 0, 'f', 2);
-            } else {
-                sizeStr = QString("%1 MB").arg(file.fileSize / 1024.0 / 1024.0, 0, 'f', 2);
-            }
-            item->setText(3, sizeStr);
-
-            // 存储完整文件路径作为用户数据
-            item->setData(0, Qt::UserRole, file.filePath);
-        }
-    }
-
+    
     void MainWindow::handleMenuAction(const QString &actionName) {
         qDebug() << "Execute menu action: " << actionName;
         if (actionName == "新建") {
@@ -425,32 +294,8 @@ namespace TinaToolBox {
     void MainWindow::hideBottomPanel() {
         bottomPanel->hide();
     }
-
-    void MainWindow::showFilePathToolTip(QTreeWidgetItem *item, int column) {
-        if (item) {
-            QString filePath = item->data(0, Qt::UserRole).toString();
-            item->setToolTip(column, filePath);
-        }
-    }
-
-    void MainWindow::showFileTreeContextMenu(const QPoint &pos) {
-        QTreeWidgetItem *item = fileTree->itemAt(pos);
-        if (!item) return;
-
-        QMenu menu;
-        QAction *copyAction = menu.addAction(tr("复制文件路径"));
-
-        QAction *selectedAction = menu.exec(fileTree->viewport()->mapToGlobal(pos));
-
-        if (selectedAction == copyAction) {
-            QString filePath = item->data(0, Qt::UserRole).toString();
-            QClipboard *clipboard = QApplication::clipboard();
-            if (clipboard) {
-                clipboard->setText(filePath);
-            }
-        }
-    }
-
+    
+    
     void MainWindow::openFile() {
         QString filePath = QFileDialog::getOpenFileName(
             this,
@@ -470,20 +315,7 @@ namespace TinaToolBox {
             }
         }
     }
-
-    bool MainWindow::isScriptFile(const QString &filePath) const {
-        return QFileInfo(filePath).suffix().toLower() == "ttb";
-    }
-
-    void MainWindow::handleScriptFileOpen(const QString &filePath) {
-        /*// updateScriptTree(filePath);
-        if (documentArea) {
-            documentArea->openFile(filePath);
-            updateFileHistory(filePath);
-            updateUIState();
-        }*/
-    }
-
+    
     void MainWindow::onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column) {
         /*if (!item) return;
 
@@ -494,75 +326,25 @@ namespace TinaToolBox {
         }*/
     }
 
-    void MainWindow::updateUIState() {
-    }
 
     // 连接信号
     void MainWindow::setupConnections() {
-        if (fileTree) {
-            connect(fileTree, &QTreeWidget::itemDoubleClicked,
-                    this, &MainWindow::onFileDoubleClicked);
-        }
+        connect(recentFilesWidget, &RecentFilesWidget::fileSelected,
+                this, &MainWindow::onFileSelected);
+        connect(recentFilesWidget, &RecentFilesWidget::removeFileRequested,
+                this, &MainWindow::onRemoveFileRequested);
     }
 
     void MainWindow::updateFileHistory(const QString &filePath) {
-        if (filePath.isEmpty()) {
-            return;
-        }
+       if (filePath.isEmpty()) return;
 
-        auto &fileHistoryManager = FileHistoryManager::getInstance(); // 使用 getInstance
-        FileHistory existingRecord = fileHistoryManager.getFileHistory(filePath);
-        if (existingRecord.filePath.isEmpty()) {
-            if (!fileHistoryManager.addFileHistory(filePath)) {
-                spdlog::error("Failed to add file to history: {}", filePath.toStdString());
-                return;
-            }
-        } else {
-            // 如果记录存在，更新记录
-            if (!fileHistoryManager.updateFileHistory(filePath)) {
-                spdlog::error("Failed to update file history: {}", filePath.toStdString());
-                return;
-            }
-        }
-        // 更新文件树显示
-        updateFileTree();
+        recentFilesWidget->addRecentFile(filePath);
     }
-
-    void MainWindow::updateFileTree() {
-        fileTree->clear();
-
-        auto &fileHistoryManager = FileHistoryManager::getInstance();
-        QVector<FileHistory> recentFiles = fileHistoryManager.getRecentFiles();
-
-        for (const auto &file: recentFiles) {
-            auto *item = new QTreeWidgetItem(fileTree);
-            item->setText(0, file.fileName);
-            item->setText(1, file.modifiedDate.toString("yyyy-MM-dd HH:mm:ss"));
-            item->setText(2, file.fileType.toUpper());
-
-            // 设置文件大小
-            QString sizeStr;
-            if (file.fileSize < 1024) {
-                sizeStr = QString("%1 B").arg(file.fileSize);
-            } else if (file.fileSize < 1024 * 1024) {
-                sizeStr = QString("%1 KB").arg(file.fileSize / 1024.0, 0, 'f', 2);
-            } else {
-                sizeStr = QString("%1 MB").arg(file.fileSize / 1024.0 / 1024.0, 0, 'f', 2);
-            }
-            item->setText(3, sizeStr);
-            item->setData(0, Qt::UserRole, file.filePath);
-
-            // 如果当前是脚本视图，隐藏非脚本文件
-            if (viewModeComboBox->currentIndex() == 1 && !isScriptFile(file.filePath)) {
-                item->setHidden(true);
-            }
-        }
-    }
-
+    
     bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         if (obj == this) {
             if (event->type() == QEvent::MouseMove) {
-                auto *mouseEvent = static_cast<QMouseEvent *>(event);
+                auto *mouseEvent = dynamic_cast<QMouseEvent *>(event);
                 return false;
             } else if (event->type() == QEvent::Leave) {
                 return false;
@@ -589,10 +371,100 @@ namespace TinaToolBox {
         // 关闭所有打开的文档
         auto &manager = DocumentManager::getInstance();
         const auto documents = manager.getDocuments().values();
-        
-        for (const auto& doc : documents) {
+
+        for (const auto &doc: documents) {
             manager.closeDocument(doc);
         }
         event->accept();
+    }
+
+    QWidget *MainWindow::createLeftPanel() {
+        auto *leftPanel = new QWidget();
+        leftPanel->setMaximumWidth(400);
+        leftPanel->setMinimumWidth(200);
+
+        auto *leftPanelLayout = new QVBoxLayout(leftPanel);
+        leftPanelLayout->setContentsMargins(0, 0, 0, 0);
+        leftPanelLayout->setSpacing(0);
+
+        auto *toolBar = createFileListToolBar();
+        leftPanelLayout->addWidget(toolBar);
+
+        recentFilesWidget = new RecentFilesWidget();
+
+        leftPanelLayout->addWidget(recentFilesWidget);
+
+        return leftPanel;
+    }
+
+    QWidget *MainWindow::createFileListToolBar() {
+        auto *toolBar = new QWidget();
+        toolBar->setStyleSheet(
+            "QWidget {"
+            "    background-color: #f5f5f5;"
+            "    border-top: 1px solid #e0e0e0;"
+            "}"
+        );
+        auto *toolBarLayout = new QHBoxLayout(toolBar);
+        toolBarLayout->setContentsMargins(5, 2, 5, 2);
+
+        auto *outputLabel = new QLabel("文件列表");
+        outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
+        toolBarLayout->addWidget(outputLabel);
+
+        viewModeComboBox = new QComboBox();
+        viewModeComboBox->addItem("所有文件", "all");
+        viewModeComboBox->addItem("脚本文件", "scripts");
+        viewModeComboBox->setStyleSheet(
+            "QComboBox {"
+            "    background-color: white;"
+            "    border: 1px solid #cccccc;"
+            "    border-radius: 2px;"
+            "    padding: 2px 5px;"
+            "    min-width: 100px;"
+            "}"
+            "QComboBox:focus {"
+            "    border: 1px solid #0078d7;"
+            "}"
+            "QComboBox::drop-down {"
+            "    border: none;"
+            "    width: 20px;"
+            "}"
+            "QComboBox::down-arrow {"
+            "    width: 8px;"
+            "    height: 8px;"
+            "    background: none;"
+            "    border-top: 2px solid #666;"
+            "    border-right: 2px solid #666;"
+            "    margin-top: -2px;"
+            "}"
+            "QComboBox QAbstractItemView {"
+            "    border: 1px solid #cccccc;"
+            "    selection-background-color: #e5f3ff;"
+            "    selection-color: black;"
+            "    background-color: white;"
+            "    outline: 0px;"
+            "}"
+        );
+
+        connect(viewModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, [this](int index) {
+                    filterTreeItems(index == 1); // 1 表示"脚本文件"选项
+                });
+        toolBarLayout->addWidget(viewModeComboBox);
+        toolBarLayout->addStretch();
+        return toolBar;
+    }
+
+    void MainWindow::onFileSelected(const QString &filePath) {
+        if (!filePath.isEmpty()) {
+            DocumentManager::getInstance().openDocument(filePath);
+            updateFileHistory(filePath);
+        }
+    }
+
+    void MainWindow::onRemoveFileRequested(const QString &filePath) {
+        // 处理文件移除请求
+        recentFilesWidget->removeRecentFile(filePath);
     }
 }

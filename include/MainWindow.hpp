@@ -13,9 +13,11 @@
 #include "MainWindowMenuBar.hpp"
 #include "Tokenizer.hpp"
 
+
 namespace TinaToolBox {
     class LogPanel;
     class DocumentArea;
+    class RecentFilesWidget;
 
     class MainWindow : public QMainWindow {
         Q_OBJECT
@@ -36,20 +38,25 @@ namespace TinaToolBox {
 
         void closeEvent(QCloseEvent *event) override;
 
-        private slots:
-            void handleMenuAction(const QString &actionName);
+    private:
+        QWidget *createLeftPanel();
+
+        QWidget *createFileListToolBar();
+
+        void onFileSelected(const QString& filePath);
+        void onRemoveFileRequested(const QString& filePath);
+        
+    private slots:
+        void handleMenuAction(const QString &actionName);
 
         void toggleMaximize();
 
         void showBottomPanel();
 
         void hideBottomPanel();
-
-        void showFilePathToolTip(QTreeWidgetItem *item, int column);
-
-        void showFileTreeContextMenu(const QPoint &pos);
-
+        
         void onSettingsClicked();
+
         void onFileDoubleClicked(const QTreeWidgetItem *item);
 
         void onRunButtonStateChanged(bool isRunning);
@@ -60,25 +67,18 @@ namespace TinaToolBox {
         void setUpUI();
 
         void createTileBar();
-
-        void loadFileHistory();
-
+        
         void openFile();
-    
-        bool isScriptFile(const QString &filePath) const;
 
-        void handleScriptFileOpen(const QString &filePath);
+        bool isScriptFile(const QString &filePath) const;
+        
 
         void onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column);
-
-        void updateUIState();
-
+        
         void setupConnections();
 
         void updateFileHistory(const QString &filePath);
-
-        void updateFileTree();
-
+        
         bool eventFilter(QObject *obj, QEvent *event) override;
 
         void filterTreeItems(bool showScriptsOnly);
@@ -93,10 +93,10 @@ namespace TinaToolBox {
         QSplitter *mainSplitter;
         QSplitter *rightSplitter;
 
+        RecentFilesWidget *recentFilesWidget;
         QTabWidget *leftPanelTab;
-        QTreeWidget *fileTree;
         QComboBox *viewModeComboBox;
-    
+
         DocumentArea *documentArea;
         QStackedWidget *propertyStack;
         QWidget *bottomPanel;
