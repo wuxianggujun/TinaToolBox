@@ -3,6 +3,8 @@
 #include <QTextBlock>
 #include <QApplication>
 #include <spdlog/spdlog.h>
+#include <QTextCodec>
+#include <QStringConverter>  // Qt6 的新头文件
 
 namespace TinaToolBox {
     TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(document) {
@@ -36,6 +38,11 @@ namespace TinaToolBox {
         spdlog::info("Text modified");
     }
 
+    void TextDocumentView::setEncoding(const QString &encoding) {
+        currentEncoding_ = encoding;
+        loadFileContext(); // 重新加载文件内容
+    }
+
     bool TextDocumentView::loadFileContext() {
         if (!document_) {
             spdlog::error("No document available");
@@ -43,45 +50,48 @@ namespace TinaToolBox {
         }
 
         QFile file(document_->filePath());
-
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (!file.open(QIODevice::ReadOnly)) {
             spdlog::error("Failed to open file: {}", document_->filePath().toStdString());
             return false;
         }
 
-        textEdit_->clear();
+        QByteArray data = file.readAll();
+        file.close();
 
-        QTextStream in(&file);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        in.setEncoding(QStringConverter::Utf8);
-#else
-        in.setCodec("UTF-8");
-#endif
-
-        QTextCursor cursor(textEdit_->document());
-        cursor.beginEditBlock();
-
-        try {
-            while (!in.atEnd()) {
-                QString block = in.read(BLOCK_SIZE);
-                cursor.insertText(block);
-                QApplication::processEvents(); // 保持UI响应
-            }
-
-            cursor.endEditBlock();
-
-            textEdit_->document()->setModified(false);
-
-            cursor.movePosition(QTextCursor::Start);
-            textEdit_->setTextCursor(cursor);
-
-            spdlog::debug("File loaded successfully: {}", document_->filePath().toStdString());
-            return true;
-        } catch (const std::exception &e) {
-            spdlog::error("Error loading file: {}", e.what());
-            cursor.endEditBlock();
-            return false;
+        QString content;
+        if (currentEncoding_ == "ANSI") {
+            // 使用系统默认编码
+            auto encoding = QStringConverter::System;
+            auto decoder = QStringDecoder(encoding);
+            content = decoder.decode(data);
+        } else if (currentEncoding_ == "UTF-8") {
+            auto decoder = QStringDecoder(QStringConverter::Utf8);
+            content = decoder.decode(data);
+        } else if (currentEncoding_ == "GB18030" || currentEncoding_ == "GBK" || currentEncoding_ == "GB2312") {
+            // 对于中文编码，使用 System 编码
+            auto decoder = QStringDecoder(QStringConverter::System);
+            content = decoder.decode(data);
+        } else if (currentEncoding_ == "Latin1") {
+            auto decoder = QStringDecoder(QStringConverter::Latin1);
+            content = decoder.decode(data);
+        } else {
+            // 默认使用系统编码
+            auto decoder = QStringDecoder(QStringConverter::System);
+            content = decoder.decode(data);
         }
+
+        textEdit_->clear();
+        textEdit_->setPlainText(content);
+        textEdit_->document()->setModified(false);
+
+        QTextCursor cursor = textEdit_->textCursor();
+        cursor.movePosition(QTextCursor::Start);
+        textEdit_->setTextCursor(cursor);
+
+        spdlog::debug("File loaded with encoding {}: {}", 
+                      currentEncoding_.toStdString(), 
+                      document_->filePath().toStdString());
+        return true;
     }
 
     bool TextDocumentView::saveFileContext() {

@@ -31,6 +31,7 @@ namespace TinaToolBox {
 
         ~DocumentArea() override;
 
+        DocumentView* getCurrentDocumentView() const;
     public slots:
         void onDocumentOpened(std::shared_ptr<Document> document);
 

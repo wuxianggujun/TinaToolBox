@@ -25,6 +25,13 @@ namespace TinaToolBox {
         documentViews_.clear();
     }
 
+    DocumentView * DocumentArea::getCurrentDocumentView() const {
+        if (auto* widget = tabWidget_->currentWidget()) {
+            return qobject_cast<DocumentView*>(widget);
+        }
+        return nullptr;
+    }
+
     void DocumentArea::onDocumentOpened(std::shared_ptr<Document> document) {
         if (!document) {
             spdlog::warn("Attempting to open null document");

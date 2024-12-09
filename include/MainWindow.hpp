@@ -15,6 +15,10 @@
 
 
 namespace TinaToolBox {
+    class StatusBar;
+}
+
+namespace TinaToolBox {
     class LogPanel;
     class DocumentArea;
     class RecentFilesWidget;
@@ -85,6 +89,8 @@ namespace TinaToolBox {
         QWidget *titleBar;
         QSplitter *mainSplitter;
         QSplitter *rightSplitter;
+
+        StatusBar* statusBar{nullptr};
 
         RecentFilesWidget *recentFilesWidget;
         QTabWidget *leftPanelTab;

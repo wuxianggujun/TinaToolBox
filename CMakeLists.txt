@@ -27,7 +27,7 @@ list(APPEND CMAKE_PREFIX_PATH ${PDFium_DIR})
 
 find_package(PDFium REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network SQL)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
 set(PROJECT_SOURCES "")
 set(RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
@@ -91,7 +91,9 @@ target_include_directories(TinaToolBox PRIVATE
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
-target_link_libraries(TinaToolBox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
+target_link_libraries(TinaToolBox PRIVATE 
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Core5Compat
         Qt${QT_VERSION_MAJOR}::Network
         Qt${QT_VERSION_MAJOR}::Sql)
 

@@ -16,6 +16,8 @@
 #include "PdfViewer.hpp"
 #include "RecentFilesWidget.hpp"
 #include "SimpleIni.h"
+#include "StatusBar.hpp"
+#include "TextDocumentView.hpp"
 
 namespace TinaToolBox {
     MainWindow::MainWindow(QWidget *parent)
@@ -121,10 +123,13 @@ namespace TinaToolBox {
        }
    )";
 
+        statusBar = new StatusBar(this);
+        mainLayout->addWidget(statusBar);
+
         mainSplitter->setStyleSheet(splitterStyle);
         rightSplitter->setStyleSheet(splitterStyle);
         centerSplitter->setStyleSheet(splitterStyle);
-
+        
         installEventFilter(this);
         
         // connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
@@ -322,6 +327,39 @@ namespace TinaToolBox {
                 this, &MainWindow::onFileSelected);
         connect(recentFilesWidget, &RecentFilesWidget::removeFileRequested,
                 this, &MainWindow::onRemoveFileRequested);
+
+        // 连接文档变化信号
+        connect(&DocumentManager::getInstance(), &DocumentManager::currentDocumentChanged,
+                this, [this](std::shared_ptr<Document> document) {
+            if (document) {
+                statusBar->setFilePath(document->filePath());
+            
+                // 获取当前文档视图
+                if (auto* docView = documentArea->getCurrentDocumentView()) {
+                    if (auto* textView = dynamic_cast<TextDocumentView*>(docView->getDocumentView())) {
+                        // 如果是文本文档，显示编码选项
+                        statusBar->setEncodingVisible(true);
+                    } else {
+                        // 非文本文档隐藏编码选项
+                        statusBar->setEncodingVisible(false);
+                    }
+                }
+            } else {
+                statusBar->setFilePath("");
+                statusBar->setEncodingVisible(false);
+            }
+        });
+
+        // 连接编码变化信号
+        connect(statusBar, &StatusBar::encodingChanged,
+                this, [this](const QString& encoding) {
+            if (auto* docView = documentArea->getCurrentDocumentView()) {
+                if (auto* textView = dynamic_cast<TextDocumentView*>(docView->getDocumentView())) {
+                    textView->setEncoding(encoding);
+                }
+            }
+        });
+        
     }
 
     void MainWindow::updateFileHistory(const QString &filePath) {

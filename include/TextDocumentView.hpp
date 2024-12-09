@@ -19,17 +19,21 @@ namespace TinaToolBox {
         bool saveContent() override;
 
         QWidget *widget() override;
-        
+
+        void setEncoding(const QString &encoding);
 
     private slots:
         void onTextModified();
 
     private:
         bool loadFileContext();
+
         bool saveFileContext();
 
         LineNumberTextEdit *textEdit_;
         std::shared_ptr<Document> document_;
-        static constexpr qint64 BLOCK_SIZE = 1024*1024; // 1MB per block
+        static constexpr qint64 BLOCK_SIZE = 1024 * 1024; // 1MB per block
+
+        QString currentEncoding_{"UTF-8"};
     };
 }
