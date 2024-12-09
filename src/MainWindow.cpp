@@ -330,21 +330,31 @@ namespace TinaToolBox {
 
         // 监听文档变化
         connect(&DocumentManager::getInstance(), &DocumentManager::currentDocumentChanged,
-                this, [this](std::shared_ptr<Document> document) {
+                this, [this](const std::shared_ptr<Document> &document) {
                     if (document) {
                         statusBar->setFilePath(document->filePath());
-
+                    
                         // 获取当前文档视图
                         if (auto *docView = documentArea->getCurrentDocumentView()) {
                             if (auto *textView = dynamic_cast<TextDocumentView *>(docView->getDocumentView())) {
                                 // 显示当前编码
                                 statusBar->setEncoding(textView->getCurrentEncoding());
                                 statusBar->setEncodingVisible(true);
-                                // 断开之前的连接
+                            
+                                // 断开所有之前的连接
                                 disconnect(statusBar, &StatusBar::encodingChanged, nullptr, nullptr);
-                                // 连接编码变化信号
+                                disconnect(textView, &TextDocumentView::encodingChanged, nullptr, nullptr);
+                            
+                                // 重新建立双向连接
+                                connect(statusBar, &StatusBar::encodingChanged,
+                                        textView, &TextDocumentView::setEncoding,
+                                        Qt::UniqueConnection);
                                 connect(textView, &TextDocumentView::encodingChanged,
-                                        statusBar, &StatusBar::setEncoding);
+                                        statusBar, &StatusBar::setEncoding,
+                                        Qt::UniqueConnection);
+                            
+                                spdlog::debug("Connections established for document: {}", 
+                                            document->filePath().toStdString());
                             } else {
                                 statusBar->setEncodingVisible(false);
                             }
@@ -352,16 +362,6 @@ namespace TinaToolBox {
                     } else {
                         statusBar->setFilePath("");
                         statusBar->setEncodingVisible(false);
-                    }
-                });
-
-        // 连接 StatusBar 的编码变化到文档视图
-        connect(statusBar, &StatusBar::encodingChanged,
-                this, [this](const QString &encoding) {
-                    if (auto *docView = documentArea->getCurrentDocumentView()) {
-                        if (auto *textView = dynamic_cast<TextDocumentView *>(docView->getDocumentView())) {
-                            textView->setEncoding(encoding);
-                        }
                     }
                 });
     }

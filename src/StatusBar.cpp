@@ -57,28 +57,24 @@ namespace TinaToolBox {
     
         // 主要编码列表
         QStringList mainEncodings = {
-            "ANSI",
             "UTF-8",
-            "GB2312"
+            "GBK",
+            "GB2312",
+            "GB18030",
+            "Big5"
         };
 
         // 更多编码列表
         QStringList moreEncodings = {
-            "UTF-16",
-            "GB18030",
-            "GBK",
-            "Big5",
-            "Latin1"
+            "UTF-16LE",
+            "UTF-16BE",
+            "Latin1",
+            "ASCII"
         };
 
         // 添加主要编码
         for (const auto& encoding : mainEncodings) {
-            QAction* action = encodingMenu_->addAction(encoding);
-            connect(action, &QAction::triggered, this, [this, encoding]() {
-                spdlog::debug("Encoding selected: {}", encoding.toStdString());
-                setEncoding(encoding);
-                emit encodingChanged(encoding);
-            });
+            encodingMenu_->addAction(encoding);
         }
 
         // 添加分隔线
@@ -87,22 +83,19 @@ namespace TinaToolBox {
         // 创建"更多编码"子菜单
         auto* moreMenu = new QMenu("更多编码", encodingMenu_);
         for (const auto& encoding : moreEncodings) {
-            QAction* action = moreMenu->addAction(encoding);
-            connect(action, &QAction::triggered, this, [this, encoding]() {
-                spdlog::debug("Encoding selected from more menu: {}", encoding.toStdString());
-                setEncoding(encoding);
-                emit encodingChanged(encoding);
-            });
+            moreMenu->addAction(encoding);
         }
-    
+
         encodingMenu_->addMenu(moreMenu);
     }
 
 
     void StatusBar::mousePressEvent(QMouseEvent *event) {
-        if (encodingLabel_->geometry().contains(event->pos())) {
+        if (event->button() == Qt::LeftButton && encodingLabel_->isVisible() && 
+          encodingLabel_->geometry().contains(event->pos())) {
             spdlog::debug("Encoding label clicked");
-            // 计算菜单显示位置：在编码标签正上方
+        
+            // 计算菜单显示位置
             QPoint pos = encodingLabel_->mapToGlobal(QPoint(0, 0));
             pos.setY(pos.y() - encodingMenu_->sizeHint().height());
 
@@ -111,13 +104,23 @@ namespace TinaToolBox {
             if (screen) {
                 QRect screenGeometry = screen->geometry();
                 if (pos.y() < screenGeometry.top()) {
-                    // 如果菜单会超出屏幕顶部，就显示在标签下方
                     pos.setY(encodingLabel_->mapToGlobal(QPoint(0, encodingLabel_->height())).y());
                 }
             }
-            encodingMenu_->popup(pos);
+    
+            // 显示菜单并获取选择的动作
+            QAction* action = encodingMenu_->exec(pos);
+            if (action) {
+                QString encoding = action->text();
+                spdlog::debug("Menu item selected: {}", encoding.toStdString());
+                setEncoding(encoding);
+                emit encodingChanged(encoding);
+            }
+        
             event->accept();
-        }
+            return;
+          }
+        QWidget::mousePressEvent(event);
     }
 
     void StatusBar::setFilePath(const QString &path) {

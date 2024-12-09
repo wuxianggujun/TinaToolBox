@@ -39,6 +39,6 @@ namespace TinaToolBox {
         std::shared_ptr<Document> document_;
         static constexpr qint64 BLOCK_SIZE = 1024 * 1024; // 1MB per block
 
-        QString currentEncoding_{"UTF-8"};
+        QString currentEncoding_;
     };
 }

@@ -5,11 +5,12 @@
 #include <spdlog/spdlog.h>
 #include <QTextCodec>
 #include <QStringConverter>  // Qt6 的新头文件
+#include <utility>
 
 #include "EncodingDetector.hpp"
 
 namespace TinaToolBox {
-    TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(document) {
+    TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(std::move(document)),currentEncoding_("") {
         textEdit_ = new LineNumberTextEdit(parent);
 
         // 连接文本编辑器的修改信号
@@ -41,8 +42,13 @@ namespace TinaToolBox {
     }
 
     void TextDocumentView::setEncoding(const QString &encoding) {
-        currentEncoding_ = encoding;
-        loadFileContext(); // 重新加载文件内容
+        if (currentEncoding_ == encoding) {
+            return;  // 如果编码相同，无需重新加载
+        }
+
+        currentEncoding_ = encoding;  // 更新当前编码
+        loadFileContext();  // 重新加载文件内容
+        emit encodingChanged(encoding);  // 发出编码变化信号
     }
 
     QString TextDocumentView::getCurrentEncoding() const {
@@ -64,38 +70,34 @@ namespace TinaToolBox {
         QByteArray data = file.readAll();
         file.close();
 
-        // 自动检测编码
-        currentEncoding_ = EncodingDetector::detect(data);
-        spdlog::debug("Detected encoding for {}: {}", 
-                      document_->filePath().toStdString(), 
-                      currentEncoding_.toStdString());
 
-        emit encodingChanged(currentEncoding_);
+        if (currentEncoding_.isEmpty()) {
+            // 自动检测编码
+            currentEncoding_ = EncodingDetector::detect(data);
+            spdlog::debug("Detected encoding for {}: {}", 
+                          document_->filePath().toStdString(), 
+                          currentEncoding_.toStdString());
+
+            emit encodingChanged(currentEncoding_);
+            
+        }
         
         QString content;
-        if (currentEncoding_ == "ANSI" || currentEncoding_ == "GBK" || 
-            currentEncoding_ == "GB2312" || currentEncoding_ == "GB18030") {
+        if (currentEncoding_ == "UTF-8") {
+            content = QString::fromUtf8(data);
+        } else if (currentEncoding_ == "UTF-16LE" || currentEncoding_ == "UTF-16BE") {
+            content = QString::fromUtf16(reinterpret_cast<const char16_t*>(data.constData()));
+        } else {
             QTextCodec *codec = QTextCodec::codecForName(currentEncoding_.toLatin1());
             if (codec) {
                 content = codec->toUnicode(data);
-            }
-            } else if (currentEncoding_ == "UTF-8") {
-                content = QString::fromUtf8(data);
-            } else if (currentEncoding_ == "UTF-16LE" || currentEncoding_ == "UTF-16BE") {
-                // 使用 char16_t* 重载
-                content = QString::fromUtf16(reinterpret_cast<const char16_t*>(data.constData()));
             } else {
-                // 默认使用UTF-8
-                content = QString::fromUtf8(data);
+                spdlog::error("Failed to find codec for encoding: {}", currentEncoding_.toStdString());
+                return false;
             }
-
-        textEdit_->clear();
+        }
         textEdit_->setPlainText(content);
         textEdit_->document()->setModified(false);
-
-        QTextCursor cursor = textEdit_->textCursor();
-        cursor.movePosition(QTextCursor::Start);
-        textEdit_->setTextCursor(cursor);
 
         return true;
     }
