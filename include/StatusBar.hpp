@@ -15,11 +15,11 @@ namespace TinaToolBox {
 
         ~StatusBar() override;
 
-        void setFilePath(const QString &filePath) const;
+        void setFilePath(const QString &filePath);
 
-        void setEncoding(const QString &encoding) const;
+        void setEncoding(const QString &encoding);
 
-        void setEncodingVisible(bool visible) const;
+        void setEncodingVisible(bool visible);
         
     signals:
         void encodingChanged(const QString &encoding);

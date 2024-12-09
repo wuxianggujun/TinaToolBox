@@ -1,6 +1,7 @@
 #include "StatusBar.hpp"
 #include <QHBoxLayout>
 #include <QMouseEvent>
+#include <spdlog/spdlog.h>
 
 namespace TinaToolBox {
     StatusBar::StatusBar(QWidget *parent): QWidget(parent) {
@@ -14,7 +15,7 @@ namespace TinaToolBox {
     }
 
     void StatusBar::setupUI() {
-        auto *layout = new QHBoxLayout(this);
+        auto* layout = new QHBoxLayout(this);
         layout->setContentsMargins(5, 0, 5, 0);
         layout->setSpacing(5);
 
@@ -28,7 +29,7 @@ namespace TinaToolBox {
 
         layout->addStretch();
 
-        // 编码标签
+        // 编码标签 - 移除 cursor 属性从样式表中
         encodingLabel_ = new QLabel(this);
         encodingLabel_->setStyleSheet(
             "color: #666666;"
@@ -37,13 +38,12 @@ namespace TinaToolBox {
             "border-radius: 2px;"
             "background: #f0f0f0;"
             "border: 1px solid #e0e0e0;"
-            "cursor: pointer;"
         );
+        // 直接设置鼠标样式
         encodingLabel_->setCursor(Qt::PointingHandCursor);
-        encodingLabel_->hide(); // 初始状态隐藏编码标签
+        encodingLabel_->hide();
         layout->addWidget(encodingLabel_);
 
-        // 设置整个状态栏的样式
         setStyleSheet(
             "StatusBar {"
             "    background-color: #f5f5f5;"
@@ -54,7 +54,7 @@ namespace TinaToolBox {
 
     void StatusBar::createEncodingMenu() {
         encodingMenu_ = new QMenu(this);
-
+    
         // 主要编码列表
         QStringList mainEncodings = {
             "ANSI",
@@ -72,9 +72,10 @@ namespace TinaToolBox {
         };
 
         // 添加主要编码
-        for (const auto &encoding: mainEncodings) {
-            QAction *action = encodingMenu_->addAction(encoding);
+        for (const auto& encoding : mainEncodings) {
+            QAction* action = encodingMenu_->addAction(encoding);
             connect(action, &QAction::triggered, this, [this, encoding]() {
+                spdlog::debug("Encoding selected: {}", encoding.toStdString());
                 setEncoding(encoding);
                 emit encodingChanged(encoding);
             });
@@ -84,21 +85,23 @@ namespace TinaToolBox {
         encodingMenu_->addSeparator();
 
         // 创建"更多编码"子菜单
-        auto *moreMenu = new QMenu("更多编码", encodingMenu_);
-        for (const auto &encoding: moreEncodings) {
-            QAction *action = moreMenu->addAction(encoding);
+        auto* moreMenu = new QMenu("更多编码", encodingMenu_);
+        for (const auto& encoding : moreEncodings) {
+            QAction* action = moreMenu->addAction(encoding);
             connect(action, &QAction::triggered, this, [this, encoding]() {
+                spdlog::debug("Encoding selected from more menu: {}", encoding.toStdString());
                 setEncoding(encoding);
                 emit encodingChanged(encoding);
             });
         }
-
+    
         encodingMenu_->addMenu(moreMenu);
     }
 
 
     void StatusBar::mousePressEvent(QMouseEvent *event) {
         if (encodingLabel_->geometry().contains(event->pos())) {
+            spdlog::debug("Encoding label clicked");
             // 计算菜单显示位置：在编码标签正上方
             QPoint pos = encodingLabel_->mapToGlobal(QPoint(0, 0));
             pos.setY(pos.y() - encodingMenu_->sizeHint().height());
@@ -113,10 +116,11 @@ namespace TinaToolBox {
                 }
             }
             encodingMenu_->popup(pos);
+            event->accept();
         }
     }
 
-    void StatusBar::setFilePath(const QString &path) const {
+    void StatusBar::setFilePath(const QString &path) {
         if (!path.isEmpty()) {
             filePathLabel_->setText(path);
             filePathLabel_->show();
@@ -128,7 +132,7 @@ namespace TinaToolBox {
         }
     }
 
-    void StatusBar::setEncoding(const QString &encoding) const {
+    void StatusBar::setEncoding(const QString &encoding) {
         if (!encoding.isEmpty()) {
             encodingLabel_->setText(encoding);
             encodingLabel_->show();
@@ -137,7 +141,7 @@ namespace TinaToolBox {
         }
     }
 
-    void StatusBar::setEncodingVisible(bool visible) const {
+    void StatusBar::setEncodingVisible(bool visible) {
         encodingLabel_->setVisible(visible);
     }
     

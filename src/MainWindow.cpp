@@ -129,9 +129,9 @@ namespace TinaToolBox {
         mainSplitter->setStyleSheet(splitterStyle);
         rightSplitter->setStyleSheet(splitterStyle);
         centerSplitter->setStyleSheet(splitterStyle);
-        
+
         installEventFilter(this);
-        
+
         // connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
         // connect(fileTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::showFileTreeContextMenu);
         connect(logPanel, &LogPanel::closed, this, &MainWindow::hideBottomPanel);
@@ -273,7 +273,7 @@ namespace TinaToolBox {
             currToken.debugPrint();
         }
     }
-    
+
     void MainWindow::handleMenuAction(const QString &actionName) {
         qDebug() << "Execute menu action: " << actionName;
         if (actionName == "新建") {
@@ -299,8 +299,8 @@ namespace TinaToolBox {
     void MainWindow::hideBottomPanel() {
         bottomPanel->hide();
     }
-    
-    
+
+
     void MainWindow::openFile() {
         QString filePath = QFileDialog::getOpenFileName(
             this,
@@ -320,7 +320,7 @@ namespace TinaToolBox {
             }
         }
     }
-    
+
     // 连接信号
     void MainWindow::setupConnections() {
         connect(recentFilesWidget, &RecentFilesWidget::fileSelected,
@@ -331,47 +331,47 @@ namespace TinaToolBox {
         // 监听文档变化
         connect(&DocumentManager::getInstance(), &DocumentManager::currentDocumentChanged,
                 this, [this](std::shared_ptr<Document> document) {
-            if (document) {
-                statusBar->setFilePath(document->filePath());
-            
-                // 获取当前文档视图
-                if (auto* docView = documentArea->getCurrentDocumentView()) {
-                    if (auto* textView = dynamic_cast<TextDocumentView*>(docView->getDocumentView())) {
-                        // 显示当前编码
-                        statusBar->setEncoding(textView->getCurrentEncoding());
-                        statusBar->setEncodingVisible(true);
-                    
-                        // 连接编码变化信号
-                        connect(textView, &TextDocumentView::encodingChanged,
-                                statusBar, &StatusBar::setEncoding);
+                    if (document) {
+                        statusBar->setFilePath(document->filePath());
+
+                        // 获取当前文档视图
+                        if (auto *docView = documentArea->getCurrentDocumentView()) {
+                            if (auto *textView = dynamic_cast<TextDocumentView *>(docView->getDocumentView())) {
+                                // 显示当前编码
+                                statusBar->setEncoding(textView->getCurrentEncoding());
+                                statusBar->setEncodingVisible(true);
+                                // 断开之前的连接
+                                disconnect(statusBar, &StatusBar::encodingChanged, nullptr, nullptr);
+                                // 连接编码变化信号
+                                connect(textView, &TextDocumentView::encodingChanged,
+                                        statusBar, &StatusBar::setEncoding);
+                            } else {
+                                statusBar->setEncodingVisible(false);
+                            }
+                        }
                     } else {
+                        statusBar->setFilePath("");
                         statusBar->setEncodingVisible(false);
                     }
-                }
-            } else {
-                statusBar->setFilePath("");
-                statusBar->setEncodingVisible(false);
-            }
-        });
+                });
 
         // 连接 StatusBar 的编码变化到文档视图
         connect(statusBar, &StatusBar::encodingChanged,
-                this, [this](const QString& encoding) {
-            if (auto* docView = documentArea->getCurrentDocumentView()) {
-                if (auto* textView = dynamic_cast<TextDocumentView*>(docView->getDocumentView())) {
-                    textView->setEncoding(encoding);
-                }
-            }
-        });
-        
+                this, [this](const QString &encoding) {
+                    if (auto *docView = documentArea->getCurrentDocumentView()) {
+                        if (auto *textView = dynamic_cast<TextDocumentView *>(docView->getDocumentView())) {
+                            textView->setEncoding(encoding);
+                        }
+                    }
+                });
     }
 
     void MainWindow::updateFileHistory(const QString &filePath) {
-       if (filePath.isEmpty()) return;
+        if (filePath.isEmpty()) return;
 
         recentFilesWidget->addRecentFile(filePath);
     }
-    
+
     bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         if (obj == this) {
             if (event->type() == QEvent::MouseMove) {
@@ -383,7 +383,7 @@ namespace TinaToolBox {
         }
         return QMainWindow::eventFilter(obj, event);
     }
-    
+
     void MainWindow::closeEvent(QCloseEvent *event) {
         // 关闭所有打开的文档
         auto &manager = DocumentManager::getInstance();
