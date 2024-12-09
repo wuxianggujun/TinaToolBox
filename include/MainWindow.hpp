@@ -69,20 +69,13 @@ namespace TinaToolBox {
         void createTileBar();
         
         void openFile();
-
-        bool isScriptFile(const QString &filePath) const;
-        
-
-        void onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column);
         
         void setupConnections();
 
         void updateFileHistory(const QString &filePath);
         
         bool eventFilter(QObject *obj, QEvent *event) override;
-
-        void filterTreeItems(bool showScriptsOnly);
-
+        
         QPoint dragPosition;
         bool isDragging = false;
         MainWindowMenuBar *m_menuBar;

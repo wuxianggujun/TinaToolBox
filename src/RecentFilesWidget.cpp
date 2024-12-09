@@ -29,6 +29,7 @@ namespace TinaToolBox {
         for (const auto &fileHistory: recentFiles) {
             addTopLevelItem(createFileItem(fileHistory));
         }
+        updateVisibleItems();
     }
 
     void RecentFilesWidget::addRecentFile(const QString &filePath) {
@@ -45,6 +46,7 @@ namespace TinaToolBox {
             // 添加新项
             insertTopLevelItem(0, createFileItem(fileHistory));
         }
+        updateVisibleItems();
     }
 
     void RecentFilesWidget::removeRecentFile(const QString &filePath) {
@@ -56,6 +58,13 @@ namespace TinaToolBox {
                     break;
                 }
             }
+        }
+    }
+
+    void RecentFilesWidget::setShowScriptsOnly(bool showScriptOnly) {
+        if (showScriptsOnly_ != showScriptOnly) {
+            showScriptsOnly_ = showScriptOnly;
+            updateVisibleItems();
         }
     }
 
@@ -183,5 +192,20 @@ namespace TinaToolBox {
         }
 
         return QString("%1 %2").arg(fileSize, 0, 'f', 2).arg(units[unitIndex]);
+    }
+
+    void RecentFilesWidget::updateVisibleItems() {
+        for (int i = 0; i < topLevelItemCount(); ++i) {
+            QTreeWidgetItem* item = topLevelItem(i);
+            QString filePath = item->data(0, Qt::UserRole).toString();
+            bool isScript = isScriptFile(filePath);
+        
+            // 如果只显示脚本且当前项不是脚本，或者显示所有文件
+            item->setHidden(showScriptsOnly_ && !isScript);
+        }
+    }
+
+    bool RecentFilesWidget::isScriptFile(const QString &filePath) const {
+        return filePath.endsWith(".ttb", Qt::CaseInsensitive);
     }
 }

@@ -17,6 +17,8 @@ namespace TinaToolBox {
         void loadRecentFiles();
         void addRecentFile(const QString &filePath);
         void removeRecentFile(const QString &filePath);
+
+        void setShowScriptsOnly(bool showScriptOnly);
     signals:
         void fileSelected(const QString &filePath);
         void removeFileRequested(const QString &filePath);
@@ -35,8 +37,13 @@ namespace TinaToolBox {
         QTreeWidgetItem* createFileItem(const FileHistory& fileHistory);
         void updateFileItem(QTreeWidgetItem* item, const FileHistory& fileHistory);
         [[nodiscard]] QString formatFileSize(qint64 size) const;
+
+        void updateVisibleItems();
+        bool isScriptFile(const QString & filePath) const;
+    private:
         
         QMenu* contextMenu_{nullptr};
         FileHistoryManager& fileHistoryManager;
+        bool showScriptsOnly_ = false;
     };
 }

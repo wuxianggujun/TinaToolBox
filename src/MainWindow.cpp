@@ -316,17 +316,6 @@ namespace TinaToolBox {
         }
     }
     
-    void MainWindow::onScriptTreeItemDoubleClicked(const QTreeWidgetItem *item, int column) {
-        /*if (!item) return;
-
-        QString filePath = item->data(0, Qt::UserRole).toString();
-        if (!filePath.isEmpty()) {
-            documentArea->openFile(filePath);
-            updateUIState();
-        }*/
-    }
-
-
     // 连接信号
     void MainWindow::setupConnections() {
         connect(recentFilesWidget, &RecentFilesWidget::fileSelected,
@@ -352,21 +341,7 @@ namespace TinaToolBox {
         }
         return QMainWindow::eventFilter(obj, event);
     }
-
-    void MainWindow::filterTreeItems(bool showScriptsOnly) {
-        /*for (int i = 0; i < fileTree->topLevelItemCount(); ++i) {
-            QTreeWidgetItem *item = fileTree->topLevelItem(i);
-            QString filePath = item->data(0, Qt::UserRole).toString();
-            bool isScript = isScriptFile(filePath);
-
-            if (showScriptsOnly) {
-                item->setHidden(!isScript);
-            } else {
-                item->setHidden(false);
-            }
-        }*/
-    }
-
+    
     void MainWindow::closeEvent(QCloseEvent *event) {
         // 关闭所有打开的文档
         auto &manager = DocumentManager::getInstance();
@@ -380,7 +355,7 @@ namespace TinaToolBox {
 
     QWidget *MainWindow::createLeftPanel() {
         auto *leftPanel = new QWidget();
-        leftPanel->setMaximumWidth(400);
+        leftPanel->setMaximumWidth(350);
         leftPanel->setMinimumWidth(200);
 
         auto *leftPanelLayout = new QVBoxLayout(leftPanel);
@@ -446,10 +421,11 @@ namespace TinaToolBox {
             "    outline: 0px;"
             "}"
         );
-
         connect(viewModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this](int index) {
-                    filterTreeItems(index == 1); // 1 表示"脚本文件"选项
+                    if (recentFilesWidget) {
+                        recentFilesWidget->setShowScriptsOnly(index == 1); // 1 表示"脚本文件"选项
+                    }
                 });
         toolBarLayout->addWidget(viewModeComboBox);
         toolBarLayout->addStretch();
