@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QApplication>  // 用于访问剪贴板
+#include <QClipboard>   // 用于复制到剪贴板
 #include <QTreeWidget>
 #include  <QMenu>
 #include "FileHistory.hpp"
@@ -21,17 +23,20 @@ namespace TinaToolBox {
 
     protected:
         void contextMenuEvent(QContextMenuEvent *event) override;
+        bool event(QEvent *event) override;
         
     private:
         void setupUi();
 
         void setupConnections();
 
+        void onItemDoubleClicked(QTreeWidgetItem *item, int column);
+
         QTreeWidgetItem* createFileItem(const FileHistory& fileHistory);
         void updateFileItem(QTreeWidgetItem* item, const FileHistory& fileHistory);
         [[nodiscard]] QString formatFileSize(qint64 size) const;
         
-        QMenu* contextMenu_{};
+        QMenu* contextMenu_{nullptr};
         FileHistoryManager& fileHistoryManager;
     };
 }
