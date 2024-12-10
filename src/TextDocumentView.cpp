@@ -10,7 +10,8 @@
 #include "EncodingDetector.hpp"
 
 namespace TinaToolBox {
-    TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(std::move(document)),currentEncoding_("") {
+    TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(std::move(
+        document)), currentEncoding_("") {
         textEdit_ = new LineNumberTextEdit(parent);
 
         // 连接文本编辑器的修改信号
@@ -43,12 +44,12 @@ namespace TinaToolBox {
 
     void TextDocumentView::setEncoding(const QString &encoding) {
         if (currentEncoding_ == encoding) {
-            return;  // 如果编码相同，无需重新加载
+            return; // 如果编码相同，无需重新加载
         }
 
-        currentEncoding_ = encoding;  // 更新当前编码
-        loadFileContext();  // 重新加载文件内容
-        emit encodingChanged(encoding);  // 发出编码变化信号
+        currentEncoding_ = encoding; // 更新当前编码
+        loadFileContext(); // 重新加载文件内容
+        emit encodingChanged(encoding); // 发出编码变化信号
     }
 
     QString TextDocumentView::getCurrentEncoding() const {
@@ -74,22 +75,22 @@ namespace TinaToolBox {
         if (currentEncoding_.isEmpty()) {
             // 自动检测编码
             currentEncoding_ = EncodingDetector::detect(data);
-            spdlog::debug("Detected encoding for {}: {}", 
-                          document_->filePath().toStdString(), 
+            spdlog::debug("Detected encoding for {}: {}",
+                          document_->filePath().toStdString(),
                           currentEncoding_.toStdString());
 
             emit encodingChanged(currentEncoding_);
-            
         }
-        
+
         QString content;
         if (currentEncoding_ == "UTF-8") {
             content = QString::fromUtf8(data);
         } else if (currentEncoding_ == "UTF-16LE" || currentEncoding_ == "UTF-16BE") {
-            content = QString::fromUtf16(reinterpret_cast<const char16_t*>(data.constData()));
+            content = QString::fromUtf16(reinterpret_cast<const char16_t *>(data.constData()));
+        } else if (currentEncoding_ == "ASCII") {
+            content = QString::fromLatin1(data);
         } else {
-            QTextCodec *codec = QTextCodec::codecForName(currentEncoding_.toLatin1());
-            if (codec) {
+            if (const QTextCodec *codec = QTextCodec::codecForName(currentEncoding_.toLatin1())) {
                 content = codec->toUnicode(data);
             } else {
                 spdlog::error("Failed to find codec for encoding: {}", currentEncoding_.toStdString());
