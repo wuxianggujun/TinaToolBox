@@ -16,71 +16,48 @@
 #include <qcombobox.h>
 
 namespace TinaToolBox {
-    class LogPanel;
-
-    // 创建一个自定义的spdlog sink
-    template<typename Mutex>
-    class LogPanelSink : public spdlog::sinks::base_sink<Mutex> {
-    public:
-        explicit LogPanelSink(LogPanel* panel) : panel_(panel) {}
-
-    protected:
-        void sink_it_(const spdlog::details::log_msg& msg) override;
-        void flush_() override {}
-
-    private:
-        LogPanel* panel_;
-    };
-
     class LogPanel : public QWidget {
-
         Q_OBJECT
 
-        private:
+    private:
         struct LogEntry {
             QString text;
             QColor color;
             spdlog::level::level_enum level;
+            qint64 timestamp; // 添加时间戳便于排序和过滤
         };
-
+    
     public:
-        explicit LogPanel(QWidget* parent = nullptr);
+        explicit LogPanel(QWidget *parent = nullptr);
+
         ~LogPanel() override;
-
-        void appendLog(const QString& text);
-        void appendLogWithColor(const QString& text, const QColor& color);
-
-        signals:
-            void closed();
-        void logMessage(const QString& message, const QColor& color);
-
-        public slots:
-            void clearLog();
+    private slots:
+        
+        void clearLog();
         void closePanel();
-        void onSearchTextChanged(const QString& text);
-
+        void onSearchTextChanged(const QString &text);
         void onLogLevelChanged(int index);
+        void onLogMessage(const QString &message, spdlog::level::level_enum level);
 
+    signals:
+        void closed();
+    
     private:
         void setupUI();
-        void setupLogHandlers();
+        void filterLogs();
+        
+        [[nodiscard]] QColor getLevelColor(spdlog::level::level_enum level) const;
+        [[nodiscard]] QString getLevelName(spdlog::level::level_enum level) const;
+        
+        QTextEdit *logArea_{};
+        QLineEdit *searchInput_{};
+        QPushButton *clearButton_{};
+        QPushButton *closeButton_{};
 
-        QTextEdit* logArea_;
-        QLineEdit* searchInput_;
-        QPushButton* clearButton_;
-        QPushButton* closeButton_;
-
-        QComboBox* logLevelComboBox_;
-        void filterLogsByLevel();
-        int currentLogLevel_;
-
+        QComboBox *logLevelComboBox_{};
+        
         QVector<LogEntry> logEntries_;
-        std::shared_ptr<LogPanelSink<std::mutex>> sink_;
-        static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg);
-        static LogPanel* instance_;
-
-        static std::streambuf* oldCoutBuf;
-        static std::streambuf* oldCerrBuf;
-    
+        int currentLogLevel_;
+        QString currentSearchText_;
     };
 }

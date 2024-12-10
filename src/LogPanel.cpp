@@ -12,263 +12,26 @@
 #include <QTimer>
 #include <spdlog/pattern_formatter.h>
 
+#include "LogSystem.hpp"
+
 namespace TinaToolBox {
-    LogPanel *LogPanel::instance_ = nullptr;
-    std::streambuf* LogPanel::oldCoutBuf = nullptr;
-    std::streambuf* LogPanel::oldCerrBuf = nullptr;
-
-    template<typename Mutex>
-    void LogPanelSink<Mutex>::sink_it_(const spdlog::details::log_msg &msg) {
-        if (!panel_) return;
-
-        // 设置日志格式，包含时间戳
-        if (!spdlog::sinks::base_sink<Mutex>::formatter_) {
-            spdlog::sinks::base_sink<Mutex>::set_formatter(
-                std::make_unique<spdlog::pattern_formatter>("[%Y-%m-%d %H:%M:%S.%e] %v"));
-        }
-        spdlog::memory_buf_t formatted;
-        spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
-        QString text = QString::fromUtf8(formatted.data(), static_cast<int>(formatted.size()));
-
-        // 根据日志级别设置颜色
-        QColor color;
-        switch (msg.level) {
-            case spdlog::level::trace:
-                color = Qt::gray;
-            break;
-            case spdlog::level::debug:
-                color = Qt::darkGreen;
-            break;
-            case spdlog::level::info:
-                color = Qt::black;
-            break;
-            case spdlog::level::warn:
-                color = QColor(255, 165, 0); // Orange
-            break;
-            case spdlog::level::err:
-                color = Qt::red;
-            break;
-            case spdlog::level::critical:
-                color = QColor(139, 0, 0); // Dark red
-            break;
-            default:
-                color = Qt::black;
-        }
-
-        // 使用 Qt::QueuedConnection 确保在主线程中更新 UI
-        QMetaObject::invokeMethod(panel_, "logMessage", Qt::QueuedConnection,
-                                  Q_ARG(QString, text), Q_ARG(QColor, color));
-    }
-
-    void LogPanel::onLogLevelChanged(int index) {
-        currentLogLevel_ = logLevelComboBox_->currentData().toInt();
-   
-        // 使用 QTimer 来延迟执行过滤，避免界面卡死
-        QTimer::singleShot(0, this, &LogPanel::filterLogsByLevel);
-    }
-
-    void LogPanel::filterLogsByLevel() {
-        // 清空当前显示
-        logArea_->clear();
-        // 获取当前选择的日志级别
-        int selectedLevel = logLevelComboBox_->currentData().toInt();
-
-        spdlog::debug("当前选择的日志级别: {}", selectedLevel);
-
-        for (const LogEntry& entry : logEntries_) {
-            bool shouldShow = false;
-
-            if (selectedLevel == -1) {  // ALL
-                shouldShow = true;
-            }
-            else {
-                // spdlog的级别：trace=0, debug=1, info=2, warn=3, error=4, critical=5
-                shouldShow = (entry.level == selectedLevel);
-            }
-
-            if (shouldShow) {
-                logArea_->setTextColor(entry.color);
-                logArea_->append(entry.text);
-            }
-        }
-    }
-
-    void LogPanel::qtMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-        if (!instance_) return;
-        // 获取当前时间并格式化
-        auto now = QDateTime::currentDateTime();
-        auto timestamp = now.toString("[yyyy-MM-dd HH:mm:ss.zzz] ");
-        QColor color;
-        QString prefix;
-        switch (type) {
-            case QtDebugMsg:
-                color = Qt::darkGreen;
-            prefix = "[Debug] ";
-            break;
-            case QtInfoMsg:
-                color = Qt::black;
-            prefix = "[Info] ";
-            break;
-            case QtWarningMsg:
-                color = QColor(255, 165, 0);
-            prefix = "[Warning] ";
-            break;
-            case QtCriticalMsg:
-                color = Qt::red;
-            prefix = "[Critical] ";
-            break;
-            case QtFatalMsg:
-                color = QColor(139, 0, 0);
-            prefix = "[Fatal] ";
-            break;
-        }
-
-        QString logMessage = timestamp + prefix + msg;
-        if (context.file) {
-            logMessage += QString(" (%1:%2)").arg(context.file).arg(context.line);
-        }
-
-        QMetaObject::invokeMethod(instance_, "logMessage", Qt::QueuedConnection,
-                                  Q_ARG(QString, logMessage), Q_ARG(QColor, color));
-    }
-
-    LogPanel::LogPanel(QWidget *parent) : QWidget(parent) {
-        instance_ = this;
-        // 初始化当前日志级别为 ALL (-1)
-        currentLogLevel_ = -1;
+    
+    LogPanel::LogPanel(QWidget *parent) : QWidget(parent),currentLogLevel_(-1) {
         setupUI();
-        setupLogHandlers();
 
-        // 确保 ComboBox 初始选择为 "All"
-        logLevelComboBox_->setCurrentIndex(0);
+        // 连接到日志系统
+        connect(&LogSystem::getInstance(), &LogSystem::logMessage,
+                this, &LogPanel::onLogMessage,
+                Qt::QueuedConnection);
 
-        // 连接信号和槽
-        connect(this, &LogPanel::logMessage, this, [this](const QString &message, const QColor &color) {
-            appendLogWithColor(message, color);
-        });
+        // 初始化日志系统
+        LogSystem::getInstance().initialize(this);
     }
 
     LogPanel::~LogPanel() {
-        if (instance_ == this) {
-            instance_ = nullptr;
-        }
-        // 清理spdlog sink
-        if (sink_) {
-            spdlog::drop_all(); // 清理所有logger
-            sink_.reset();
-        }
-        // 恢复默认的消息处理器
-        qInstallMessageHandler(nullptr);
+        LogSystem::getInstance().shutdown();
     }
-
-    void LogPanel::setupLogHandlers() {
-        // 1. 只保留一个日志输出途径
-        sink_ = std::make_shared<LogPanelSink<std::mutex>>(this);
-        auto logger = spdlog::default_logger();
-        logger->sinks().clear();
-        logger->sinks().push_back(sink_);
     
-        // 2. 设置 spdlog 作为 Qt 消息的处理器
-        qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-            // 将 Qt 消息转发给 spdlog
-            switch (type) {
-                case QtDebugMsg:
-                    spdlog::debug(msg.toStdString());
-                    break;
-                case QtInfoMsg:
-                    spdlog::info(msg.toStdString());
-                    break;
-                case QtWarningMsg:
-                    spdlog::warn(msg.toStdString());
-                    break;
-                case QtCriticalMsg:
-                    spdlog::error(msg.toStdString());
-                    break;
-                case QtFatalMsg:
-                    spdlog::critical(msg.toStdString());
-                    break;
-            }
-        });
-
-        // 3. 重定向 std::cout 和 std::cerr
-        static std::streambuf* oldCoutBuf = std::cout.rdbuf();
-        static std::streambuf* oldCerrBuf = std::cerr.rdbuf();
-
-        // 创建自定义的 streambuf
-        class LogBuf : public std::streambuf {
-        protected:
-            std::string buffer;
-            bool isError;
-
-            int_type overflow(int_type c) override {
-                if (c != EOF) {
-                    if (c == '\n') {
-                        if (isError) {
-                            spdlog::error(buffer);
-                        } else {
-                            spdlog::info(buffer);
-                        }
-                        buffer.clear();
-                    } else {
-                        buffer += static_cast<char>(c);
-                    }
-                }
-                return c;
-            }
-
-        public:
-            explicit LogBuf(bool error = false) : isError(error) {}
-        };
-
-        static LogBuf coutBuf(false);
-        static LogBuf cerrBuf(true);
-
-        // 重定向标准输出和错误输出
-        std::cout.rdbuf(&coutBuf);
-        std::cerr.rdbuf(&cerrBuf);
-    }
-
-    void LogPanel::appendLog(const QString &text) {
-        logArea_->append(text);
-    }
-
-    void LogPanel::appendLogWithColor(const QString &text, const QColor &color) {
-        // 解析日志级别
-        spdlog::level::level_enum level = spdlog::level::info;  // 默认级别
-        // 更精确的日志级别检测
-        QString lowerText = text.toLower();
-        if (lowerText.contains("[trace]")) {
-            level = spdlog::level::trace;
-        }
-        else if (lowerText.contains("[debug]")) {
-            level = spdlog::level::debug;
-        }
-        else if (lowerText.contains("[info]")) {
-            level = spdlog::level::info;
-        }
-        else if (lowerText.contains("[warning]") || lowerText.contains("[warn]")) {
-            level = spdlog::level::warn;
-        }
-        else if (lowerText.contains("[error]") || lowerText.contains("[err]")) {
-            level = spdlog::level::err;
-        }
-        else if (lowerText.contains("[critical]")) {
-            level = spdlog::level::critical;
-        }
-
-        // 存储日志条目
-        logEntries_.append({text, color, level});
-
-        // 检查是否应该显示这条日志
-        int currentLevel = logLevelComboBox_->currentData().toInt();
-        bool shouldShow = (currentLevel == -1) || (level == currentLevel);
-
-        if (shouldShow) {
-            logArea_->setTextColor(color);
-            logArea_->append(text);
-        }
-    }
-
     // 在头文件中添加日志级别的调试辅助函数
     QString getLevelName(spdlog::level::level_enum level) {
         switch (level) {
@@ -281,9 +44,10 @@ namespace TinaToolBox {
             default: return "UNKNOWN";
         }
     }
+
     void LogPanel::clearLog() {
+        logEntries_.clear(); // 同时清除存储的日志
         logArea_->clear();
-        logEntries_.clear();  // 同时清除存储的日志
     }
 
     void LogPanel::closePanel() {
@@ -291,28 +55,29 @@ namespace TinaToolBox {
     }
 
     void LogPanel::onSearchTextChanged(const QString &text) {
-        if (text.isEmpty()) {
-            // 清除所有高亮
-            QTextCursor cursor = logArea_->textCursor();
-            cursor.movePosition(QTextCursor::Start);
-            cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-            QTextCharFormat format;
-            format.setBackground(Qt::transparent);
-            cursor.mergeCharFormat(format);
-            return;
-        }
+        currentSearchText_ = text;
+        filterLogs();
+    }
 
-        // 高亮匹配的文本
-        QTextCursor cursor(logArea_->document());
-        QTextCharFormat highlightFormat;
-        highlightFormat.setBackground(Qt::yellow);
+    void LogPanel::onLogLevelChanged(int index) {
+        currentLogLevel_ = logLevelComboBox_->currentData().toInt();
+        filterLogs();
+    }
 
-        while (!cursor.isNull() && !cursor.atEnd()) {
-            cursor = logArea_->document()->find(text, cursor);
-            if (!cursor.isNull()) {
-                cursor.mergeCharFormat(highlightFormat);
-            }
-        }
+    void LogPanel::onLogMessage(const QString &message, spdlog::level::level_enum level) {
+        // 创建新的日志条目
+        LogEntry entry{
+            message,
+            getLevelColor(level),
+            level,
+            QDateTime::currentMSecsSinceEpoch()
+        };
+
+        // 存储日志条目
+        logEntries_.append(entry);
+
+        // 应用过滤
+        filterLogs();
     }
 
 
@@ -346,42 +111,41 @@ namespace TinaToolBox {
         logLevelComboBox_->addItem("Critical", spdlog::level::critical);
 
         logLevelComboBox_->setStyleSheet(
-         "QComboBox {"
-         "    background-color: white;"
-         "    border: 1px solid #cccccc;"
-         "    border-radius: 2px;"
-         "    padding: 2px 5px;"
-         "    min-width: 100px;"
-         "}"
-         "QComboBox:focus {"
-         "    border: 1px solid #0078d7;"
-         "}"
-         "QComboBox::drop-down {"
-         "    border: none;"
-         "    width: 20px;"
-         "}"
-         "QComboBox::down-arrow {"
-         "    width: 8px;"
-         "    height: 8px;"
-         "    background: none;"
-         "    border-top: 2px solid #666;"
-         "    border-right: 2px solid #666;"
-         "    margin-top: -2px;"
-         "}"
-         "QComboBox QAbstractItemView {"
-         "    border: 1px solid #cccccc;"
-         "    selection-background-color: #e5f3ff;"
-         "    selection-color: black;"
-         "    background-color: white;"
-         "    outline: 0px;"
-         "}");
+            "QComboBox {"
+            "    background-color: white;"
+            "    border: 1px solid #cccccc;"
+            "    border-radius: 2px;"
+            "    padding: 2px 5px;"
+            "    min-width: 100px;"
+            "}"
+            "QComboBox:focus {"
+            "    border: 1px solid #0078d7;"
+            "}"
+            "QComboBox::drop-down {"
+            "    border: none;"
+            "    width: 20px;"
+            "}"
+            "QComboBox::down-arrow {"
+            "    width: 8px;"
+            "    height: 8px;"
+            "    background: none;"
+            "    border-top: 2px solid #666;"
+            "    border-right: 2px solid #666;"
+            "    margin-top: -2px;"
+            "}"
+            "QComboBox QAbstractItemView {"
+            "    border: 1px solid #cccccc;"
+            "    selection-background-color: #e5f3ff;"
+            "    selection-color: black;"
+            "    background-color: white;"
+            "    outline: 0px;"
+            "}");
 
-       
+
         connect(logLevelComboBox_, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, &LogPanel::onLogLevelChanged);
 
         toolbarLayout->addWidget(logLevelComboBox_);
-    
 
 
         searchInput_ = new QLineEdit();
@@ -456,5 +220,53 @@ namespace TinaToolBox {
             "}"
         );
         mainLayout->addWidget(logArea_);
+    }
+
+    void LogPanel::filterLogs() {
+        logArea_->clear();
+
+        for (const auto &entry : logEntries_) {
+            bool shouldShow = true;
+
+            // 级别过滤
+            if (currentLogLevel_ != -1 && entry.level != currentLogLevel_) {
+                shouldShow = false;
+            }
+
+            // 搜索文本过滤
+            if (!currentSearchText_.isEmpty() && 
+                !entry.text.contains(currentSearchText_, Qt::CaseInsensitive)) {
+                shouldShow = false;
+                }
+
+            if (shouldShow) {
+                logArea_->setTextColor(entry.color);
+                logArea_->append(entry.text);
+            }
+        }
+    }
+
+    QColor LogPanel::getLevelColor(spdlog::level::level_enum level) const {
+        switch (level) {
+            case spdlog::level::trace: return Qt::gray;
+            case spdlog::level::debug: return Qt::darkGreen;
+            case spdlog::level::info: return Qt::black;
+            case spdlog::level::warn: return QColor(255, 165, 0);  // Orange
+            case spdlog::level::err: return Qt::red;
+            case spdlog::level::critical: return QColor(139, 0, 0);  // Dark red
+            default: return Qt::black;
+        }
+    }
+
+    QString LogPanel::getLevelName(spdlog::level::level_enum level) const {
+        switch (level) {
+            case spdlog::level::trace: return "TRACE";
+            case spdlog::level::debug: return "DEBUG";
+            case spdlog::level::info: return "INFO";
+            case spdlog::level::warn: return "WARN";
+            case spdlog::level::err: return "ERROR";
+            case spdlog::level::critical: return "CRITICAL";
+            default: return "UNKNOWN";
+        }
     }
 }
