@@ -1,6 +1,7 @@
 #include "DocumentViewFactory.hpp"
 
 #include "Document.hpp"
+#include "ScriptDocumentView.hpp"
 #include "TextDocumentView.hpp"
 
 namespace TinaToolBox {
@@ -27,7 +28,6 @@ namespace TinaToolBox {
     }
 
     std::unique_ptr<IDocumentView> DocumentViewFactory::createScriptView(const std::shared_ptr<Document> &document) {
-        // TODO
-        return nullptr;
+        return std::make_unique<ScriptDocumentView>(document);
     }
 }
