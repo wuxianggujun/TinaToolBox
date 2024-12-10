@@ -69,10 +69,12 @@ namespace TinaToolBox {
         int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
         int bottom = top + qRound(blockBoundingRect(block).height());
 
+        // 获取当前行号
+        int currentLine = textCursor().blockNumber();
+        
         // 设置行号字体
         QFont lineNumberFont = font();
-        lineNumberFont.setPointSize(12);  // 设置行号字体大小
-        painter.setFont(lineNumberFont);
+        lineNumberFont.setPointSize(12);
         
         while (block.isValid() && top <= event->rect().bottom()) {
             if (block.isVisible() && bottom >= event->rect().top()) {
@@ -83,10 +85,20 @@ namespace TinaToolBox {
                     painter.setBrush(QColor("#ff4444"));
                     painter.drawEllipse(breakpointRect);
                 }
+                
+                // 设置当前行的字体为粗体，颜色更深
+                if (blockNumber == currentLine) {
+                    lineNumberFont.setBold(true);
+                    painter.setFont(lineNumberFont);
+                    painter.setPen(QColor("#333333")); // 更深的颜色
+                } else {
+                    lineNumberFont.setBold(false);
+                    painter.setFont(lineNumberFont);
+                    painter.setPen(QColor("#999999")); // 普通行的颜色
+                }
 
                 // 绘制行号
                 QString number = QString::number(blockNumber + 1);
-                painter.setPen(QColor("#999999"));
               
                 // 计算行号文本的垂直中心位置
                 int textHeight = fontMetrics().height();
