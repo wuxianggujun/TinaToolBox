@@ -24,14 +24,13 @@
 namespace TinaToolBox {
     MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent) {
+        LogSystem::getInstance().initialize();
         setWindowTitle(tr("TinaToolBox"));
         setMinimumSize(1024, 768);
         setWindowFlags(Qt::FramelessWindowHint);
 
         // 设置鼠标追踪
         setMouseTracking(true);
-        
-        LogSystem::getInstance().initialize();
         
         centerWidget = new QWidget();
         setCentralWidget(centerWidget);

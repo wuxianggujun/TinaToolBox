@@ -38,7 +38,7 @@ namespace TinaToolBox {
         if (!document) return;
 
         QString filePath = document->filePath();
-        spdlog::debug("Closing document: {}", filePath.toStdString());
+        spdlog::debug("Starting to close document: {}", filePath.toStdString());
 
         // 发出信号前先移除文档引用
         documents_.remove(filePath);
@@ -46,9 +46,9 @@ namespace TinaToolBox {
         emit documentClosed(document);
         if (currentDocument_ == document) {
             currentDocument_.reset();
+            emit currentDocumentChanged(currentDocument_);
         }
-        emit currentDocumentChanged(currentDocument_);
-        spdlog::debug("Document closed: {}", filePath.toStdString());
+        spdlog::debug("Document closed and cleaned up: {}", filePath.toStdString());
     }
 
     std::shared_ptr<Document> DocumentManager::getCurrentDocument() const {

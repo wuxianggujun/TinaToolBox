@@ -58,5 +58,7 @@ namespace TinaToolBox {
         QVector<LogEntryDisplay> displayEntries_;
         int currentLogLevel_;
         QString currentSearchText_;
+
+        bool isFiltering_ = false;  // 添加标志位
     };
 }

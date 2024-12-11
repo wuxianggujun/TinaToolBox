@@ -60,6 +60,9 @@ namespace TinaToolBox {
         auto logger = spdlog::default_logger();
         logger->sinks().clear();
         logger->sinks().push_back(sink_);
+        // 确保设置足够低的日志级别以捕获所有日志
+        logger->set_level(spdlog::level::trace);
+        spdlog::set_level(spdlog::level::trace);
     }
 
     void LogSystem::setupStdRedirectors() {

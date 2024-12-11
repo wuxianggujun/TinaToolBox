@@ -16,9 +16,11 @@
 #include "LogSystem.hpp"
 
 namespace TinaToolBox {
-    
-    LogPanel::LogPanel(QWidget *parent) : QWidget(parent),currentLogLevel_(-1) {
+    LogPanel::LogPanel(QWidget *parent) : QWidget(parent), currentLogLevel_(-1) {
         setupUI();
+
+        // 确保日志级别下拉框默认选择 "All"
+        logLevelComboBox_->setCurrentIndex(0); // "All" 选项
 
         // 连接到日志系统
         connect(&LogSystem::getInstance(), &LogSystem::logMessage,
@@ -27,7 +29,7 @@ namespace TinaToolBox {
 
         // 加载现有日志
         auto cachedLogs = LogSystem::getInstance().getCachedLogs();
-        for (const auto& log : cachedLogs) {
+        for (const auto &log: cachedLogs) {
             LogEntryDisplay entry(log);
             entry.color = getLevelColor(log.level);
             displayEntries_.append(entry);
@@ -36,9 +38,8 @@ namespace TinaToolBox {
     }
 
     LogPanel::~LogPanel() {
-        
     }
-    
+
 
     void LogPanel::clearLog() {
         displayEntries_.clear(); // 同时清除存储的日志
@@ -63,8 +64,11 @@ namespace TinaToolBox {
         LogEntry baseEntry{message, level, QDateTime::currentMSecsSinceEpoch()};
         LogEntryDisplay entry(baseEntry);
         entry.color = getLevelColor(level);
+        // 如果正在过滤，只添加日志但不刷新显示
         displayEntries_.append(entry);
-        filterLogs();
+        if (!isFiltering_) {
+            filterLogs();
+        }
     }
 
 
@@ -73,7 +77,7 @@ namespace TinaToolBox {
         mainLayout->setContentsMargins(0, 0, 0, 0);
         mainLayout->setSpacing(0);
 
-        
+
         // 工具栏
         auto *toolbar = new QWidget();
         toolbar->setStyleSheet(
@@ -131,7 +135,7 @@ namespace TinaToolBox {
             "    background-color: white;"
             "    outline: 0px;"
             "}");
-        
+
         toolbarLayout->addWidget(logLevelComboBox_);
 
         // 搜索输入框
@@ -186,7 +190,7 @@ namespace TinaToolBox {
             "    color: #333333;"
             "}"
         );
-        
+
         toolbarLayout->addWidget(closeButton_);
 
         mainLayout->addWidget(toolbar);
@@ -206,43 +210,56 @@ namespace TinaToolBox {
         mainLayout->addWidget(logArea_);
 
         // 连接信号和槽
-        
+
         connect(logLevelComboBox_, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, &LogPanel::onLogLevelChanged);
         connect(searchInput_, &QLineEdit::textChanged, this, &LogPanel::onSearchTextChanged);
         connect(clearButton_, &QPushButton::clicked, this, &LogPanel::clearLog);
         connect(closeButton_, &QPushButton::clicked, this, &LogPanel::closePanel);
-        
     }
 
     void LogPanel::filterLogs() {
+        // 防止递归调用
+        if (isFiltering_) {
+            return;
+        }
+        isFiltering_ = true;
+
         logArea_->clear();
         QTextCursor cursor(logArea_->document());
 
-        for (const auto &entry : displayEntries_) {
+        spdlog::debug("Filtering logs: level={}, search='{}'",
+                      currentLogLevel_,
+                      currentSearchText_.toStdString());
+
+        int displayedCount = 0;
+
+        for (const auto &entry: displayEntries_) {
             bool shouldShow = true;
 
             if (currentLogLevel_ != -1 && entry.level != currentLogLevel_) {
                 shouldShow = false;
             }
 
-            if (!currentSearchText_.isEmpty() && 
+            if (!currentSearchText_.isEmpty() &&
                 !entry.text.contains(currentSearchText_, Qt::CaseInsensitive)) {
                 shouldShow = false;
-                }
+            }
 
             if (shouldShow) {
                 cursor.movePosition(QTextCursor::End);
-            
                 QTextCharFormat format;
                 format.setForeground(entry.color);
                 cursor.insertText(entry.text + "\n", format);
+                displayedCount++;
             }
         }
 
         if (!currentSearchText_.isEmpty()) {
             highlightSearchText();
         }
+
+        isFiltering_ = false; // 重置标志位
     }
 
     void LogPanel::highlightSearchText() {
@@ -253,13 +270,13 @@ namespace TinaToolBox {
         highlightFormat.setBackground(Qt::yellow);
         highlightFormat.setForeground(Qt::black);
 
-        
+
         // 修正：使用正确的 Qt 查找标志
         QTextDocument::FindFlags flags = QTextDocument::FindCaseSensitively;
 
         while (!cursor.isNull() && !cursor.atEnd()) {
-            cursor = logArea_->document()->find(currentSearchText_, cursor, 
-                                             flags);
+            cursor = logArea_->document()->find(currentSearchText_, cursor,
+                                                flags);
             if (!cursor.isNull()) {
                 cursor.mergeCharFormat(highlightFormat);
             }
@@ -271,11 +288,10 @@ namespace TinaToolBox {
             case spdlog::level::trace: return Qt::gray;
             case spdlog::level::debug: return Qt::darkGreen;
             case spdlog::level::info: return Qt::black;
-            case spdlog::level::warn: return QColor(255, 165, 0);  // Orange
+            case spdlog::level::warn: return QColor(255, 165, 0); // Orange
             case spdlog::level::err: return Qt::red;
-            case spdlog::level::critical: return QColor(139, 0, 0);  // Dark red
+            case spdlog::level::critical: return QColor(139, 0, 0); // Dark red
             default: return Qt::black;
         }
     }
-    
 }
