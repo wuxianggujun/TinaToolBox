@@ -1,4 +1,6 @@
 #include "MainWindow.hpp"
+
+#include <iostream>
 #include <QApplication>
 #include <QFileDialog>
 #include <QDebug>
@@ -28,7 +30,9 @@ namespace TinaToolBox {
 
         // 设置鼠标追踪
         setMouseTracking(true);
-
+        
+        LogSystem::getInstance().initialize();
+        
         centerWidget = new QWidget();
         setCentralWidget(centerWidget);
 
@@ -37,8 +41,6 @@ namespace TinaToolBox {
         mainLayout->setSpacing(0);
 
         setUpUI();
-
-        LogSystem::getInstance().initialize();
     }
 
     MainWindow::~MainWindow() {
@@ -158,6 +160,11 @@ namespace TinaToolBox {
         /*if (documentArea) {
             documentArea->showSettingsPanel();
         }*/
+
+        // 2. 记录日志
+        spdlog::info("Starting application...");
+        qDebug() << "Debug information";
+        std::cout << "Standard output" << std::endl;
     }
 
     void MainWindow::mousePressEvent(QMouseEvent *event) {
@@ -395,6 +402,8 @@ namespace TinaToolBox {
         for (const auto &doc: documents) {
             manager.closeDocument(doc);
         }
+        // 等待所有清理完成
+        QApplication::processEvents();
         event->accept();
     }
 

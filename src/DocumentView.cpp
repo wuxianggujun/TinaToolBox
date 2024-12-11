@@ -14,9 +14,12 @@ namespace TinaToolBox {
     DocumentView::~DocumentView() {
         spdlog::debug("DocumentView destroyed: {}", 
         document_ ? document_->filePath().toStdString() : "null");
-        documentView_.reset();
+        // 先清理具体的文档视图
+        if (documentView_) {
+            documentView_.reset();
+            documentView_ = nullptr;
+        }
         document_.reset();
-        documentView_ = nullptr;
         document_ = nullptr;
     }
 

@@ -116,9 +116,14 @@ namespace TinaToolBox {
     void DocumentArea::cleanupDocumentView(const QString &filePath) {
         auto it = documentViews_.find(filePath);
         if (it != documentViews_.end()) {
-            int index = tabWidget_->indexOf(it.value());
+            auto* view = it.value();
+            int index = tabWidget_->indexOf(view);
             if (index != -1) {
                 tabWidget_->removeTab(index);
+            }
+            // 确保在删除视图之前清理所有资源
+            if (view->getDocumentView()) {
+                view->setDocumentView(nullptr);  // 这会触发原有视图的清理
             }
             delete it.value();
             documentViews_.erase(it);
