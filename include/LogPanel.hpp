@@ -15,18 +15,17 @@
 #include <spdlog/sinks/base_sink.h>
 #include <qcombobox.h>
 
+#include "LogSystem.hpp"
+
 namespace TinaToolBox {
     class LogPanel : public QWidget {
         Q_OBJECT
 
-    private:
-        struct LogEntry {
-            QString text;
+    struct LogEntryDisplay : public LogEntry {
             QColor color;
-            spdlog::level::level_enum level;
-            qint64 timestamp; // 添加时间戳便于排序和过滤
+            explicit LogEntryDisplay(const LogEntry& entry):LogEntry(entry),color(Qt::black){}
         };
-    
+        
     public:
         explicit LogPanel(QWidget *parent = nullptr);
 
@@ -45,9 +44,9 @@ namespace TinaToolBox {
     private:
         void setupUI();
         void filterLogs();
+        void highlightSearchText();
         
         [[nodiscard]] QColor getLevelColor(spdlog::level::level_enum level) const;
-        [[nodiscard]] QString getLevelName(spdlog::level::level_enum level) const;
         
         QTextEdit *logArea_{};
         QLineEdit *searchInput_{};
@@ -56,7 +55,7 @@ namespace TinaToolBox {
 
         QComboBox *logLevelComboBox_{};
         
-        QVector<LogEntry> logEntries_;
+        QVector<LogEntryDisplay> displayEntries_;
         int currentLogLevel_;
         QString currentSearchText_;
     };

@@ -9,6 +9,7 @@
 #include <QTextBlock>
 #include <QScrollBar>
 #include <QTextCursor>
+#include <QTextDocument>
 #include <QTimer>
 #include <spdlog/pattern_formatter.h>
 
@@ -24,29 +25,23 @@ namespace TinaToolBox {
                 this, &LogPanel::onLogMessage,
                 Qt::QueuedConnection);
 
-        // 初始化日志系统
-        LogSystem::getInstance().initialize(this);
+        // 加载现有日志
+        auto cachedLogs = LogSystem::getInstance().getCachedLogs();
+        for (const auto& log : cachedLogs) {
+            LogEntryDisplay entry(log);
+            entry.color = getLevelColor(log.level);
+            displayEntries_.append(entry);
+        }
+        filterLogs();
     }
 
     LogPanel::~LogPanel() {
-        LogSystem::getInstance().shutdown();
+        
     }
     
-    // 在头文件中添加日志级别的调试辅助函数
-    QString getLevelName(spdlog::level::level_enum level) {
-        switch (level) {
-            case spdlog::level::trace: return "TRACE";
-            case spdlog::level::debug: return "DEBUG";
-            case spdlog::level::info: return "INFO";
-            case spdlog::level::warn: return "WARN";
-            case spdlog::level::err: return "ERROR";
-            case spdlog::level::critical: return "CRITICAL";
-            default: return "UNKNOWN";
-        }
-    }
 
     void LogPanel::clearLog() {
-        logEntries_.clear(); // 同时清除存储的日志
+        displayEntries_.clear(); // 同时清除存储的日志
         logArea_->clear();
     }
 
@@ -65,18 +60,10 @@ namespace TinaToolBox {
     }
 
     void LogPanel::onLogMessage(const QString &message, spdlog::level::level_enum level) {
-        // 创建新的日志条目
-        LogEntry entry{
-            message,
-            getLevelColor(level),
-            level,
-            QDateTime::currentMSecsSinceEpoch()
-        };
-
-        // 存储日志条目
-        logEntries_.append(entry);
-
-        // 应用过滤
+        LogEntry baseEntry{message, level, QDateTime::currentMSecsSinceEpoch()};
+        LogEntryDisplay entry(baseEntry);
+        entry.color = getLevelColor(level);
+        displayEntries_.append(entry);
         filterLogs();
     }
 
@@ -86,6 +73,8 @@ namespace TinaToolBox {
         mainLayout->setContentsMargins(0, 0, 0, 0);
         mainLayout->setSpacing(0);
 
+        
+        // 工具栏
         auto *toolbar = new QWidget();
         toolbar->setStyleSheet(
             "QWidget {"
@@ -97,10 +86,12 @@ namespace TinaToolBox {
         auto *toolbarLayout = new QHBoxLayout(toolbar);
         toolbarLayout->setContentsMargins(5, 2, 5, 2);
 
+        // 输出标签
         auto *outputLabel = new QLabel("输出");
         outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
         toolbarLayout->addWidget(outputLabel);
 
+        // 日志级别选择器
         logLevelComboBox_ = new QComboBox();
         logLevelComboBox_->addItem("All", -1);
         logLevelComboBox_->addItem("Trace", spdlog::level::trace);
@@ -140,14 +131,10 @@ namespace TinaToolBox {
             "    background-color: white;"
             "    outline: 0px;"
             "}");
-
-
-        connect(logLevelComboBox_, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                this, &LogPanel::onLogLevelChanged);
-
+        
         toolbarLayout->addWidget(logLevelComboBox_);
 
-
+        // 搜索输入框
         searchInput_ = new QLineEdit();
         searchInput_->setPlaceholderText("搜索日志...");
         searchInput_->setStyleSheet(
@@ -163,12 +150,11 @@ namespace TinaToolBox {
             "}"
         );
 
-        connect(searchInput_, &QLineEdit::textChanged, this, &LogPanel::onSearchTextChanged);
-
         toolbarLayout->addWidget(searchInput_);
 
         toolbarLayout->addStretch();
 
+        // 清除按钮
         clearButton_ = new QPushButton("清空");
         clearButton_->setStyleSheet(
             "QPushButton {"
@@ -182,10 +168,9 @@ namespace TinaToolBox {
             "}"
         );
 
-        connect(clearButton_, &QPushButton::clicked, this, &LogPanel::clearLog);
-
         toolbarLayout->addWidget(clearButton_);
 
+        // 关闭按钮
         closeButton_ = new QPushButton("×");
         closeButton_->setStyleSheet(
             "QPushButton {"
@@ -201,8 +186,7 @@ namespace TinaToolBox {
             "    color: #333333;"
             "}"
         );
-
-        connect(closeButton_, &QPushButton::clicked, this, &LogPanel::closePanel);
+        
         toolbarLayout->addWidget(closeButton_);
 
         mainLayout->addWidget(toolbar);
@@ -220,28 +204,64 @@ namespace TinaToolBox {
             "}"
         );
         mainLayout->addWidget(logArea_);
+
+        // 连接信号和槽
+        
+        connect(logLevelComboBox_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &LogPanel::onLogLevelChanged);
+        connect(searchInput_, &QLineEdit::textChanged, this, &LogPanel::onSearchTextChanged);
+        connect(clearButton_, &QPushButton::clicked, this, &LogPanel::clearLog);
+        connect(closeButton_, &QPushButton::clicked, this, &LogPanel::closePanel);
+        
     }
 
     void LogPanel::filterLogs() {
         logArea_->clear();
+        QTextCursor cursor(logArea_->document());
 
-        for (const auto &entry : logEntries_) {
+        for (const auto &entry : displayEntries_) {
             bool shouldShow = true;
 
-            // 级别过滤
             if (currentLogLevel_ != -1 && entry.level != currentLogLevel_) {
                 shouldShow = false;
             }
 
-            // 搜索文本过滤
             if (!currentSearchText_.isEmpty() && 
                 !entry.text.contains(currentSearchText_, Qt::CaseInsensitive)) {
                 shouldShow = false;
                 }
 
             if (shouldShow) {
-                logArea_->setTextColor(entry.color);
-                logArea_->append(entry.text);
+                cursor.movePosition(QTextCursor::End);
+            
+                QTextCharFormat format;
+                format.setForeground(entry.color);
+                cursor.insertText(entry.text + "\n", format);
+            }
+        }
+
+        if (!currentSearchText_.isEmpty()) {
+            highlightSearchText();
+        }
+    }
+
+    void LogPanel::highlightSearchText() {
+        if (currentSearchText_.isEmpty()) return;
+
+        QTextCursor cursor(logArea_->document());
+        QTextCharFormat highlightFormat;
+        highlightFormat.setBackground(Qt::yellow);
+        highlightFormat.setForeground(Qt::black);
+
+        
+        // 修正：使用正确的 Qt 查找标志
+        QTextDocument::FindFlags flags = QTextDocument::FindCaseSensitively;
+
+        while (!cursor.isNull() && !cursor.atEnd()) {
+            cursor = logArea_->document()->find(currentSearchText_, cursor, 
+                                             flags);
+            if (!cursor.isNull()) {
+                cursor.mergeCharFormat(highlightFormat);
             }
         }
     }
@@ -257,16 +277,5 @@ namespace TinaToolBox {
             default: return Qt::black;
         }
     }
-
-    QString LogPanel::getLevelName(spdlog::level::level_enum level) const {
-        switch (level) {
-            case spdlog::level::trace: return "TRACE";
-            case spdlog::level::debug: return "DEBUG";
-            case spdlog::level::info: return "INFO";
-            case spdlog::level::warn: return "WARN";
-            case spdlog::level::err: return "ERROR";
-            case spdlog::level::critical: return "CRITICAL";
-            default: return "UNKNOWN";
-        }
-    }
+    
 }

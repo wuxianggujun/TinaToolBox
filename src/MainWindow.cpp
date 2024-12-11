@@ -37,11 +37,14 @@ namespace TinaToolBox {
         mainLayout->setSpacing(0);
 
         setUpUI();
+
+        LogSystem::getInstance().initialize();
     }
 
     MainWindow::~MainWindow() {
         // 在程序退出时清理PDFium库
         PdfViewer::PDFiumLibrary::Destroy();
+        LogSystem::getInstance().shutdown();
     }
 
 

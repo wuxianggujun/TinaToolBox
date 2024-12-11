@@ -13,12 +13,8 @@
 #include "MainWindowMenuBar.hpp"
 #include "Tokenizer.hpp"
 
-
 namespace TinaToolBox {
     class StatusBar;
-}
-
-namespace TinaToolBox {
     class LogPanel;
     class DocumentArea;
     class RecentFilesWidget;

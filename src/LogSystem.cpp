@@ -34,11 +34,7 @@ namespace TinaToolBox {
         return c;
     }
 
-
-    template<typename Mutex>
-    LogPanelSink<Mutex>::LogPanelSink(LogPanel *panel): panel_(panel) {
-    }
-
+    
     template<typename Mutex>
     void LogPanelSink<Mutex>::sink_it_(const spdlog::details::log_msg &msg) {
         spdlog::memory_buf_t formatted;
@@ -47,7 +43,7 @@ namespace TinaToolBox {
         LogSystem::getInstance().log(text, msg.level);
     }
 
-    LogSystem::LogSystem(): panel_(nullptr) {
+    LogSystem::LogSystem() {
     }
 
     LogSystem::~LogSystem() {
@@ -60,7 +56,7 @@ namespace TinaToolBox {
 
     void LogSystem::setupSpdLogger() {
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
-        sink_ = std::make_shared<LogPanelSink<std::mutex> >(panel_);
+        sink_ = std::make_shared<LogPanelSink<std::mutex> >();
         auto logger = spdlog::default_logger();
         logger->sinks().clear();
         logger->sinks().push_back(sink_);
@@ -69,6 +65,13 @@ namespace TinaToolBox {
     void LogSystem::setupStdRedirectors() {
         stdoutRedirector_ = std::make_unique<StdoutRedirector>(false);
         stderrRedirector_ = std::make_unique<StdoutRedirector>(false);
+    }
+
+    void LogSystem::cacheLog(const LogEntry &entry) {
+        cachedLogs_.push(entry);
+        while (cachedLogs_.size()>MAX_CACHED_LOGS) {
+            cachedLogs_.pop();
+        }
     }
 
     void LogSystem::qtMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
@@ -102,31 +105,45 @@ namespace TinaToolBox {
         return instance;
     }
 
-    void LogSystem::initialize(LogPanel *panel) {
+    void LogSystem::initialize() {
         std::lock_guard<std::mutex> lock(mutex_);
-        panel_ = panel;
-
         setupSpdLogger();
         setupQtMessageHandler();
         setupStdRedirectors();
     }
 
     void LogSystem::shutdown() {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard lock(mutex_);
         stdoutRedirector_.reset();
         stderrRedirector_.reset();
         sink_.reset();
-        panel_ = nullptr;
     }
 
     void LogSystem::log(const QString &message, spdlog::level::level_enum level) {
         std::lock_guard lock(mutex_);
-        if (panel_) {
-            emit logMessage(message, level);
-        }
+        LogEntry entry{
+            message,
+            level,
+            QDateTime::currentMSecsSinceEpoch()
+        };
+
+        cacheLog(entry);
+
+        emit logMessage(message, level);
     }
 
     void LogSystem::setLogLevel(spdlog::level::level_enum level) {
         spdlog::set_level(level);
+    }
+
+    QVector<LogEntry> LogSystem::getCachedLogs() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        QVector<LogEntry> logs;
+        auto tempQueue = cachedLogs_;  // 创建副本
+        while (!tempQueue.empty()) {
+            logs.append(tempQueue.front());
+            tempQueue.pop();
+        }
+        return logs;
     }
 }
