@@ -44,6 +44,7 @@ namespace TinaToolBox {
 
     // 日志系统管理类
     class LogSystem : public QObject {
+        
         Q_OBJECT
 
     public:

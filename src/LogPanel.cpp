@@ -66,8 +66,27 @@ namespace TinaToolBox {
         entry.color = getLevelColor(level);
         // 如果正在过滤，只添加日志但不刷新显示
         displayEntries_.append(entry);
-        if (!isFiltering_) {
-            filterLogs();
+        // 检查是否符合当前过滤条件
+        bool shouldShow = true;
+        if (currentLogLevel_ != -1 && entry.level != currentLogLevel_) {
+            shouldShow = false;
+        }
+        if (!currentSearchText_.isEmpty() && 
+            !entry.text.contains(currentSearchText_, Qt::CaseInsensitive)) {
+            shouldShow = false;
+            }
+    
+        // 如果符合条件，直接添加到显示区域
+        if (shouldShow) {
+            QTextCursor cursor(logArea_->document());
+            cursor.movePosition(QTextCursor::End);
+            QTextCharFormat format;
+            format.setForeground(entry.color);
+            cursor.insertText(entry.text + "\n", format);
+        
+            // 滚动到底部
+            QScrollBar* scrollBar = logArea_->verticalScrollBar();
+            scrollBar->setValue(scrollBar->maximum());
         }
     }
 
@@ -227,13 +246,7 @@ namespace TinaToolBox {
 
         logArea_->clear();
         QTextCursor cursor(logArea_->document());
-
-        spdlog::debug("Filtering logs: level={}, search='{}'",
-                      currentLogLevel_,
-                      currentSearchText_.toStdString());
-
-        int displayedCount = 0;
-
+        
         for (const auto &entry: displayEntries_) {
             bool shouldShow = true;
 
@@ -251,7 +264,6 @@ namespace TinaToolBox {
                 QTextCharFormat format;
                 format.setForeground(entry.color);
                 cursor.insertText(entry.text + "\n", format);
-                displayedCount++;
             }
         }
 
