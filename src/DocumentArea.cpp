@@ -25,9 +25,9 @@ namespace TinaToolBox {
         documentViews_.clear();
     }
 
-    DocumentView * DocumentArea::getCurrentDocumentView() const {
-        if (auto* widget = tabWidget_->currentWidget()) {
-            return qobject_cast<DocumentView*>(widget);
+    DocumentView *DocumentArea::getCurrentDocumentView() const {
+        if (auto *widget = tabWidget_->currentWidget()) {
+            return qobject_cast<DocumentView *>(widget);
         }
         return nullptr;
     }
@@ -38,7 +38,34 @@ namespace TinaToolBox {
             return;
         }
 
-        auto *view = createDocumentView(document);
+        QString filePath = document->filePath();
+        if (documentViews_.contains(filePath)) {
+            tabWidget_->setCurrentWidget(documentViews_[filePath]);
+            return;
+        }
+
+        try {
+            // 创建文档视图
+            auto view = createDocumentView(document);
+            if (!view) {
+                spdlog::warn("Failed to create document view for document: {}", document->filePath().toStdString());
+                return;
+            };
+
+            documentViews_[filePath] = view;
+
+            // 添加到标签页
+            int index = tabWidget_->addDocumentTab(view, QFileInfo(filePath).fileName());
+            tabWidget_->setCurrentIndex(index);
+
+            // 设置文件路径属性
+            view->setProperty("filePath", filePath);
+        } catch (const std::exception &e) {
+            spdlog::error("Failed to open document: {}", e.what());
+            // 可以在这里添加错误提示对话框
+        }
+
+        /*auto *view = createDocumentView(document);
         if (!view) {
             spdlog::warn("Failed to create document view for document: {}", document->filePath().toStdString());
             return;
@@ -48,7 +75,7 @@ namespace TinaToolBox {
         tabWidget_->addTab(view, document->fileName());
         tabWidget_->setCurrentWidget(view);
 
-        updateTabState(view, document);
+        updateTabState(view, document);*/
     }
 
     void DocumentArea::onDocumentClosed(std::shared_ptr<Document> document) {
@@ -116,14 +143,14 @@ namespace TinaToolBox {
     void DocumentArea::cleanupDocumentView(const QString &filePath) {
         auto it = documentViews_.find(filePath);
         if (it != documentViews_.end()) {
-            auto* view = it.value();
+            auto *view = it.value();
             int index = tabWidget_->indexOf(view);
             if (index != -1) {
                 tabWidget_->removeTab(index);
             }
             // 确保在删除视图之前清理所有资源
             if (view->getDocumentView()) {
-                view->setDocumentView(nullptr);  // 这会触发原有视图的清理
+                view->setDocumentView(nullptr); // 这会触发原有视图的清理
             }
             delete it.value();
             documentViews_.erase(it);

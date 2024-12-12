@@ -8,18 +8,21 @@
 namespace TinaToolBox {
     class LoadingProgressDialog : public QDialog {
         Q_OBJECT
-
     public:
-        explicit LoadingProgressDialog(QWidget *parent = nullptr);
+        static LoadingProgressDialog& getInstance() {
+            static LoadingProgressDialog instance;
+            return instance;
+        }
 
-        void setProgress(int value);
-
-        void setMaximum(int max);
-
-        void setStatusText(const QString &text);
+        void startProgress(const QString& title);
+        void updateProgress(int value, const QString& status);
+        void finishProgress();
 
     private:
-        QProgressBar *progressBar_;
-        QLabel *statusLabel_;
+        LoadingProgressDialog(QWidget* parent = nullptr);
+        ~LoadingProgressDialog() override = default;
+
+        QProgressBar* progressBar_;
+        QLabel* statusLabel_;
     };
 }

@@ -67,6 +67,12 @@ namespace TinaToolBox {
         spdlog::error("Document {} error: {}", filePath_.toStdString(), error.toStdString());
     }
 
+    void Document::updateLoadingProgress(int percentage, const QString &message) {
+        currentProgress_.percentage = percentage;
+        currentProgress_.message = message;
+        emit loadingProgressChanged(currentProgress_);
+    }
+
 
     QString Document::filePath() const {
         return filePath_;

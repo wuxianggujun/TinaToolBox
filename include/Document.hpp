@@ -19,11 +19,17 @@ namespace TinaToolBox {
         // 文档状态
         enum class State {
             Opening, // 文档正在打开（初始状态）
+            Loading,
             Ready, // 文档已准备就绪（可以使用）
             Error // 发生错误（不可用状态）
         };
 
         Q_ENUM(State); // 使状态可以用于QT的源对象系统
+
+        struct LoadingProgress {
+            int percentage{0};
+            QString message;
+        };
 
     public:
         explicit Document(const QString &filePath);
@@ -66,10 +72,14 @@ namespace TinaToolBox {
 
         void errorOccurred(const QString &error);
 
+        void loadingProgressChanged(const LoadingProgress& progress);
+
     protected:
         void setState(State newState);
 
         void setError(const QString &error);
+
+        void updateLoadingProgress(int percentage, const QString& message);
 
     private:
         State state_;
@@ -77,7 +87,7 @@ namespace TinaToolBox {
         QString filePath_;
         QFileInfo fileInfo_;
         Type type_;
-
+        LoadingProgress currentProgress_;
         [[nodiscard]] Type determineType(const QString &extension) const;
     };
 }
