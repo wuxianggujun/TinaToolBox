@@ -29,17 +29,17 @@ namespace TinaToolBox {
     void ExcelDocumentView::loadExcelFile() {
         auto* progressDialog = LoadingProgressDialog::getInstance();
         try {
-
             QString fileName = QFileInfo(document_->filePath()).fileName();
-            progressDialog->startProgress(QString("Loading %1").arg(fileName));
-
+            progressDialog->startProgress(QString("Opening %1").arg(fileName));
+        
             QXlsx::Document xlsx(document_->filePath());
-            progressDialog->updateProgress(20, "Opening file...");
+            progressDialog->updateProgress(0, "Reading file...");
             if (!xlsx.load()) {
                 progressDialog->finishProgress();
                 throw std::runtime_error("Failed to load Excel file");
             }
-            progressDialog->updateProgress(40, "Reading data...");
+        
+            progressDialog->updateProgress(50, "Processing data...");
             processWorksheet(xlsx);
             progressDialog->finishProgress();
         } catch (const std::exception &e) {

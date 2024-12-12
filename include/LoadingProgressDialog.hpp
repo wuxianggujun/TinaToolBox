@@ -4,6 +4,7 @@
 #include <QProgressBar>
 #include <QLabel>
 #include <QVBoxLayout>
+#include "ProgressIndicator.hpp"
 
 namespace TinaToolBox {
     class LoadingProgressDialog : public QDialog {
@@ -14,21 +15,19 @@ namespace TinaToolBox {
             return &instance;
         }
 
-        void startProgress(const QString& title);
+        void startProgress(const QString& title,bool useSpinner = false);
         void updateProgress(int value, const QString& status);
         void finishProgress();
 
     protected:
-        // 防止外部创建实例
         LoadingProgressDialog(QWidget* parent = nullptr);
         ~LoadingProgressDialog() override = default;
 
     private:
-        // 禁止拷贝和赋值
         LoadingProgressDialog(const LoadingProgressDialog&) = delete;
         LoadingProgressDialog& operator=(const LoadingProgressDialog&) = delete;
-
-        QProgressBar* progressBar_;
+        
         QLabel* statusLabel_;
+        ProgressIndicator* spinner_;  // ?????????
     };
 }

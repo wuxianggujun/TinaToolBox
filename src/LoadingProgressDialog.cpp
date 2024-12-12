@@ -6,24 +6,26 @@ namespace TinaToolBox {
 
     LoadingProgressDialog::LoadingProgressDialog(QWidget* parent)
         : QDialog(parent, Qt::FramelessWindowHint)
-        , progressBar_(new QProgressBar(this))
-        , statusLabel_(new QLabel(this))
+        , statusLabel_(new QLabel(this)),spinner_(new ProgressIndicator(this)) // ???????
     {
         setWindowTitle(tr("Loading..."));
         setFixedSize(300, 100);
         
         auto* layout = new QVBoxLayout(this);
-        layout->addWidget(statusLabel_);
-        layout->addWidget(progressBar_);
-        
-        progressBar_->setMinimum(0);
-        progressBar_->setMaximum(100);
-        progressBar_->setTextVisible(true);
-        
-        statusLabel_->setAlignment(Qt::AlignCenter);
-        setModal(true);
+        layout->setSpacing(10);
+    
+        // ??spinner???????
+        spinner_->setFixedSize(32, 32);
+        spinner_->setColor(QColor(0, 120, 212));  // ????
+        layout->addWidget(spinner_, 0, Qt::AlignCenter);
 
-        // 设置窗口居中
+        
+        // ?????????????
+        statusLabel_->setAlignment(Qt::AlignCenter);
+        layout->addWidget(statusLabel_, 0, Qt::AlignCenter);
+    
+        setModal(true);
+        
         if (parent) {
             setParent(parent);
         }
@@ -33,12 +35,12 @@ namespace TinaToolBox {
     
     }
 
-    void LoadingProgressDialog::startProgress(const QString& title) {
+    void LoadingProgressDialog::startProgress(const QString& title,bool useSpinner) {
         setWindowTitle(title);
-        progressBar_->setValue(0);
-        statusLabel_->setText("");
-
-        // 居中显示
+        statusLabel_->setText(title);
+        spinner_->startAnimation();
+        
+        
         if (parentWidget()) {
             move(parentWidget()->window()->frameGeometry().center() -
                 rect().center());
@@ -53,14 +55,13 @@ namespace TinaToolBox {
     }
 
     void LoadingProgressDialog::updateProgress(int value, const QString& status) {
-        progressBar_->setValue(value);
         statusLabel_->setText(status);
         QApplication::processEvents();
     }
 
     void LoadingProgressDialog::finishProgress() {
         hide();
-        progressBar_->setValue(0);
+        spinner_->stopAnimation();
         statusLabel_->clear();
         QApplication::processEvents();
     }
