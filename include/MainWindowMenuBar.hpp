@@ -1,8 +1,6 @@
 #pragma once
 
 #include <QWidget>
-#include <QHBoxLayout>
-#include <QPushButton>
 #include <QMenu>
 #include <QMap>
 
@@ -13,41 +11,83 @@ namespace TinaToolBox {
     public:
         explicit MainWindowMenuBar(QWidget *parent = nullptr);
 
-        // 添加菜单方法
-        QMenu *addMenu(const QString &title);
-
-        // 设置菜单数据
-        void setupMenus();
-
-        void setupWindowControls();
-
         void updateMaximizeButton(bool isMaximized);
-    
-        signals:
-            void menuActionTriggered(const QString &actionName);
+
+    signals:
+        void menuActionTriggered(const QString &actionName);
 
         void minimizeClicked();
-
-        void settingsClicked();
 
         void maximizeClicked();
 
         void closeClicked();
 
-    protected:
-        bool eventFilter(QObject *watched, QEvent *event) override;
-    
-    private:
-        QHBoxLayout *m_layout;
-        QPushButton *m_settingsBtn;
-        QPushButton *m_minBtn;
-        QPushButton *m_maxBtn;
-        QPushButton *m_closeBtn;
-        // 存储菜单数据的结构
-        QMap<QString, QList<QPair<QString, QString> > > m_menuData;
-        bool m_switchingMenu = false;  // 用于跟踪菜单切换状态
-        QMenu* m_activeMenu =  nullptr;
-        QPushButton* m_activeMenuButton = nullptr;
-    };
+        void settingsClicked();
 
+    protected:
+        void paintEvent(QPaintEvent *event) override;
+
+        void mousePressEvent(QMouseEvent *event) override;
+
+        void mouseMoveEvent(QMouseEvent *event) override;
+
+        void mouseReleaseEvent(QMouseEvent *event) override;
+
+        void leaveEvent(QEvent *event) override;
+
+        bool eventFilter(QObject *watched, QEvent *event) override;
+
+        void resizeEvent(QResizeEvent *event) override;
+    private:
+        struct MenuItem {
+            QString text;
+            QRect rect;
+            bool isHovered = false;
+            bool isActive = false;
+            QMenu *menu = nullptr;
+        };
+
+        struct ControlButton {
+            QString icon;
+            QRect rect;
+            bool isHovered = false;
+            QString type;
+        };
+
+        void initializeMenus();
+
+        void initializeControlButtons();
+
+        void drawMenuItem(QPainter &painter, const MenuItem &item);
+
+        void drawControlButton(QPainter &painter, const ControlButton &button);
+
+        MenuItem *getMenuItemAt(const QPoint &pos);
+
+        ControlButton *getControlButtonAt(const QPoint &pos);
+
+        void showMenuAt(MenuItem *item);
+
+        void hideActiveMenu();
+
+        void updateLayout();
+
+    private:
+        QList<MenuItem> menuItems;
+        QList<ControlButton> controlButtons_;
+        MenuItem *activeMenuItem = nullptr;
+        ControlButton *hoveredButton = nullptr;
+        QMenu *activeMenu = nullptr;
+        bool isMaximized_ = false;
+
+        const int MENU_BUTTON_HEIGHT = 30;
+        const int MENU_BUTTON_PADDING = 10;
+        const int CONTROL_BUTTON_WIDTH = 45;
+
+        const QColor backgroundColor = QColor("#F0F0F0");
+        const QColor hoverColor = QColor("#E8E8E8");
+        const QColor activeColor = QColor("#E0E0E0");
+        const QColor textColor = QColor("#000000");
+        const QColor closeHoverColor = QColor("#E81123"); 
+    };
 }
