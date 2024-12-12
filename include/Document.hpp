@@ -12,7 +12,8 @@ namespace TinaToolBox {
             UNKNOWN,
             SCRIPT,
             TEXT,
-            PDF
+            PDF,
+            EXCEL
         };
 
         // 文档状态

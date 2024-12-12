@@ -49,7 +49,7 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 
 list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FILES} ${RESOURCES})
 
-#add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
+add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(TinaToolBox
@@ -99,7 +99,8 @@ target_link_libraries(TinaToolBox PRIVATE
 
 target_link_libraries(TinaToolBox PRIVATE
         Python3::Python
-        spdlog::spdlog 
+        spdlog::spdlog
+        xlnt 
         unofficial::skia::skia
         pdfium)
 
@@ -111,6 +112,7 @@ target_compile_options(TinaToolBox PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/utf-8>
         $<$<COMPILE_LANGUAGE:CUDA>:-DNDEBUG>
 )
+
 target_compile_definitions(TinaToolBox PRIVATE CMAKE_TOOLCHAIN_FILE="D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 if (${QT_VERSION} VERSION_LESS 6.1.0)
@@ -140,4 +142,22 @@ if (WIN32)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${PDFium_DIR}/bin/pdfium.dll"
             $<TARGET_FILE_DIR:TinaToolBox>)
+endif()
+
+# 在qt_finalize_executable之前添加
+if (WIN32)
+    # 根据构建类型选择正确的dll名称
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(XLNT_DLL_NAME "xlntd.dll")
+    else()
+        set(XLNT_DLL_NAME "xlnt.dll")
+    endif()
+
+    add_custom_command(TARGET TinaToolBox POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/dependencies/xlnt/source/${XLNT_DLL_NAME}"
+            $<TARGET_FILE_DIR:TinaToolBox>)
+
+    # 添加调试信息
+    message(STATUS "XLNT DLL will be copied from: ${CMAKE_BINARY_DIR}/dependencies/xlnt/source/${XLNT_DLL_NAME}")
 endif()

@@ -1,0 +1,88 @@
+name: CMake
+
+on:
+  push:
+    paths-ignore:
+      - 'Example.md'
+      - 'HowToSetProject.ko.md'
+      - 'HowToSetProject.md'
+      - 'README.ko.md'
+      - 'README.md'
+      - 'TestEnv.md'
+      - 'ToTest.md'
+      - 'ToUpgrade.md'
+      - 'Vision.md'
+      - 'LICENSE'
+    branches:
+      - master
+
+  pull_request:
+    paths-ignore:
+      - 'Example.md'
+      - 'HowToSetProject.ko.md'
+      - 'HowToSetProject.md'
+      - 'README.ko.md'
+      - 'README.md'
+      - 'TestEnv.md'
+      - 'ToTest.md'
+      - 'ToUpgrade.md'
+      - 'Vision.md'
+      - 'LICENSE'
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+        build_type:
+          - Debug
+          - Release
+
+        link_type:
+          - static
+          - shared
+
+        config:
+          - qt_version: "5.12"
+            macos_architectures: "x86_64"
+          - qt_version: "6.6.0"
+            macos_architectures: "x86_64;arm64"
+
+    steps:
+      - name: Install Qt with options and default aqtversion
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: null # use whatever the default is
+          modules: ${{ matrix.config.modules }}
+          version: ${{ matrix.config.qt_version }}
+          cache: true
+
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install ninja-build tool (must be after Qt due PATH changes)
+        uses: turtlesec-no/get-ninja@main
+
+      - name: Make sure MSVC is found when Ninja generator is in use
+        if: ${{ runner.os == 'Windows' }}
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure project
+        run: >
+          cmake -S QXlsx -B ./build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --warn-uninitialized
+          -Werror=dev
+          -DBUILD_SHARED_LIBS=${{ matrix.link_type == 'shared' }}
+          -DCMAKE_OSX_ARCHITECTURES="${{ matrix.config.macos_architectures }}"
+
+      - name: Build Project
+        run: cmake --build ./build

@@ -122,6 +122,8 @@ namespace TinaToolBox {
             return SCRIPT;
         if (extension == "pdf")
             return PDF;
+        if (extension == "xlsx" || extension == "xls")  // 添加Excel文件支持
+            return EXCEL;
         if (QStringList({"txt", "md", "json", "xml", "yaml", "yml"}).contains(extension)) {
             return TEXT;
         }

@@ -1,6 +1,7 @@
 #include "DocumentViewFactory.hpp"
 
 #include "Document.hpp"
+#include "ExcelDoucmentView.hpp"
 #include "ScriptDocumentView.hpp"
 #include "TextDocumentView.hpp"
 #include "PdfDocumentView.hpp"
@@ -14,6 +15,8 @@ namespace TinaToolBox {
                 return createPdfView(document);
             case Document::SCRIPT:
                 return createScriptView(document);
+            case Document::EXCEL:
+                return createExcelView(document);
             default:
                 return nullptr;
         }
@@ -29,5 +32,9 @@ namespace TinaToolBox {
 
     std::unique_ptr<IDocumentView> DocumentViewFactory::createScriptView(const std::shared_ptr<Document> &document) {
         return std::make_unique<ScriptDocumentView>(document);
+    }
+
+    std::unique_ptr<IDocumentView> DocumentViewFactory::createExcelView(const std::shared_ptr<Document> &document) {
+        return std::make_unique<ExcelDocumentView>(document);
     }
 }

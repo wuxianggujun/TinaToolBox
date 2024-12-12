@@ -14,6 +14,7 @@ namespace TinaToolBox {
         static std::unique_ptr<IDocumentView> createTextView(const std::shared_ptr<Document>& document);
         static std::unique_ptr<IDocumentView> createPdfView(const std::shared_ptr<Document>& document);
         static std::unique_ptr<IDocumentView> createScriptView(const std::shared_ptr<Document>& document);
+        static std::unique_ptr<IDocumentView> createExcelView(const std::shared_ptr<Document>& document);
     };
     
 }
