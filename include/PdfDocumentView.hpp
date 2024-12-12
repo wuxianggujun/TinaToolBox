@@ -1,12 +1,14 @@
 #pragma once
 
+#include <QObject>
 #include <memory>
 #include "DocumentView.hpp"
 #include "PdfViewer.hpp"
 
 namespace TinaToolBox {
 
-    class PdfDocumentView: public IDocumentView {
+    class PdfDocumentView:public QObject, public IDocumentView {
+        Q_OBJECT
     public:
         explicit PdfDocumentView(const std::shared_ptr<Document>& document);
         ~PdfDocumentView() override;

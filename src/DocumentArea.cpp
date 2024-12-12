@@ -33,6 +33,7 @@ namespace TinaToolBox {
     }
 
     void DocumentArea::onDocumentOpened(std::shared_ptr<Document> document) {
+        spdlog::debug("DocumentArea::onDocumentOpened called");
         if (!document) {
             spdlog::warn("Attempting to open null document");
             return;
@@ -40,6 +41,7 @@ namespace TinaToolBox {
 
         QString filePath = document->filePath();
         if (documentViews_.contains(filePath)) {
+            spdlog::debug("Document view already exists, switching to it");
             tabWidget_->setCurrentWidget(documentViews_[filePath]);
             return;
         }
@@ -71,18 +73,6 @@ namespace TinaToolBox {
             spdlog::error("Failed to open document: {}", e.what());
             // 可以在这里添加错误提示对话框
         }
-
-        /*auto *view = createDocumentView(document);
-        if (!view) {
-            spdlog::warn("Failed to create document view for document: {}", document->filePath().toStdString());
-            return;
-        }
-
-        documentViews_[document->filePath()] = view;
-        tabWidget_->addTab(view, document->fileName());
-        tabWidget_->setCurrentWidget(view);
-
-        updateTabState(view, document);*/
     }
 
     void DocumentArea::onDocumentClosed(std::shared_ptr<Document> document) {
@@ -98,6 +88,7 @@ namespace TinaToolBox {
     }
 
     void DocumentArea::onCurrentDocumentChanged(std::shared_ptr<Document> document) {
+        spdlog::debug("DocumentArea::onCurrentDocumentChanged called");
         if (!document) return;
 
         auto it = documentViews_.find(document->filePath());
@@ -135,10 +126,12 @@ namespace TinaToolBox {
     }
 
     DocumentView *DocumentArea::createDocumentView(const std::shared_ptr<Document> &document) {
+        spdlog::debug("Creating document view for: {}", document->filePath().toStdString());
         auto *view = new DocumentView(document);
         // 使用工厂创建具体的文档视图
         auto docView = DocumentViewFactory::createDocumentView(document);
         if (docView) {
+            spdlog::debug("Setting specific document view");
             view->setDocumentView(std::move(docView));
         } else {
             spdlog::warn("No specific view created for document type: {}",

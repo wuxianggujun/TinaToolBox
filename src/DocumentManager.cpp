@@ -9,6 +9,7 @@ namespace TinaToolBox {
     }
 
     std::shared_ptr<Document> DocumentManager::openDocument(const QString &path) {
+        spdlog::debug("DocumentManager::openDocument called for path: {}", path.toStdString());
         if (documents_.contains(path)) {
             currentDocument_ = documents_[path];
             auto doc = documents_[path];
@@ -29,7 +30,9 @@ namespace TinaToolBox {
         if (document->getState() == Document::State::Ready) {
             currentDocument_ = document;
             emit documentOpened(document);
+            spdlog::debug("Emitting documentOpened signal");
             emit currentDocumentChanged(document);
+            spdlog::debug("Emitting currentDocumentChanged signal");
         }
         return document;
     }

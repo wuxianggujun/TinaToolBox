@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QObject>
 #include "Document.hpp"
 #include "DocumentView.hpp"
 #include "MergedTableView.hpp"
@@ -9,7 +10,8 @@
 #include <memory>
 
 namespace TinaToolBox {
-    class ExcelDocumentView : public IDocumentView {
+    class ExcelDocumentView :public QObject,public IDocumentView {
+        Q_OBJECT
     public:
         explicit  ExcelDocumentView(const std::shared_ptr<Document>& document);
         ~ExcelDocumentView() override = default;

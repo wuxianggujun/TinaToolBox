@@ -9,9 +9,8 @@
 namespace TinaToolBox {
     ExcelDocumentView::ExcelDocumentView(const std::shared_ptr<Document> &document): document_(document),
         tableView_(new MergedTableView()), model_(new TableModel(tableView_)) {
+        spdlog::debug("ExcelDocumentView constructor called for: {}", document->filePath().toStdString());
         tableView_->setModel(model_);
-
-        loadExcelFile();
     }
 
     void ExcelDocumentView::updateContent() {
@@ -27,6 +26,7 @@ namespace TinaToolBox {
     }
 
     void ExcelDocumentView::loadExcelFile() {
+        spdlog::warn("loadExcelFile");
         auto* progressDialog = LoadingProgressDialog::getInstance();
         try {
             QString fileName = QFileInfo(document_->filePath()).fileName();
@@ -39,7 +39,7 @@ namespace TinaToolBox {
                 throw std::runtime_error("Failed to load Excel file");
             }
         
-            progressDialog->updateProgress(50, "Processing data...");
+            progressDialog->updateProgress(40, "Processing data...");
             processWorksheet(xlsx);
             progressDialog->finishProgress();
         } catch (const std::exception &e) {
