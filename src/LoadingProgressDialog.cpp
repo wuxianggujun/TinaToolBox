@@ -1,7 +1,9 @@
 #include "LoadingProgressDialog.hpp"
 #include <QApplication>
+#include <QScreen>
 
 namespace TinaToolBox {
+
     LoadingProgressDialog::LoadingProgressDialog(QWidget* parent)
         : QDialog(parent, Qt::FramelessWindowHint)
         , progressBar_(new QProgressBar(this))
@@ -20,11 +22,32 @@ namespace TinaToolBox {
         
         statusLabel_->setAlignment(Qt::AlignCenter);
         setModal(true);
+
+        // 设置窗口居中
+        if (parent) {
+            setParent(parent);
+        }
+        else {
+            setWindowFlags(windowFlags() | Qt::Dialog);
+        }
+    
     }
 
     void LoadingProgressDialog::startProgress(const QString& title) {
         setWindowTitle(title);
         progressBar_->setValue(0);
+        statusLabel_->setText("");
+
+        // 居中显示
+        if (parentWidget()) {
+            move(parentWidget()->window()->frameGeometry().center() -
+                rect().center());
+        }
+        else {
+            QRect screenGeometry = QApplication::primaryScreen()->geometry();
+            move(screenGeometry.center() - rect().center());
+        }
+
         show();
         QApplication::processEvents();
     }
@@ -37,6 +60,8 @@ namespace TinaToolBox {
 
     void LoadingProgressDialog::finishProgress() {
         hide();
+        progressBar_->setValue(0);
+        statusLabel_->clear();
         QApplication::processEvents();
     }
 }

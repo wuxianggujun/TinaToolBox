@@ -60,6 +60,13 @@ namespace TinaToolBox {
 
             // 设置文件路径属性
             view->setProperty("filePath", filePath);
+
+            // 监听文档状态变化
+            connect(document.get(), &Document::stateChanged, this, 
+                [this, view, document]() {
+                    updateTabState(view, document);
+                });
+            
         } catch (const std::exception &e) {
             spdlog::error("Failed to open document: {}", e.what());
             // 可以在这里添加错误提示对话框
@@ -166,8 +173,14 @@ namespace TinaToolBox {
             case Document::State::Opening:
                 // 显示加载中的状态
                 tabWidget_->setTabIcon(index, QIcon(":/icons/loading.png"));
-                tabWidget_->setTabToolTip(index, document->filePath());
+                tabWidget_->setTabToolTip(index, "Opening...");
                 break;
+
+            case Document::State::Loading: {
+                tabWidget_->setTabIcon(index, QIcon(":/icons/loading.png"));
+                tabWidget_->setTabToolTip(index, "Loading...");
+                break;
+            }
 
             case Document::State::Ready:
                 // 清除特殊图标，显示正常状态

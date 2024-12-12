@@ -15,6 +15,7 @@
 #include "FileHistory.hpp"
 #include "ExceptionHandler.hpp"
 #include "LineNumberTextEdit.hpp"
+#include "LoadingProgressDialog.hpp"
 #include "PdfViewer.hpp"
 #include "RecentFilesWidget.hpp"
 #include "SimpleIni.h"

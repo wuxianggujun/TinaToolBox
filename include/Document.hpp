@@ -67,6 +67,8 @@ namespace TinaToolBox {
 
         QString lastError() const;
 
+        void setState(State newState);
+
     signals:
         void stateChanged(State newState);
 
@@ -75,7 +77,6 @@ namespace TinaToolBox {
         void loadingProgressChanged(const LoadingProgress& progress);
 
     protected:
-        void setState(State newState);
 
         void setError(const QString &error);
 
