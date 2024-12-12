@@ -100,7 +100,7 @@ target_link_libraries(TinaToolBox PRIVATE
 target_link_libraries(TinaToolBox PRIVATE
         Python3::Python
         spdlog::spdlog
-        xlnt 
+        QXlsx::QXlsx
         unofficial::skia::skia
         pdfium)
 
@@ -142,22 +142,4 @@ if (WIN32)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${PDFium_DIR}/bin/pdfium.dll"
             $<TARGET_FILE_DIR:TinaToolBox>)
-endif()
-
-# 在qt_finalize_executable之前添加
-if (WIN32)
-    # 根据构建类型选择正确的dll名称
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(XLNT_DLL_NAME "xlntd.dll")
-    else()
-        set(XLNT_DLL_NAME "xlnt.dll")
-    endif()
-
-    add_custom_command(TARGET TinaToolBox POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_BINARY_DIR}/dependencies/xlnt/source/${XLNT_DLL_NAME}"
-            $<TARGET_FILE_DIR:TinaToolBox>)
-
-    # 添加调试信息
-    message(STATUS "XLNT DLL will be copied from: ${CMAKE_BINARY_DIR}/dependencies/xlnt/source/${XLNT_DLL_NAME}")
 endif()

@@ -1,1 +1,1 @@
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/xlnt)
+add_subdirectory(QXlsx/QXlsx)

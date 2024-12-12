@@ -4,7 +4,8 @@
 #include "DocumentView.hpp"
 #include "MergedTableView.hpp"
 #include "TableModel.hpp"
-#include <xlnt/xlnt.hpp>
+#include <xlsxdocument.h>
+#include  <xlsxcellrange.h>
 #include <memory>
 
 namespace TinaToolBox {
@@ -19,8 +20,8 @@ namespace TinaToolBox {
 
     private:
         void loadExcelFile();
-        void processWorksheet(const xlnt::worksheet& worksheet);
-        QVariant getCellValue(const xlnt::cell& cell);
+        void processWorksheet(const QXlsx::Document& xlsx);
+        QVariant getCellValue(const QXlsx::Cell* cell);
 
         std::shared_ptr<Document> document_;
         MergedTableView* tableView_;
