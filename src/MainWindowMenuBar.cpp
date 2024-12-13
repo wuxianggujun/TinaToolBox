@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QPainterPath>
+#include <spdlog/spdlog.h>
 
 namespace TinaToolBox {
     MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
@@ -18,7 +19,7 @@ namespace TinaToolBox {
 
     void MainWindowMenuBar::updateMaximizeButton(bool isMaximized) {
         isMaximized_ = isMaximized;
-        for (auto& button : controlButtons_) {
+        for (auto &button: controlButtons_) {
             if (button.type == "max") {
                 button.icon = isMaximized ? "❐" : "□";
                 update();
@@ -31,11 +32,17 @@ namespace TinaToolBox {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
 
-        //绘制背景
-        painter.fillRect(rect(), backgroundColor);
-        //绘制菜单按钮
-        for (const auto &item: menuItems) {
-            drawMenuItem(painter, item);
+        // 绘制每个菜单项
+        for (const auto &item: menuItems_) {
+            // 根据活动状态选择背景色
+            QColor bgColor = backgroundColor;
+            if (item.isActive) {
+                bgColor = activeColor; // 使用选中背景色
+            }
+
+            painter.fillRect(item.rect, bgColor);
+            painter.setPen(textColor);
+            painter.drawText(item.rect, Qt::AlignCenter, item.text);
         }
 
         // 绘制控制按钮
@@ -46,13 +53,18 @@ namespace TinaToolBox {
 
     void MainWindowMenuBar::mousePressEvent(QMouseEvent *event) {
         if (event->button() == Qt::LeftButton) {
-            if (MenuItem* item = getMenuItemAt(event->pos())) {
-                if (activeMenuItem == item) {
+            if (MenuItem *item = getMenuItemAt(event->pos())) {
+                if (!item) {
+                    hideActiveMenu();
+                    return;
+                }
+
+                if (activeMenuItem_ == item) {
                     hideActiveMenu();
                 } else {
                     showMenuAt(item);
                 }
-            } else if (ControlButton* button = getControlButtonAt(event->pos())) {
+            } else if (ControlButton *button = getControlButtonAt(event->pos())) {
                 if (button->type == "min") {
                     emit minimizeClicked();
                 } else if (button->type == "max") {
@@ -64,27 +76,22 @@ namespace TinaToolBox {
                 }
             }
         }
-        
     }
 
     void MainWindowMenuBar::mouseMoveEvent(QMouseEvent *event) {
         bool needsUpdate = false;
 
         // 更新菜单项悬停状态
-        for (auto& item : menuItems) {
+        for (auto &item: menuItems_) {
             bool wasHovered = item.isHovered;
             item.isHovered = item.rect.contains(event->pos());
             if (wasHovered != item.isHovered) {
                 needsUpdate = true;
             }
-
-            if (item.isHovered && activeMenu && activeMenuItem != &item) {
-                showMenuAt(&item);
-            }
         }
 
         // 更新控制按钮悬停状态
-        for (auto& button : controlButtons_) {
+        for (auto &button: controlButtons_) {
             bool wasHovered = button.isHovered;
             button.isHovered = button.rect.contains(event->pos());
             if (wasHovered != button.isHovered) {
@@ -101,8 +108,8 @@ namespace TinaToolBox {
         // 处理鼠标释放事件
         if (event->button() == Qt::LeftButton) {
             // 如果点击在菜单项外并且没有活动菜单，清除所有活动状态
-            if (!getMenuItemAt(event->pos()) && !activeMenu) {
-                for (auto& item : menuItems) {
+            if (!getMenuItemAt(event->pos()) && !activeMenu_) {
+                for (auto &item: menuItems_) {
                     if (item.isActive) {
                         item.isActive = false;
                         update();
@@ -116,14 +123,14 @@ namespace TinaToolBox {
     void MainWindowMenuBar::leaveEvent(QEvent *event) {
         bool needsUpdate = false;
 
-        for (auto& item : menuItems) {
+        for (auto &item: menuItems_) {
             if (item.isHovered) {
                 item.isHovered = false;
                 needsUpdate = true;
             }
         }
 
-        for (auto& button : controlButtons_) {
+        for (auto &button: controlButtons_) {
             if (button.isHovered) {
                 button.isHovered = false;
                 needsUpdate = true;
@@ -138,14 +145,43 @@ namespace TinaToolBox {
     }
 
     bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
-        if (activeMenu && watched == activeMenu && event->type() == QEvent::Hide) {
-            if (activeMenuItem) {
-                activeMenuItem->isActive = false;
-                activeMenuItem = nullptr;
-                activeMenu = nullptr;
-                update();
+        if (auto *menu = qobject_cast<QMenu *>(watched)) {
+            if (event->type() == QEvent::Hide) {
+                spdlog::debug("Menu hide event received");
+
+                // 获取当前鼠标位置
+                QPoint globalPos = QCursor::pos();
+                QPoint localPos = mapFromGlobal(globalPos);
+
+                // 检查是否在切换到其他菜单项
+                MenuItem *newItem = getMenuItemAt(localPos);
+
+                if (newItem && newItem != activeMenuItem_ && newItem->rect.contains(localPos)) {
+                    spdlog::debug("Switching menus to: {}", newItem->text.toStdString());
+                    QTimer::singleShot(0, this, [this, newItem]() {
+                        showMenuAt(newItem);
+                    });
+                } else if (!newItem || !newItem->rect.contains(localPos)) {
+                    spdlog::debug("Not switching menus, clearing state");
+                    hideActiveMenu();
+                }
+                return true;
             }
         }
+
+        // 当有活动菜单时，检查鼠标移动
+        if (activeMenu_ && event->type() == QEvent::MouseMove) {
+            QPoint globalPos = QCursor::pos();
+            QPoint localPos = mapFromGlobal(globalPos);
+
+            MenuItem *newItem = getMenuItemAt(localPos);
+            if (newItem && newItem != activeMenuItem_ && !newItem->isActive) {
+                spdlog::debug("Active menu exists and mouse moved to new item");
+                showMenuAt(newItem);
+                return true;
+            }
+        }
+
         return QWidget::eventFilter(watched, event);
     }
 
@@ -208,7 +244,7 @@ namespace TinaToolBox {
                     });
                 }
             }
-            menuItems.append(item);
+            menuItems_.append(item);
         }
     }
 
@@ -251,8 +287,8 @@ namespace TinaToolBox {
         painter.drawText(button.rect, Qt::AlignCenter, button.icon);
     }
 
-    MainWindowMenuBar::MenuItem * MainWindowMenuBar::getMenuItemAt(const QPoint &pos) {
-        for (auto& item : menuItems) {
+    MainWindowMenuBar::MenuItem *MainWindowMenuBar::getMenuItemAt(const QPoint &pos) {
+        for (auto &item: menuItems_) {
             if (item.rect.contains(pos)) {
                 return &item;
             }
@@ -260,8 +296,8 @@ namespace TinaToolBox {
         return nullptr;
     }
 
-    MainWindowMenuBar::ControlButton * MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
-        for (auto& button : controlButtons_) {
+    MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
+        for (auto &button: controlButtons_) {
             if (button.rect.contains(pos)) {
                 return &button;
             }
@@ -270,36 +306,55 @@ namespace TinaToolBox {
     }
 
     void MainWindowMenuBar::showMenuAt(MenuItem *item) {
-        if (activeMenuItem) {
-            activeMenuItem->isActive = false;
+        if (!item || item == activeMenuItem_) {
+            return;
+        }
+        spdlog::debug("showMenuAt called for menu item: {}", item->text.toStdString());
+
+        // 更新状态
+        if (activeMenuItem_) {
+            activeMenuItem_->isActive = false;
         }
 
-        activeMenuItem = item;
-        activeMenuItem->isActive = true;
-        activeMenu = item->menu;
+        activeMenuItem_ = item;
+        activeMenuItem_->isActive = true;
+
+        // 如果有活动菜单，先隐藏
+        if (activeMenu_) {
+            activeMenu_->hide();
+        }
+
+        activeMenu_ = item->menu;
 
         QPoint pos = mapToGlobal(QPoint(item->rect.x(), item->rect.bottom()));
-        activeMenu->popup(pos);
+        spdlog::debug("Showing menu at global pos: ({}, {})", pos.x(), pos.y());
+        // 阻止事件循环
+        activeMenu_->blockSignals(true);
+        activeMenu_->popup(pos);
+        activeMenu_->blockSignals(false);
+
         update();
+
+        spdlog::debug("After showMenuAt - activeMenu_={}, activeMenuItem_={}",
+                      activeMenu_ ? "true" : "false",
+                      activeMenuItem_ ? activeMenuItem_->text.toStdString() : "null");
     }
 
     void MainWindowMenuBar::hideActiveMenu() {
-        if (activeMenu) {
-            activeMenu->hide();
+        spdlog::debug("Hiding active menu");
+        if (activeMenuItem_) {
+            activeMenuItem_->isActive = false;
         }
-        if (activeMenuItem) {
-            activeMenuItem->isActive = false;
-            activeMenuItem = nullptr;
-        }
-        activeMenu = nullptr;
+        activeMenuItem_ = nullptr;
+        activeMenu_ = nullptr;
         update();
     }
 
     void MainWindowMenuBar::updateLayout() {
         int x = 0;
-    
+
         // 更新菜单项位置
-        for (auto& item : menuItems) {
+        for (auto &item: menuItems_) {
             QFontMetrics fm(font());
             int width = fm.horizontalAdvance(item.text) + 2 * MENU_BUTTON_PADDING;
             item.rect = QRect(x, 0, width, MENU_BUTTON_HEIGHT);
@@ -308,10 +363,9 @@ namespace TinaToolBox {
 
         // 更新控制按钮位置
         x = width() - CONTROL_BUTTON_WIDTH * controlButtons_.size();
-        for (auto& button : controlButtons_) {
+        for (auto &button: controlButtons_) {
             button.rect = QRect(x, 0, CONTROL_BUTTON_WIDTH, MENU_BUTTON_HEIGHT);
             x += CONTROL_BUTTON_WIDTH;
         }
     }
-    
 }

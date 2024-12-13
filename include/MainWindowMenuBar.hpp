@@ -73,21 +73,21 @@ namespace TinaToolBox {
         void updateLayout();
 
     private:
-        QList<MenuItem> menuItems;
+        QList<MenuItem> menuItems_;
         QList<ControlButton> controlButtons_;
-        MenuItem *activeMenuItem = nullptr;
-        ControlButton *hoveredButton = nullptr;
-        QMenu *activeMenu = nullptr;
+        MenuItem *activeMenuItem_ = nullptr;
+        ControlButton *hoveredButton_ = nullptr;
+        QMenu *activeMenu_ = nullptr;
         bool isMaximized_ = false;
 
         const int MENU_BUTTON_HEIGHT = 30;
         const int MENU_BUTTON_PADDING = 10;
         const int CONTROL_BUTTON_WIDTH = 45;
 
-        const QColor backgroundColor = QColor("#F0F0F0");
-        const QColor hoverColor = QColor("#E8E8E8");
-        const QColor activeColor = QColor("#E0E0E0");
+        const QColor backgroundColor = QColor(0xF0F0F0);
+        const QColor hoverColor = QColor(0xE8E8E8);
+        const QColor activeColor = QColor(0xE0E0E0);
         const QColor textColor = QColor("#000000");
-        const QColor closeHoverColor = QColor("#E81123"); 
+        const QColor closeHoverColor = QColor(0xE81123); 
     };
 }
