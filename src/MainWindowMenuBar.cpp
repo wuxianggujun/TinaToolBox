@@ -38,6 +38,8 @@ namespace TinaToolBox {
             QColor bgColor = backgroundColor;
             if (item.isActive) {
                 bgColor = activeColor; // 使用选中背景色
+            }else if (item.isHovered) {
+                bgColor = hoverColor;  // 使用悬停颜色
             }
 
             painter.fillRect(item.rect, bgColor);
@@ -122,7 +124,7 @@ namespace TinaToolBox {
 
     void MainWindowMenuBar::leaveEvent(QEvent *event) {
         bool needsUpdate = false;
-
+        // 清除所有悬停状态
         for (auto &item: menuItems_) {
             if (item.isHovered) {
                 item.isHovered = false;
@@ -147,11 +149,8 @@ namespace TinaToolBox {
     bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
         if (auto *menu = qobject_cast<QMenu *>(watched)) {
             if (event->type() == QEvent::Hide) {
-                spdlog::debug("Menu hide event received");
-
-                // 获取当前鼠标位置
-                QPoint globalPos = QCursor::pos();
-                QPoint localPos = mapFromGlobal(globalPos);
+                
+                QPoint localPos = mapFromGlobal(QCursor::pos());
 
                 // 检查是否在切换到其他菜单项
                 MenuItem *newItem = getMenuItemAt(localPos);
