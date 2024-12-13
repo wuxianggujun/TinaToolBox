@@ -69,7 +69,6 @@ namespace TinaToolBox {
         mainSplitter->addWidget(leftPanel);
 
         rightSplitter = new QSplitter(Qt::Vertical);
-        rightSplitter->setHandleWidth(1); // 设置分割条宽度
         // rightSplitter->setChildrenCollapsible(false); // 防止子控件完全折叠
 
         documentArea = new DocumentArea();
@@ -114,27 +113,13 @@ namespace TinaToolBox {
         rightSplitter->setStretchFactor(1, 0); // 下部分不自动拉伸
 
         // 设置主分割器的属性
-        mainSplitter->setHandleWidth(1);
         mainSplitter->setCollapsible(0, false); // 防止左侧面板完全折叠
         mainSplitter->setChildrenCollapsible(false);
-
-        // 设置分割器的样式
-        QString splitterStyle = R"(
-       QSplitter::handle {
-           background-color: #e0e0e0;  /* 浅灰色 */
-       }
-       QSplitter::handle:hover {
-           background-color: #007acc;  /* 保持悬停时的蓝色 */
-       }
-   )";
+        
 
         statusBar = new StatusBar(this);
         mainLayout->addWidget(statusBar);
-
-        mainSplitter->setStyleSheet(splitterStyle);
-        rightSplitter->setStyleSheet(splitterStyle);
-        centerSplitter->setStyleSheet(splitterStyle);
-
+        
         installEventFilter(this);
 
         // connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
@@ -168,30 +153,14 @@ namespace TinaToolBox {
     }
 
     void MainWindow::mousePressEvent(QMouseEvent *event) {
-        if (m_menuBar && m_menuBar->geometry().contains(event->pos())) {
-            if (event->button() == Qt::LeftButton && !isMaximized()) {
+        if (event->button() == Qt::LeftButton) {
+            // 获取相对于菜单栏的位置
+            QPoint menuBarPos = m_menuBar->mapFromGlobal(event->globalPos());
+        
+            // 检查是否在菜单栏的可拖动区域
+            if (m_menuBar->isInDraggableArea(menuBarPos)) {
                 isDragging = true;
-                dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-                event->accept();
-            } else if (event->button() == Qt::LeftButton && isMaximized()) {
-                // 如果在最大化状态下点击标题栏，恢复窗口并开始拖动
-                showNormal();
-                if (m_menuBar) {
-                    m_menuBar->updateMaximizeButton(false);
-                }
-                // 计算新的拖动位置，使鼠标保持在点击的相对位置
-                QPoint globalPos = event->globalPosition().toPoint();
-                QRect geometry = frameGeometry();
-                int clickX = event->pos().x();
-                geometry.moveLeft(globalPos.x() - clickX);
-                geometry.moveTop(globalPos.y() - m_menuBar->geometry().height() / 2);
-                setGeometry(geometry);
-
-                isDragging = true;
-                dragPosition = QPoint(clickX, m_menuBar->geometry().height() / 2);
-                event->accept();
-            } else if (event->button() == Qt::RightButton) {
-                // 禁用右键点击的默认行为
+                dragPosition = event->globalPos() - pos();
                 event->accept();
                 return;
             }
@@ -200,29 +169,32 @@ namespace TinaToolBox {
     }
 
     void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-        if (isDragging && (event->buttons() & Qt::LeftButton) && !isMaximized()) {
-            move(event->globalPosition().toPoint() - dragPosition);
-            event->accept();
+        if (isDragging && (event->buttons() & Qt::LeftButton)) {
+            if (!isMaximized()) {
+                QPoint newPos = event->globalPos() - dragPosition;
+                move(newPos);
+                event->accept();
+                return;
+            }
         }
         QMainWindow::mouseMoveEvent(event);
     }
 
     void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
-        isDragging = false;
+        if (event->button() == Qt::LeftButton) {
+            isDragging = false;
+        }
         QMainWindow::mouseReleaseEvent(event);
     }
 
     void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
-        if (event->button() == Qt::LeftButton && m_menuBar && m_menuBar->geometry().contains(event->pos())) {
-            // 如果窗口不是最大化状态，则最大化
-            if (!isMaximized()) {
-                showMaximized();
-                if (m_menuBar) {
-                    m_menuBar->updateMaximizeButton(true);
-                }
+        if (event->button() == Qt::LeftButton) {
+            // 检查是否在菜单栏区域
+            if (event->pos().y() <= m_menuBar->height()) {
+                toggleMaximize();
+                event->accept();
+                return;
             }
-            event->accept();
-            return;
         }
         QMainWindow::mouseDoubleClickEvent(event);
     }
@@ -417,6 +389,7 @@ namespace TinaToolBox {
         leftPanelLayout->setSpacing(0);
 
         auto *toolBar = createFileListToolBar();
+
         leftPanelLayout->addWidget(toolBar);
 
         recentFilesWidget = new RecentFilesWidget();
@@ -428,12 +401,6 @@ namespace TinaToolBox {
 
     QWidget *MainWindow::createFileListToolBar() {
         auto *toolBar = new QWidget();
-        toolBar->setStyleSheet(
-            "QWidget {"
-            "    background-color: #f5f5f5;"
-            "    border-top: 1px solid #e0e0e0;"
-            "}"
-        );
         auto *toolBarLayout = new QHBoxLayout(toolBar);
         toolBarLayout->setContentsMargins(5, 2, 5, 2);
 

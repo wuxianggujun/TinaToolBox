@@ -23,14 +23,30 @@ namespace TinaToolBox {
             if (button.name == "maximize") {
                 // 根据窗口状态切换图标
                 if (window()->isMaximized()) {
-                    button.icon = QIcon(":/icons/restore.svg");
+                    button.icon = QIcon(":/icons/chrome-maximize.svg");
                 } else {
-                    button.icon = QIcon(":/icons/maximize.svg");
+                    button.icon = QIcon(":/icons/chrome-restore.svg");
                 }
                 update();
                 break;
             }
         }
+    }
+
+    bool MainWindowMenuBar::isInDraggableArea(const QPoint &pos) const {
+        // 检查是否在菜单项区域外
+        for (const auto& item : menuItems_) {
+            if (item.rect.contains(pos)) {
+                return false;
+            }
+        }
+        // 检查是否在控制按钮区域外
+        for (const auto& button : controlButtons_) {
+            if (button.rect.contains(pos)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     void MainWindowMenuBar::paintEvent(QPaintEvent *event) {
@@ -56,6 +72,9 @@ namespace TinaToolBox {
         for (const auto &button: controlButtons_) {
             drawControlButton(painter, button);
         }
+        // 绘制底部浅灰色线条
+        painter.setPen(lineColor);  // 浅灰色
+        painter.drawLine(0, rect().bottom(), width(), rect().bottom());
     }
 
     void MainWindowMenuBar::mousePressEvent(QMouseEvent *event) {
@@ -259,15 +278,15 @@ namespace TinaToolBox {
         controlButtons_ = {
             {
                 "minimize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/minimize.svg"), QSize(ICON_SIZE, ICON_SIZE)
+                QIcon(":/icons/chrome-minimize.svg"), QSize(ICON_SIZE, ICON_SIZE)
             },
             {
                 "maximize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/maximize.svg"), QSize(ICON_SIZE, ICON_SIZE)
+                QIcon(":/icons/chrome-restore.svg"), QSize(ICON_SIZE, ICON_SIZE)
             },
             {
                 "close", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/close.svg"), QSize(ICON_SIZE, ICON_SIZE)
+                QIcon(":/icons/chrome-close.svg"), QSize(ICON_SIZE, ICON_SIZE)
             }
         };
         updateControlButtonsPosition();

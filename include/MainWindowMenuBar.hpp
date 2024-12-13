@@ -13,6 +13,7 @@ namespace TinaToolBox {
 
         void updateMaximizeButton(bool isMaximized);
 
+        bool isInDraggableArea(const QPoint& pos) const;
     signals:
         void menuActionTriggered(const QString &actionName);
 
@@ -82,7 +83,7 @@ namespace TinaToolBox {
         QMenu *activeMenu_ = nullptr;
         bool isMaximized_ = false;
 
-        const int MENU_HEIGHT = 30;
+        const int MENU_HEIGHT = 35;
         const int BUTTON_PADDING = 10;
         const int CONTROL_BUTTON_WIDTH = 45;
         int MENU_ITEM_WIDTH = 50;
@@ -94,6 +95,7 @@ namespace TinaToolBox {
         const QColor hoverColor = QColor(0xE8E8E8);
         const QColor activeColor = QColor(0xE0E0E0);
         const QColor textColor = QColor("#000000");
-        const QColor closeHoverColor = QColor(0xE81123); 
+        const QColor closeHoverColor = QColor(0xE81123);
+        const QColor lineColor = QColor(200, 200, 200);  // 浅灰色线条颜色
     };
 }
