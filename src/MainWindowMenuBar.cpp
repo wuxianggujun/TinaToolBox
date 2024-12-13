@@ -328,11 +328,9 @@ namespace TinaToolBox {
 
         QPoint pos = mapToGlobal(QPoint(item->rect.x(), item->rect.bottom()));
         spdlog::debug("Showing menu at global pos: ({}, {})", pos.x(), pos.y());
-        // 阻止事件循环
-        activeMenu_->blockSignals(true);
+        
         activeMenu_->popup(pos);
-        activeMenu_->blockSignals(false);
-
+        
         update();
 
         spdlog::debug("After showMenuAt - activeMenu_={}, activeMenuItem_={}",
