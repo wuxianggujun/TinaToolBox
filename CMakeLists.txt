@@ -30,11 +30,10 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
 set(PROJECT_SOURCES "")
-set(RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 
-file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resource/*.rc)
+file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
-file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/*.hpp)
+file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
 
 # 创建可执行文件
 if (Qt${QT_VERSION_MAJOR}_USE_STATIC_RUNTIME)
@@ -45,7 +44,7 @@ endif()
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 
 # 生成资源文件
-#qt_add_resources(RESOURCES ${RESOURCES_DIR}/resource.qrc)
+qt_add_resources(RESOURCES ${RC_FILES})
 
 list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FILES} ${RESOURCES})
 

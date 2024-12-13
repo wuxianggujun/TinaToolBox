@@ -48,12 +48,13 @@ namespace TinaToolBox {
         };
 
         struct ControlButton {
-            QString icon;
+            QString name;
             QRect rect;
             bool isHovered = false;
-            QString type;
+            QIcon icon;
+            QSize iconSize;
         };
-
+        
         void initializeMenus();
 
         void initializeControlButtons();
@@ -71,6 +72,7 @@ namespace TinaToolBox {
         void hideActiveMenu();
 
         void updateLayout();
+        void updateControlButtonsPosition();
 
     private:
         QList<MenuItem> menuItems_;
@@ -80,10 +82,14 @@ namespace TinaToolBox {
         QMenu *activeMenu_ = nullptr;
         bool isMaximized_ = false;
 
-        const int MENU_BUTTON_HEIGHT = 30;
-        const int MENU_BUTTON_PADDING = 10;
+        const int MENU_HEIGHT = 30;
+        const int BUTTON_PADDING = 10;
         const int CONTROL_BUTTON_WIDTH = 45;
+        int MENU_ITEM_WIDTH = 50;
 
+        // 标准尺寸参考
+        const int ICON_SIZE = 16;  // 基础尺寸
+        
         const QColor backgroundColor = QColor(0xF0F0F0);
         const QColor hoverColor = QColor(0xE8E8E8);
         const QColor activeColor = QColor(0xE0E0E0);

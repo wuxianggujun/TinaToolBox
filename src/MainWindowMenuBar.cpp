@@ -10,7 +10,7 @@
 
 namespace TinaToolBox {
     MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
-        setFixedHeight(MENU_BUTTON_HEIGHT);
+        setFixedHeight(MENU_HEIGHT);
         setMouseTracking(true);
 
         initializeMenus();
@@ -20,8 +20,13 @@ namespace TinaToolBox {
     void MainWindowMenuBar::updateMaximizeButton(bool isMaximized) {
         isMaximized_ = isMaximized;
         for (auto &button: controlButtons_) {
-            if (button.type == "max") {
-                button.icon = isMaximized ? "❐" : "□";
+            if (button.name == "maximize") {
+                // 根据窗口状态切换图标
+                if (window()->isMaximized()) {
+                    button.icon = QIcon(":/icons/restore.svg");
+                } else {
+                    button.icon = QIcon(":/icons/maximize.svg");
+                }
                 update();
                 break;
             }
@@ -38,8 +43,8 @@ namespace TinaToolBox {
             QColor bgColor = backgroundColor;
             if (item.isActive) {
                 bgColor = activeColor; // 使用选中背景色
-            }else if (item.isHovered) {
-                bgColor = hoverColor;  // 使用悬停颜色
+            } else if (item.isHovered) {
+                bgColor = hoverColor; // 使用悬停颜色
             }
 
             painter.fillRect(item.rect, bgColor);
@@ -67,13 +72,13 @@ namespace TinaToolBox {
                     showMenuAt(item);
                 }
             } else if (ControlButton *button = getControlButtonAt(event->pos())) {
-                if (button->type == "min") {
+                if (button->name == "minimize") {
                     emit minimizeClicked();
-                } else if (button->type == "max") {
+                } else if (button->name == "maximize") {
                     emit maximizeClicked();
-                } else if (button->type == "close") {
+                } else if (button->name == "close") {
                     emit closeClicked();
-                } else if (button->type == "settings") {
+                } else if (button->name == "settings") {
                     emit settingsClicked();
                 }
             }
@@ -149,7 +154,6 @@ namespace TinaToolBox {
     bool MainWindowMenuBar::eventFilter(QObject *watched, QEvent *event) {
         if (auto *menu = qobject_cast<QMenu *>(watched)) {
             if (event->type() == QEvent::Hide) {
-                
                 QPoint localPos = mapFromGlobal(QCursor::pos());
 
                 // 检查是否在切换到其他菜单项
@@ -223,11 +227,14 @@ namespace TinaToolBox {
             }
         };
 
+        int x = 0;
         for (const auto &data: menuData) {
             MenuItem item;
             item.text = data.text;
             item.menu = new QMenu(this);
+            item.rect = QRect(x, 0, MENU_ITEM_WIDTH, MENU_HEIGHT);
             item.menu->installEventFilter(this);
+            x += MENU_ITEM_WIDTH;
 
             for (const auto &[action, shortcut]: data.actions) {
                 if (action.isEmpty()) {
@@ -248,12 +255,22 @@ namespace TinaToolBox {
     }
 
     void MainWindowMenuBar::initializeControlButtons() {
+        // 按照minimize、maximize、close的顺序初始化
         controlButtons_ = {
-            {"⚙", QRect(), false, "settings"},
-            {"─", QRect(), false, "min"},
-            {"□", QRect(), false, "max"},
-            {"×", QRect(), false, "close"}
+            {
+                "minimize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
+                QIcon(":/icons/minimize.svg"), QSize(ICON_SIZE, ICON_SIZE)
+            },
+            {
+                "maximize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
+                QIcon(":/icons/maximize.svg"), QSize(ICON_SIZE, ICON_SIZE)
+            },
+            {
+                "close", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
+                QIcon(":/icons/close.svg"), QSize(ICON_SIZE, ICON_SIZE)
+            }
         };
+        updateControlButtonsPosition();
     }
 
     void MainWindowMenuBar::drawMenuItem(QPainter &painter, const MenuItem &item) {
@@ -269,21 +286,24 @@ namespace TinaToolBox {
     }
 
     void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
-        QColor bgColor = backgroundColor;
-        QColor iconColor = textColor;
-
-        if (button.isHovered) {
-            if (button.type == "close") {
-                bgColor = closeHoverColor;
-                iconColor = Qt::white;
-            } else {
-                bgColor = hoverColor;
-            }
-        }
-
+        // 绘制背景
+        QColor bgColor = button.isHovered ? (button.name == "close" ? closeHoverColor : hoverColor) : backgroundColor;
         painter.fillRect(button.rect, bgColor);
-        painter.setPen(iconColor);
-        painter.drawText(button.rect, Qt::AlignCenter, button.icon);
+
+        // 绘制图标
+        if (!button.icon.isNull()) {
+            QRect iconRect = button.rect;
+            // 计算图标的绘制位置（居中）
+            int x = iconRect.x() + (iconRect.width() - button.iconSize.width()) / 2;
+            int y = iconRect.y() + (iconRect.height() - button.iconSize.height()) / 2;
+
+            // 创建图标的渲染模式
+            QIcon::Mode mode = button.isHovered ? QIcon::Active : QIcon::Normal;
+
+            // 绘制图标
+            QRect targetRect(x, y, button.iconSize.width(), button.iconSize.height());
+            button.icon.paint(&painter, targetRect, Qt::AlignCenter, mode);
+        }
     }
 
     MainWindowMenuBar::MenuItem *MainWindowMenuBar::getMenuItemAt(const QPoint &pos) {
@@ -308,8 +328,7 @@ namespace TinaToolBox {
         if (!item || item == activeMenuItem_) {
             return;
         }
-        spdlog::debug("showMenuAt called for menu item: {}", item->text.toStdString());
-
+        
         // 更新状态
         if (activeMenuItem_) {
             activeMenuItem_->isActive = false;
@@ -326,19 +345,12 @@ namespace TinaToolBox {
         activeMenu_ = item->menu;
 
         QPoint pos = mapToGlobal(QPoint(item->rect.x(), item->rect.bottom()));
-        spdlog::debug("Showing menu at global pos: ({}, {})", pos.x(), pos.y());
-        
         activeMenu_->popup(pos);
-        
-        update();
 
-        spdlog::debug("After showMenuAt - activeMenu_={}, activeMenuItem_={}",
-                      activeMenu_ ? "true" : "false",
-                      activeMenuItem_ ? activeMenuItem_->text.toStdString() : "null");
+        update();
     }
 
     void MainWindowMenuBar::hideActiveMenu() {
-        spdlog::debug("Hiding active menu");
         if (activeMenuItem_) {
             activeMenuItem_->isActive = false;
         }
@@ -353,16 +365,25 @@ namespace TinaToolBox {
         // 更新菜单项位置
         for (auto &item: menuItems_) {
             QFontMetrics fm(font());
-            int width = fm.horizontalAdvance(item.text) + 2 * MENU_BUTTON_PADDING;
-            item.rect = QRect(x, 0, width, MENU_BUTTON_HEIGHT);
+            int width = fm.horizontalAdvance(item.text) + 2 * BUTTON_PADDING;
+            item.rect = QRect(x, 0, width, MENU_HEIGHT);
             x += width;
         }
 
         // 更新控制按钮位置
         x = width() - CONTROL_BUTTON_WIDTH * controlButtons_.size();
         for (auto &button: controlButtons_) {
-            button.rect = QRect(x, 0, CONTROL_BUTTON_WIDTH, MENU_BUTTON_HEIGHT);
+            button.rect = QRect(x, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT);
             x += CONTROL_BUTTON_WIDTH;
+        }
+    }
+
+    void MainWindowMenuBar::updateControlButtonsPosition() {
+        int x = width();
+        // 从右到左依次放置按钮
+        for (auto it = controlButtons_.rbegin(); it != controlButtons_.rend(); ++it) {
+            it->rect = QRect(x - CONTROL_BUTTON_WIDTH, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT);
+            x -= CONTROL_BUTTON_WIDTH;
         }
     }
 }
