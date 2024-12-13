@@ -151,54 +151,7 @@ namespace TinaToolBox {
         qDebug() << "Debug information";
         std::cout << "Standard output" << std::endl;
     }
-
-    void MainWindow::mousePressEvent(QMouseEvent *event) {
-        if (event->button() == Qt::LeftButton) {
-            // 获取相对于菜单栏的位置
-            QPoint menuBarPos = m_menuBar->mapFromGlobal(event->globalPos());
-        
-            // 检查是否在菜单栏的可拖动区域
-            if (m_menuBar->isInDraggableArea(menuBarPos)) {
-                isDragging = true;
-                dragPosition = event->globalPos() - pos();
-                event->accept();
-                return;
-            }
-        }
-        QMainWindow::mousePressEvent(event);
-    }
-
-    void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-        if (isDragging && (event->buttons() & Qt::LeftButton)) {
-            if (!isMaximized()) {
-                QPoint newPos = event->globalPos() - dragPosition;
-                move(newPos);
-                event->accept();
-                return;
-            }
-        }
-        QMainWindow::mouseMoveEvent(event);
-    }
-
-    void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
-        if (event->button() == Qt::LeftButton) {
-            isDragging = false;
-        }
-        QMainWindow::mouseReleaseEvent(event);
-    }
-
-    void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
-        if (event->button() == Qt::LeftButton) {
-            // 检查是否在菜单栏区域
-            if (event->pos().y() <= m_menuBar->height()) {
-                toggleMaximize();
-                event->accept();
-                return;
-            }
-        }
-        QMainWindow::mouseDoubleClickEvent(event);
-    }
-
+    
     void MainWindow::toggleMaximize() {
         if (isMaximized()) {
             showNormal();

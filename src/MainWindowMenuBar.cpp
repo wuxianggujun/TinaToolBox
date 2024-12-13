@@ -23,9 +23,9 @@ namespace TinaToolBox {
             if (button.name == "maximize") {
                 // 根据窗口状态切换图标
                 if (window()->isMaximized()) {
-                    button.icon = QIcon(":/icons/chrome-maximize.svg");
-                } else {
                     button.icon = QIcon(":/icons/chrome-restore.svg");
+                } else {
+                    button.icon = QIcon(":/icons/chrome-maximize.svg");
                 }
                 update();
                 break;
