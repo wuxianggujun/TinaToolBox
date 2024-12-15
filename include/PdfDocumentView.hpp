@@ -10,7 +10,7 @@ namespace TinaToolBox {
     class PdfDocumentView:public QObject, public IDocumentView {
         Q_OBJECT
     public:
-        explicit PdfDocumentView(const std::shared_ptr<Document>& document);
+        explicit PdfDocumentView(const std::shared_ptr<Document>& document,QWidget *parent = nullptr);
         ~PdfDocumentView() override;
 
         void updateContent() override;

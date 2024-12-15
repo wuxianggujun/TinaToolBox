@@ -13,7 +13,7 @@ namespace TinaToolBox {
     class ExcelDocumentView :public QObject,public IDocumentView {
         Q_OBJECT
     public:
-        explicit  ExcelDocumentView(const std::shared_ptr<Document>& document);
+        explicit  ExcelDocumentView(const std::shared_ptr<Document>& document,QWidget *parent = nullptr);
         ~ExcelDocumentView() override = default;
 
         void updateContent() override;

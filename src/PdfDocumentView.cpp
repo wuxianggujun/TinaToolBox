@@ -3,8 +3,8 @@
 #include "Document.hpp"
 
 namespace TinaToolBox {
-    PdfDocumentView::PdfDocumentView(const std::shared_ptr<Document> &document): document_(document),
-        pdfViewer_(new PdfViewer()) {
+    PdfDocumentView::PdfDocumentView(const std::shared_ptr<Document> &document,QWidget *parent):QObject(parent),document_(document),
+        pdfViewer_(new PdfViewer(parent)) {
     }
 
     PdfDocumentView::~PdfDocumentView() {

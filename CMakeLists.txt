@@ -100,6 +100,7 @@ target_link_libraries(TinaToolBox PRIVATE
         Python3::Python
         spdlog::spdlog
         QXlsx::QXlsx
+        tomlplusplus::tomlplusplus
         unofficial::skia::skia
         pdfium)
 

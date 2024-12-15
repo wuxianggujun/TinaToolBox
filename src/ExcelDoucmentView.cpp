@@ -7,8 +7,8 @@
 
 
 namespace TinaToolBox {
-    ExcelDocumentView::ExcelDocumentView(const std::shared_ptr<Document> &document): document_(document),
-        tableView_(new MergedTableView()), model_(new TableModel(tableView_)) {
+    ExcelDocumentView::ExcelDocumentView(const std::shared_ptr<Document> &document,QWidget *parent):QObject(parent),document_(document),
+        tableView_(new MergedTableView(parent)), model_(new TableModel(tableView_)) {
         spdlog::debug("ExcelDocumentView constructor called for: {}", document->filePath().toStdString());
         tableView_->setModel(model_);
     }

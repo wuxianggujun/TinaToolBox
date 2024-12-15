@@ -1,1 +1,2 @@
 add_subdirectory(QXlsx/QXlsx)
+add_subdirectory(tomlplusplus)

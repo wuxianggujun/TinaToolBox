@@ -10,7 +10,7 @@
 
 namespace TinaToolBox {
     ScriptDocumentView::ScriptDocumentView(std::shared_ptr<Document> document, QWidget *parent)
-        : document_(std::move(document)), currentEncoding_("") {
+        :QObject(parent),document_(std::move(document)), currentEncoding_("") {
         codeEditor_ = new CodeEditor(parent);
 
         // 连接编辑器的修改信号

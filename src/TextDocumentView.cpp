@@ -10,7 +10,7 @@
 #include "EncodingDetector.hpp"
 
 namespace TinaToolBox {
-    TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): document_(std::move(
+    TextDocumentView::TextDocumentView(std::shared_ptr<Document> document, QWidget *parent): QObject(parent),document_(std::move(
         document)), currentEncoding_("") {
         textEdit_ = new LineNumberTextEdit(parent);
 
