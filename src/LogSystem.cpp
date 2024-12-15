@@ -42,14 +42,7 @@ namespace TinaToolBox {
         QString text = QString::fromUtf8(formatted.data(), static_cast<int>(formatted.size()));
         LogSystem::getInstance().log(text, msg.level);
     }
-
-    LogSystem::LogSystem() {
-    }
-
-    LogSystem::~LogSystem() {
-        shutdown();
-    }
-
+    
     void LogSystem::setupQtMessageHandler() {
         qInstallMessageHandler(qtMessageHandler);
     }
@@ -102,11 +95,7 @@ namespace TinaToolBox {
 
         logSystem.log(fullMsg, level);
     }
-
-    LogSystem &LogSystem::getInstance() {
-        static LogSystem instance;
-        return instance;
-    }
+    
 
     void LogSystem::initialize() {
         std::lock_guard<std::mutex> lock(mutex_);

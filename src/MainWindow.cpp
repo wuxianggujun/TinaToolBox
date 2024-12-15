@@ -10,6 +10,7 @@
 #include <QClipboard>
 #include "LogPanel.hpp"
 #include <QCloseEvent>
+#include <QStandardPaths>
 #include "DocumentArea.hpp"
 #include "DocumentManager.hpp"
 #include "FileHistory.hpp"
@@ -21,18 +22,22 @@
 #include "SimpleIni.h"
 #include "StatusBar.hpp"
 #include "TextDocumentView.hpp"
+#include "ConfigManager.hpp"
+#include "ThemeManager.hpp"
+
 
 namespace TinaToolBox {
     MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent) {
-        LogSystem::getInstance().initialize();
+        // QString theme = ConfigManager::getInstance().getString("app","theme","light");
+
         setWindowTitle(tr("TinaToolBox"));
         setMinimumSize(1024, 768);
         setWindowFlags(Qt::FramelessWindowHint);
 
         // 设置鼠标追踪
         setMouseTracking(true);
-        
+
         centerWidget = new QWidget();
         setCentralWidget(centerWidget);
 
@@ -115,11 +120,11 @@ namespace TinaToolBox {
         // 设置主分割器的属性
         mainSplitter->setCollapsible(0, false); // 防止左侧面板完全折叠
         mainSplitter->setChildrenCollapsible(false);
-        
+
 
         statusBar = new StatusBar(this);
         mainLayout->addWidget(statusBar);
-        
+
         installEventFilter(this);
 
         // connect(fileTree, &QTreeWidget::itemEntered, this, &MainWindow::showFilePathToolTip);
@@ -151,7 +156,7 @@ namespace TinaToolBox {
         qDebug() << "Debug information";
         std::cout << "Standard output" << std::endl;
     }
-    
+
     void MainWindow::toggleMaximize() {
         if (isMaximized()) {
             showNormal();
@@ -268,18 +273,18 @@ namespace TinaToolBox {
                 this, [this](const std::shared_ptr<Document> &document) {
                     if (document) {
                         statusBar->setFilePath(document->filePath());
-                    
+
                         // 获取当前文档视图
                         if (auto *docView = documentArea->getCurrentDocumentView()) {
                             if (auto *textView = dynamic_cast<TextDocumentView *>(docView->getDocumentView())) {
                                 // 显示当前编码
                                 statusBar->setEncoding(textView->getCurrentEncoding());
                                 statusBar->setEncodingVisible(true);
-                            
+
                                 // 断开所有之前的连接
                                 disconnect(statusBar, &StatusBar::encodingChanged, nullptr, nullptr);
                                 disconnect(textView, &TextDocumentView::encodingChanged, nullptr, nullptr);
-                            
+
                                 // 重新建立双向连接
                                 connect(statusBar, &StatusBar::encodingChanged,
                                         textView, &TextDocumentView::setEncoding,
@@ -287,9 +292,9 @@ namespace TinaToolBox {
                                 connect(textView, &TextDocumentView::encodingChanged,
                                         statusBar, &StatusBar::setEncoding,
                                         Qt::UniqueConnection);
-                            
-                                spdlog::debug("Connections established for document: {}", 
-                                            document->filePath().toStdString());
+
+                                spdlog::debug("Connections established for document: {}",
+                                              document->filePath().toStdString());
                             } else {
                                 statusBar->setEncodingVisible(false);
                             }

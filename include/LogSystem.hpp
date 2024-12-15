@@ -5,6 +5,7 @@
 #include <streambuf>
 #include <mutex>
 #include <queue>
+#include "Singleton.hpp"
 
 namespace TinaToolBox {
     class LogPanel;
@@ -43,16 +44,14 @@ namespace TinaToolBox {
 
 
     // 日志系统管理类
-    class LogSystem : public QObject {
-        
+    class LogSystem : public QObject,public Singleton<LogSystem>{
         Q_OBJECT
-
+        friend class Singleton<LogSystem>;
     public:
-        static LogSystem &getInstance();
+        
+        void initialize() override;
 
-        void initialize();
-
-        void shutdown();
+        void shutdown() override;
 
         void log(const QString &message, spdlog::level::level_enum level);
 
@@ -63,10 +62,8 @@ namespace TinaToolBox {
         void logMessage(const QString &message, spdlog::level::level_enum level);
 
     private:
-        LogSystem();
-
-        ~LogSystem() override;
-
+        LogSystem() :QObject(nullptr){}
+        
         void setupQtMessageHandler();
 
         void setupSpdLogger();

@@ -1,0 +1,13 @@
+{
+  "colors": {
+    "background": "#1E1E1E",
+    "foreground": "#FFFFFF",
+    "primary": "#007ACC",
+    "secondary": "#5C6BC0",
+    "accent": "#FF4081"
+  },
+  "stylesheets": {
+    "main": "QWidget { background-color: #1E1E1E; color: #FFFFFF; }",
+    "button": "QPushButton { background-color: #007ACC; color: white; border-radius: 4px; padding: 6px; }"
+  }
+}

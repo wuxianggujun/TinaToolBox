@@ -10,8 +10,14 @@
 #include <QStackedWidget>
 #include <QMessageBox>
 #include <QTreeWidgetItem>
+
+#include "ConfigManager.hpp"
+#include "LogSystem.hpp"
 #include "MainWindowMenuBar.hpp"
+#include "Singleton.hpp"
+#include "ThemeManager.hpp"
 #include "Tokenizer.hpp"
+
 
 namespace TinaToolBox {
     class StatusBar;
@@ -28,7 +34,6 @@ namespace TinaToolBox {
         ~MainWindow();
 
     protected:
-        
         void closeEvent(QCloseEvent *event) override;
 
     private:
@@ -36,9 +41,10 @@ namespace TinaToolBox {
 
         QWidget *createFileListToolBar();
 
-        void onFileSelected(const QString& filePath);
-        void onRemoveFileRequested(const QString& filePath);
-        
+        void onFileSelected(const QString &filePath);
+
+        void onRemoveFileRequested(const QString &filePath);
+
     private slots:
         void handleMenuAction(const QString &actionName);
 
@@ -47,7 +53,7 @@ namespace TinaToolBox {
         void showBottomPanel();
 
         void hideBottomPanel();
-        
+
         void onSettingsClicked();
 
         void onFileDoubleClicked(const QTreeWidgetItem *item);
@@ -60,15 +66,15 @@ namespace TinaToolBox {
         void setUpUI();
 
         void createTileBar();
-        
+
         void openFile();
-        
+
         void setupConnections();
 
         void updateFileHistory(const QString &filePath);
-        
+
         bool eventFilter(QObject *obj, QEvent *event) override;
-        
+
         QPoint dragPosition;
         bool isDragging = false;
         MainWindowMenuBar *m_menuBar;
@@ -79,7 +85,7 @@ namespace TinaToolBox {
         QSplitter *mainSplitter;
         QSplitter *rightSplitter;
 
-        StatusBar* statusBar{nullptr};
+        StatusBar *statusBar{nullptr};
 
         RecentFilesWidget *recentFilesWidget;
         QTabWidget *leftPanelTab;
@@ -91,5 +97,8 @@ namespace TinaToolBox {
         LogPanel *logPanel;
         QPushButton *maxButton;
         QSplitter *bottomSplitter;
+
+        SingletonGuard<LogSystem> logSystemGuard;
+        SingletonGuard<ConfigManager> configManagerGuard;
     };
 }

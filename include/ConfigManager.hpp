@@ -12,8 +12,10 @@ namespace TinaToolBox {
         Q_OBJECT
         friend class Singleton<ConfigManager>; // 允许基类访问私有构造函数
     public:
-        bool initialized(const QString& configPath = "config.toml");
-        bool saveConfig();
+        void initialize() override;
+        void shutdown() override;
+        bool loadConfig(const QString& configPath);
+        bool saveConfig() const;
 
         QString getString(const QString& section,const QString& key, const QString& defaultValue = "") const;
         int getInt(const QString& section,const QString& key, int defaultValue = 0) const;
