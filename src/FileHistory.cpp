@@ -138,7 +138,7 @@ QString FileHistoryManager::getDatabasePath() const {
     if (!dir.exists()) {
         if (!dir.mkpath(".")) {  // 创建所有必需的父目录
             spdlog::error("Failed to create data directory: {}", dataPath.toStdString());
-            return QString();
+            return {};
         }
         spdlog::info("Created data directory: {}", dataPath.toStdString());
     }
