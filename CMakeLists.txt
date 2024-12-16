@@ -50,6 +50,8 @@ list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FIL
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
+#add_subdirectory(${PROJECT_SOURCE_DIR}/tinacalamine)
+
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(TinaToolBox
             MANUAL_FINALIZATION
@@ -66,27 +68,19 @@ else ()
     endif ()
 endif ()
 
-source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${HEADER_FILES})
-source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCE_FILES})
-source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${RC_FILES})
-source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${UI_FILES})
-source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${RESOURCES})
-
-find_path(SIMPLEINI_INCLUDE_DIRS "ConvertUTF.c")
-find_package(unofficial-skia CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-find_package(pybind11 CONFIG)
 
-message(STATUS "Python Include_dirs: ${Python3_INCLUDE_DIRS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
-        ${SIMPLEINI_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}/include
         ${PDFium_INCLUDE_DIRS}
-        ${Python3_INCLUDE_DIRS})
+        #${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
+)
+
+# 将主模块的头文件路径设置为 INTERFACE
+#target_include_directories(TinaToolBox INTERFACE ${PROJECT_SOURCE_DIR}/include)
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
@@ -97,12 +91,12 @@ target_link_libraries(TinaToolBox PRIVATE
         Qt${QT_VERSION_MAJOR}::Sql)
 
 target_link_libraries(TinaToolBox PRIVATE
-        Python3::Python
         spdlog::spdlog
         QXlsx::QXlsx
         tomlplusplus::tomlplusplus
-        unofficial::skia::skia
-        pdfium)
+        pdfium
+#        rust_part
+)
 
 target_compile_options(TinaToolBox PRIVATE
         $<$<COMPILE_LANGUAGE:C>:-DNDEBUG>
