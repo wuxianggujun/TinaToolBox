@@ -10,6 +10,7 @@
 #include <QClipboard>
 #include "LogPanel.hpp"
 #include <QCloseEvent>
+#include <QPainterPath>
 #include <QStandardPaths>
 #include "DocumentArea.hpp"
 #include "DocumentManager.hpp"
@@ -34,7 +35,6 @@ namespace TinaToolBox {
         setWindowTitle(tr("TinaToolBox"));
         setMinimumSize(1024, 768);
         setWindowFlags(Qt::FramelessWindowHint);
-
         // 设置鼠标追踪
         setMouseTracking(true);
 
@@ -43,6 +43,7 @@ namespace TinaToolBox {
 
         mainLayout = new QVBoxLayout(centerWidget);
         mainLayout->setContentsMargins(0, 0, 0, 0);
+        // mainLayout->setContentsMargins(SHADOW_WIDTH, SHADOW_WIDTH, SHADOW_WIDTH, SHADOW_WIDTH);
         mainLayout->setSpacing(0);
 
         setUpUI();
@@ -327,6 +328,21 @@ namespace TinaToolBox {
         return QMainWindow::eventFilter(obj, event);
     }
 
+    void MainWindow::drawShadow(QPainter &painter, const QRect &rect) const {
+        QColor shadowColor(0, 0, 0, 30);
+        for (int i = 0; i < SHADOW_WIDTH; i++) {
+            shadowColor.setAlpha(30 - (i * 30 / SHADOW_WIDTH));
+            painter.setPen(shadowColor);
+
+            QRect shadowRect = rect.marginsAdded(QMargins(i, i, i, i));
+            if (isMaximized()) {
+                painter.drawRect(shadowRect);
+            } else {
+                painter.drawRoundedRect(shadowRect, WINDOW_RADIUS + i, WINDOW_RADIUS + i);
+            }
+        }
+    }
+
     void MainWindow::closeEvent(QCloseEvent *event) {
         // 关闭所有打开的文档
         auto &manager = DocumentManager::getInstance();
@@ -338,6 +354,53 @@ namespace TinaToolBox {
         // 等待所有清理完成
         QApplication::processEvents();
         event->accept();
+    }
+
+    void MainWindow::paintEvent(QPaintEvent *event) {
+        Q_UNUSED(event);
+
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing, true); // 启用抗锯齿
+
+        // 创建路径
+        QPainterPath path;
+        if (isMaximized()) {
+            // 最大化时使用矩形
+            path.addRect(rect());
+        } else {
+            // 非最大化时使用圆角矩形
+            path.addRoundedRect(rect(), WINDOW_RADIUS, WINDOW_RADIUS);
+        }
+
+        // 绘制主窗口背景
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(palette().window());  // 使用系统窗口颜色
+        painter.drawPath(path);
+
+        // 设置窗口遮罩
+        if (!isMaximized()) {
+            setMask(path.toFillPolygon().toPolygon());
+        } else {
+            clearMask();
+        }
+    }
+
+    void MainWindow::mousePressEvent(QMouseEvent *event) {
+        if (event->button() == Qt::LeftButton) {
+            if (!isMaximized()) {
+                dragPosition = event->globalPos() - frameGeometry().topLeft();
+                event->accept();
+            }
+        }
+    }
+
+    void MainWindow::mouseMoveEvent(QMouseEvent *event) {
+        if (event->buttons() & Qt::LeftButton) {
+            if (!isMaximized()) {
+                move(event->globalPos() - dragPosition);
+                event->accept();
+            }
+        }
     }
 
     QWidget *MainWindow::createLeftPanel() {
