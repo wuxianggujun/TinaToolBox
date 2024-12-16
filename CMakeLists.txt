@@ -35,6 +35,7 @@ file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
 file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
 
+
 # 创建可执行文件
 if (Qt${QT_VERSION_MAJOR}_USE_STATIC_RUNTIME)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -50,7 +51,7 @@ list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FIL
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
-#add_subdirectory(${PROJECT_SOURCE_DIR}/tinacalamine)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tinacalamine)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(TinaToolBox
@@ -76,11 +77,8 @@ target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
         ${PROJECT_SOURCE_DIR}/include
         ${PDFium_INCLUDE_DIRS}
-        #${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
+        ${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
 )
-
-# 将主模块的头文件路径设置为 INTERFACE
-#target_include_directories(TinaToolBox INTERFACE ${PROJECT_SOURCE_DIR}/include)
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
@@ -95,7 +93,7 @@ target_link_libraries(TinaToolBox PRIVATE
         QXlsx::QXlsx
         tomlplusplus::tomlplusplus
         pdfium
-#        rust_part
+        rust_part
 )
 
 target_compile_options(TinaToolBox PRIVATE

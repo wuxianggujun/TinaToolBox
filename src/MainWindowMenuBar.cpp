@@ -80,17 +80,15 @@ namespace TinaToolBox {
     void MainWindowMenuBar::mousePressEvent(QMouseEvent *event) {
         if (event->button() == Qt::LeftButton) {
             if (MenuItem *item = getMenuItemAt(event->pos())) {
-                if (!item) {
-                    hideActiveMenu();
-                    return;
-                }
-
                 if (activeMenuItem_ == item) {
                     hideActiveMenu();
                 } else {
                     showMenuAt(item);
                 }
             } else if (ControlButton *button = getControlButtonAt(event->pos())) {
+                // 在发送信号之前先检查按钮是否有效
+                if (!button) return;
+                
                 if (button->name == "minimize") {
                     emit minimizeClicked();
                 } else if (button->name == "maximize") {
@@ -277,16 +275,20 @@ namespace TinaToolBox {
         // 按照minimize、maximize、close的顺序初始化
         controlButtons_ = {
             {
+                "settings", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
+                QIcon(":/icons/settings-gear.svg"), QSize(ICON_SIZE, ICON_SIZE),true    
+            },
+            {
                 "minimize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/chrome-minimize.svg"), QSize(ICON_SIZE, ICON_SIZE)
+                QIcon(":/icons/chrome-minimize.svg"), QSize(ICON_SIZE, ICON_SIZE),false
             },
             {
                 "maximize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/chrome-restore.svg"), QSize(ICON_SIZE, ICON_SIZE)
+                QIcon(":/icons/chrome-restore.svg"), QSize(ICON_SIZE, ICON_SIZE),false
             },
             {
                 "close", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/chrome-close.svg"), QSize(ICON_SIZE, ICON_SIZE)
+                QIcon(":/icons/chrome-close.svg"), QSize(ICON_SIZE, ICON_SIZE),false
             }
         };
         updateControlButtonsPosition();
@@ -304,23 +306,55 @@ namespace TinaToolBox {
         painter.drawText(item.rect, Qt::AlignCenter, item.text);
     }
 
-    void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
+    /*void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
         // 绘制背景
         QColor bgColor = button.isHovered ? (button.name == "close" ? closeHoverColor : hoverColor) : backgroundColor;
         painter.fillRect(button.rect, bgColor);
 
+        
+        
+
         // 绘制图标
         if (!button.icon.isNull()) {
             QRect iconRect = button.rect;
+            QSize iconSize = button.iconSize;
+            
             // 计算图标的绘制位置（居中）
-            int x = iconRect.x() + (iconRect.width() - button.iconSize.width()) / 2;
-            int y = iconRect.y() + (iconRect.height() - button.iconSize.height()) / 2;
+            int x = iconRect.x() + (iconRect.width() - iconSize.width()) / 2;
+            int y = iconRect.y() + (iconRect.height() - iconSize.height()) / 2;
 
             // 创建图标的渲染模式
             QIcon::Mode mode = button.isHovered ? QIcon::Active : QIcon::Normal;
 
             // 绘制图标
             QRect targetRect(x, y, button.iconSize.width(), button.iconSize.height());
+            button.icon.paint(&painter, targetRect, Qt::AlignCenter, mode);
+        }
+    }*/
+
+    void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
+        if (button.useShapeDetection) {
+            // 设置按钮只在图标区域绘制背景
+            if (button.isHovered) {
+                int x = button.rect.x() + (button.rect.width() - button.iconSize.width()) / 2;
+                int y = button.rect.y() + (button.rect.height() - button.iconSize.height()) / 2;
+                QRect iconRect(x, y, button.iconSize.width(), button.iconSize.height());
+                painter.fillRect(iconRect, hoverColor);
+            }
+        } else {
+            // 其他按钮保持原来的矩形背景
+            QColor bgColor = button.isHovered ? 
+                (button.name == "close" ? closeHoverColor : hoverColor) : 
+                backgroundColor;
+            painter.fillRect(button.rect, bgColor);
+        }
+
+        // 绘制图标
+        if (!button.icon.isNull()) {
+            int x = button.rect.x() + (button.rect.width() - button.iconSize.width()) / 2;
+            int y = button.rect.y() + (button.rect.height() - button.iconSize.height()) / 2;
+            QRect targetRect(x, y, button.iconSize.width(), button.iconSize.height());
+            QIcon::Mode mode = button.isHovered ? QIcon::Active : QIcon::Normal;
             button.icon.paint(&painter, targetRect, Qt::AlignCenter, mode);
         }
     }
@@ -334,15 +368,35 @@ namespace TinaToolBox {
         return nullptr;
     }
 
-    MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
+    /*MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
         for (auto &button: controlButtons_) {
             if (button.rect.contains(pos)) {
                 return &button;
             }
         }
         return nullptr;
-    }
+    }*/
 
+    MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
+        for (auto &button : controlButtons_) {
+            if (button.useShapeDetection) {
+                // 对于设置按钮，只检查图标区域
+                int x = button.rect.x() + (button.rect.width() - button.iconSize.width()) / 2;
+                int y = button.rect.y() + (button.rect.height() - button.iconSize.height()) / 2;
+                QRect iconRect(x, y, button.iconSize.width(), button.iconSize.height());
+                if (iconRect.contains(pos)) {
+                    return &button;
+                }
+            } else {
+                // 其他按钮保持原来的矩形检测
+                if (button.rect.contains(pos)) {
+                    return &button;
+                }
+            }
+        }
+        return nullptr;
+    }
+    
     void MainWindowMenuBar::showMenuAt(MenuItem *item) {
         if (!item || item == activeMenuItem_) {
             return;

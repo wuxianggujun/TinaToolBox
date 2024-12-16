@@ -51,7 +51,6 @@ namespace TinaToolBox {
     MainWindow::~MainWindow() {
         // 在程序退出时清理PDFium库
         PdfViewer::PDFiumLibrary::Destroy();
-        LogSystem::getInstance().shutdown();
     }
 
 
@@ -151,6 +150,10 @@ namespace TinaToolBox {
             documentArea->showSettingsPanel();
         }*/
 
+        // 使用 LogSystem 的实例引用，而不是直接使用 spdlog
+        //auto& logSystem = LogSystem::getInstance();
+
+        //logSystem.log("Settings button clicked", spdlog::level::info);
         // 2. 记录日志
         spdlog::info("Starting application...");
         qDebug() << "Debug information";

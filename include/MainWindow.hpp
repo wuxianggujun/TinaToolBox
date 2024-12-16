@@ -97,8 +97,5 @@ namespace TinaToolBox {
         LogPanel *logPanel;
         QPushButton *maxButton;
         QSplitter *bottomSplitter;
-
-        SingletonGuard<LogSystem> logSystemGuard;
-        SingletonGuard<ConfigManager> configManagerGuard;
     };
 }

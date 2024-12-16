@@ -53,7 +53,25 @@ namespace TinaToolBox {
 
         void shutdown() override;
 
+        bool isInitialized() const;
+        
         void log(const QString &message, spdlog::level::level_enum level);
+
+        // 添加便捷方法
+        template<typename... Args>
+        void info(Args&&... args) {
+            spdlog::info(std::forward<Args>(args)...);
+        }
+
+        template<typename... Args>
+        void debug(Args&&... args) {
+            spdlog::debug(std::forward<Args>(args)...);
+        }
+
+        template<typename... Args>
+        void error(Args&&... args) {
+            spdlog::error(std::forward<Args>(args)...);
+        }
 
         void setLogLevel(spdlog::level::level_enum level);
 

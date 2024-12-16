@@ -24,6 +24,7 @@ namespace TinaToolBox {
         void closeClicked();
 
         void settingsClicked();
+    
 
     protected:
         void paintEvent(QPaintEvent *event) override;
@@ -54,6 +55,7 @@ namespace TinaToolBox {
             bool isHovered = false;
             QIcon icon;
             QSize iconSize;
+            bool useShapeDetection = false;
         };
         
         void initializeMenus();

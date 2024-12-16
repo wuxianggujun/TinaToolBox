@@ -14,10 +14,14 @@ namespace TinaToolBox {
     }
 
     StdoutRedirector::~StdoutRedirector() {
-        if (isStderr_) {
-            std::cerr.rdbuf(oldBuf_);
-        } else {
-            std::cout.rdbuf(oldBuf_);
+        if (oldBuf_) {
+            if (isStderr_) {
+                std::cerr.rdbuf(oldBuf_);
+            }
+            else {
+                std::cout.rdbuf(oldBuf_);
+            }
+            oldBuf_ = nullptr;
         }
     }
 
@@ -40,7 +44,9 @@ namespace TinaToolBox {
         spdlog::memory_buf_t formatted;
         spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
         QString text = QString::fromUtf8(formatted.data(), static_cast<int>(formatted.size()));
-        LogSystem::getInstance().log(text, msg.level);
+        //LogSystem::getInstance().log(text, msg.level);
+        // 直接发送信号而不是调用 log 方法
+        emit LogSystem::getInstance().logMessage(text, msg.level);
     }
     
     void LogSystem::setupQtMessageHandler() {
@@ -106,9 +112,26 @@ namespace TinaToolBox {
 
     void LogSystem::shutdown() {
         std::lock_guard lock(mutex_);
-        stdoutRedirector_.reset();
-        stderrRedirector_.reset();
-        sink_.reset();
+
+        // 先清理重定向器
+        if (stdoutRedirector_) {
+            stdoutRedirector_.reset();
+        }
+        if (stderrRedirector_) {
+            stderrRedirector_.reset();
+        }
+
+        // 最后清理 sink
+        if (sink_) {
+            sink_.reset();
+        }
+
+        // 确保 spdlog 正确关闭
+        spdlog::shutdown();
+    }
+
+    bool LogSystem::isInitialized() const {
+        return sink_ != nullptr;
     }
 
     void LogSystem::log(const QString &message, spdlog::level::level_enum level) {

@@ -6,8 +6,15 @@
 #include <QStandardPaths>
 #include <spdlog/spdlog.h>
 
+#include "LogSystem.hpp"
+
 namespace TinaToolBox {
     void ConfigManager::initialize() {
+        // 确保 LogSystem 已经初始化
+        if (!LogSystem::getInstance().isInitialized()) {
+            LogSystem::getInstance().initialize();
+        }
+    
         configPath_ = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/config.toml";
         loadConfig(configPath_);
     }
@@ -17,7 +24,7 @@ namespace TinaToolBox {
             saveConfig();
             config_.reset();
             config_ = nullptr;
-        }
+        } 
     }
     
     bool ConfigManager::loadConfig(const QString &configPath) {

@@ -5,11 +5,24 @@
 
 using namespace TinaToolBox;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    SingletonGuard<LogSystem> logSystemGuard_;
+
+
+    qDebug() << "Starting application...";
+
+    auto &logSystem = LogSystem::getInstance();
+    logSystem.initialize();
+
+    // 确保 ConfigManager 在 LogSystem 之后初始化
+    auto &configManager = ConfigManager::getInstance();
+    configManager.initialize();
+
     MainWindow w;
     w.show();
-    return a.exec();
+    const int result = QApplication::exec();
+
+    configManager.shutdown();
+    logSystem.shutdown();
+    return result;
 }
