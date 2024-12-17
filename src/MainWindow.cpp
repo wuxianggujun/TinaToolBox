@@ -345,30 +345,24 @@ namespace TinaToolBox {
 
     void MainWindow::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
-
+        
         QPainter painter(this);
-        painter.setRenderHint(QPainter::Antialiasing); // 抗锯齿
-
-        
-        // 获取圆角半径
-        int radius = UIConfig::getInstance().cornerRadius();
-        
-        // 使用窗口的背景色
-        painter.setBrush(palette().window());
-        // 设置透明的画笔（去除边框）
+        painter.setRenderHint(QPainter::Antialiasing);
+    
+        // 设置画笔和画刷
         painter.setPen(Qt::transparent);
+        painter.setBrush(palette().window());
 
-        // 获取窗口矩形并调整大小
-
+        // 获取窗口矩形
         QRectF rect = this->rect();
 
-        // 绘制圆角矩形
-        painter.drawRoundedRect(rect, radius, radius);
-
-        // 设置窗口遮罩以实现真正的圆角效果
-        if (!isMaximized()) {
-            QPainterPath path;
-            path.addRoundedRect(rect, radius, radius);
+        if (isMaximized()) {
+            // 最大化时绘制普通矩形
+            painter.drawRect(rect);
+        } else {
+            // 非最大化时绘制圆角矩形
+            int radius = UIConfig::getInstance().cornerRadius();
+            painter.drawRoundedRect(rect, radius, radius);
         }
     }
 

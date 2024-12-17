@@ -67,13 +67,20 @@ namespace TinaToolBox {
         // 只绘制上半部分的圆角
         QRect rect = this->rect();
         QPainterPath path;
-        path.moveTo(0, rect.height()); // 从左下角开始
-        path.lineTo(0, 15); // 左边直线
-        path.arcTo(0, 0, 30, 30, 180, -90); // 左上角圆弧
-        path.lineTo(rect.width() - 15, 0); // 顶边直线
-        path.arcTo(rect.width() - 30, 0, 30, 30, 90, -90); // 右上角圆弧
-        path.lineTo(rect.width(), rect.height()); // 右边直线
-        path.lineTo(0, rect.height()); // 底边直线
+
+        if (window()->isMaximized()) {
+            // 窗口最大化时，绘制普通矩形
+            path.addRect(rect);
+        } else {
+            // 非最大化时，绘制带圆角的路径
+            path.moveTo(0, rect.height());
+            path.lineTo(0, radius);
+            path.arcTo(0, 0, radius*2, radius*2, 180, -90);
+            path.lineTo(rect.width() - radius, 0);
+            path.arcTo(rect.width() - radius*2, 0, radius*2, radius*2, 90, -90);
+            path.lineTo(rect.width(), rect.height());
+            path.lineTo(0, rect.height());
+        }
 
         painter.drawPath(path);
 
@@ -88,12 +95,11 @@ namespace TinaToolBox {
 
             // 创建菜单项的路径
             QPainterPath itemPath;
-            if (item.rect.x() == 0) {
-                // 如果是第一个菜单项
-                // 左侧需要圆角
+            if (item.rect.x() == 0 && !window()->isMaximized()) {
+                // 如果是第一个菜单项 左侧需要圆角
                 itemPath.moveTo(item.rect.x(), item.rect.bottom());
-                itemPath.lineTo(item.rect.x(), item.rect.top() + 15);
-                itemPath.arcTo(item.rect.x(), item.rect.top(), 30, 30, 180, -90);
+                itemPath.lineTo(item.rect.x(), item.rect.top() + radius);
+                itemPath.arcTo(item.rect.x(), item.rect.top(), radius * 2, radius * 2, 180, -90);
                 itemPath.lineTo(item.rect.right(), item.rect.top());
                 itemPath.lineTo(item.rect.right(), item.rect.bottom());
             } else {
@@ -260,7 +266,7 @@ namespace TinaToolBox {
 
         QList<MenuData> menuData = {
             {
-                "文件(&F)", {
+                "文件(F)", {
                     {"新建", "Ctrl+N"},
                     {"打开", "Ctrl+O"},
                     {"保存", "Ctrl+S"},
@@ -273,7 +279,7 @@ namespace TinaToolBox {
                 }
             },
             {
-                "编辑(&E)", {
+                "编辑(E)", {
                     {"撤销", "Ctrl+Z"},
                     {"重做", "Ctrl+Y"},
                     {"", ""}, // separator
@@ -348,12 +354,6 @@ namespace TinaToolBox {
     
 
     void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
-        // 调试输出
-        qDebug() << "Button:" << button.name 
-                 << "Rect:" << button.rect 
-                 << "Window width:" << width() 
-                 << "Is rightmost:" << (button.rect.right() == width());
-
         
         // 获取圆角半径
         int radius = UIConfig::getInstance().cornerRadius();
@@ -382,14 +382,20 @@ namespace TinaToolBox {
             
                 // 确保右边界延伸到窗口边缘
                 r.setRight(width());  // 将按钮的右边界设置为窗口宽度
-            
-                path.moveTo(r.left(), r.bottom());  // 左下角
-                path.lineTo(r.left(), r.top());     // 左边线
-                path.lineTo(r.right() - radius, r.top()); // 顶边线到圆角开始处
-                path.arcTo(r.right() - (radius*2), r.top(), radius*2, radius*2, 90, -90); // 右上角圆弧
-                path.lineTo(r.right(), r.bottom());  // 右边线
-                path.lineTo(r.left(), r.bottom());   // 底边线
-
+                
+                if (window()->isMaximized()) {
+                    // 窗口最大化时，绘制普通矩形
+                    path.addRect(r);
+                } else {
+                    // 非最大化时，绘制带圆角的路径
+                    path.moveTo(r.left(), r.bottom());  // 左下角
+                    path.lineTo(r.left(), r.top());     // 左边线
+                    path.lineTo(r.right() - radius, r.top()); // 使用配置的圆角半径
+                    path.arcTo(r.right() - (radius * 2), r.top(), radius * 2, radius * 2, 90, -90); // 右上角圆弧
+                    path.lineTo(r.right(), r.bottom());  // 右边线
+                    path.lineTo(r.left(), r.bottom());   // 底边线
+                }
+                
                 painter.setPen(Qt::NoPen);
                 painter.setBrush(bgColor);
                 painter.drawPath(path);
