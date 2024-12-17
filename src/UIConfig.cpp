@@ -3,6 +3,7 @@
 //
 
 #include "UIConfig.hpp"
+#include "ConfigManager.hpp"
 
 namespace TinaToolBox {
     void UIConfig::initialize() {

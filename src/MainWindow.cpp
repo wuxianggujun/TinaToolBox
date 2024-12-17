@@ -83,10 +83,10 @@ namespace TinaToolBox {
         centerSplitter->addWidget(documentArea);
 
         // 设置属性面板
-        QWidget *propertyPanel = new QWidget();
+        auto *propertyPanel = new QWidget();
         propertyPanel->setMinimumWidth(200);
         propertyPanel->setMaximumWidth(350);
-        QVBoxLayout *propertyPanelLayout = new QVBoxLayout(propertyPanel);
+        auto *propertyPanelLayout = new QVBoxLayout(propertyPanel);
         propertyPanelLayout->setContentsMargins(0, 0, 0, 0);
         propertyPanelLayout->setSpacing(0);
 
@@ -256,8 +256,7 @@ namespace TinaToolBox {
         );
         if (!filePath.isEmpty()) {
             auto &manager = DocumentManager::getInstance();
-            auto document = manager.openDocument(filePath);
-            if (document) {
+            if (auto document = manager.openDocument(filePath)) {
                 updateFileHistory(filePath);
                 // 如果当前是脚本视图且打开的是非脚本文件，切换到所有文件视图
                 if (viewModeComboBox->currentIndex() == 1 && !document->isScript()) {
@@ -369,7 +368,7 @@ namespace TinaToolBox {
     void MainWindow::mousePressEvent(QMouseEvent *event) {
         if (event->button() == Qt::LeftButton) {
             if (!isMaximized()) {
-                dragPosition = event->globalPos() - frameGeometry().topLeft();
+                dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
                 event->accept();
             }
         }
@@ -378,7 +377,7 @@ namespace TinaToolBox {
     void MainWindow::mouseMoveEvent(QMouseEvent *event) {
         if (event->buttons() & Qt::LeftButton) {
             if (!isMaximized()) {
-                move(event->globalPos() - dragPosition);
+                move(event->globalPosition().toPoint() - dragPosition);
                 event->accept();
             }
         }

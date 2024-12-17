@@ -423,16 +423,7 @@ namespace TinaToolBox {
         }
         return nullptr;
     }
-
-    /*MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
-        for (auto &button: controlButtons_) {
-            if (button.rect.contains(pos)) {
-                return &button;
-            }
-        }
-        return nullptr;
-    }*/
-
+    
     MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
         for (auto &button: controlButtons_) {
             if (button.useShapeDetection) {

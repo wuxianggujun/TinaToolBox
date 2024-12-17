@@ -3,8 +3,6 @@
 //
 #pragma once
 #include "Singleton.hpp"
-#include "ConfigManager.hpp"
-
 
 namespace TinaToolBox {
     class UIConfig : public Singleton<UIConfig>{
