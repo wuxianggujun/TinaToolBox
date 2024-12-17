@@ -79,8 +79,6 @@ namespace TinaToolBox {
 
         bool eventFilter(QObject *obj, QEvent *event) override;
 
-        void drawShadow(QPainter &painter,const QRect & rect) const;
-
         QPoint dragPosition;
         bool isDragging = false;
         MainWindowMenuBar *m_menuBar;
@@ -105,7 +103,5 @@ namespace TinaToolBox {
         QSplitter *bottomSplitter;
 
         static constexpr int WINDOW_RADIUS = 10; // 窗口圆角半径
-        static constexpr int SHADOW_WIDTH = 10;
-        static constexpr int BORDER_WIDTH = 1;  // 添加边框宽度
     };
 }

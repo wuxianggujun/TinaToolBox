@@ -12,6 +12,7 @@ namespace TinaToolBox {
     MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
         setFixedHeight(MENU_HEIGHT);
         setMouseTracking(true);
+        setAttribute(Qt::WA_TranslucentBackground); // 添加这行
 
         initializeMenus();
         initializeControlButtons();
@@ -35,13 +36,13 @@ namespace TinaToolBox {
 
     bool MainWindowMenuBar::isInDraggableArea(const QPoint &pos) const {
         // 检查是否在菜单项区域外
-        for (const auto& item : menuItems_) {
+        for (const auto &item: menuItems_) {
             if (item.rect.contains(pos)) {
                 return false;
             }
         }
         // 检查是否在控制按钮区域外
-        for (const auto& button : controlButtons_) {
+        for (const auto &button: controlButtons_) {
             if (button.rect.contains(pos)) {
                 return false;
             }
@@ -50,19 +51,36 @@ namespace TinaToolBox {
     }
 
     void MainWindowMenuBar::paintEvent(QPaintEvent *event) {
+        Q_UNUSED(event);
+        const QColor backgroundColor = QColor(255, 0, 0, 200);  // 半透明红色，用于测试
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
 
-        // 绘制每个菜单项
+        // 绘制带圆角的背景
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(backgroundColor);
+
+        // 只绘制上半部分的圆角
+        QRect rect = this->rect();
+        QPainterPath path;
+        path.moveTo(0, rect.height()); // 从左下角开始
+        path.lineTo(0, 15); // 左边直线
+        path.arcTo(0, 0, 30, 30, 180, -90); // 左上角圆弧
+        path.lineTo(rect.width() - 15, 0); // 顶边直线
+        path.arcTo(rect.width() - 30, 0, 30, 30, 90, -90); // 右上角圆弧
+        path.lineTo(rect.width(), rect.height()); // 右边直线
+        path.lineTo(0, rect.height()); // 底边直线
+
+        painter.drawPath(path);
+
+        // 绘制菜单项
         for (const auto &item: menuItems_) {
-            // 根据活动状态选择背景色
             QColor bgColor = backgroundColor;
             if (item.isActive) {
-                bgColor = activeColor; // 使用选中背景色
+                bgColor = activeColor;
             } else if (item.isHovered) {
-                bgColor = hoverColor; // 使用悬停颜色
+                bgColor = hoverColor;
             }
-
             painter.fillRect(item.rect, bgColor);
             painter.setPen(textColor);
             painter.drawText(item.rect, Qt::AlignCenter, item.text);
@@ -72,9 +90,10 @@ namespace TinaToolBox {
         for (const auto &button: controlButtons_) {
             drawControlButton(painter, button);
         }
-        // 绘制底部浅灰色线条
-        painter.setPen(lineColor);  // 浅灰色
-        painter.drawLine(0, rect().bottom(), width(), rect().bottom());
+
+        // 绘制底部线条
+        painter.setPen(lineColor);
+        painter.drawLine(0, rect.height() - 1, rect.width(), rect.height() - 1);
     }
 
     void MainWindowMenuBar::mousePressEvent(QMouseEvent *event) {
@@ -88,7 +107,7 @@ namespace TinaToolBox {
             } else if (ControlButton *button = getControlButtonAt(event->pos())) {
                 // 在发送信号之前先检查按钮是否有效
                 if (!button) return;
-                
+
                 if (button->name == "minimize") {
                     emit minimizeClicked();
                 } else if (button->name == "maximize") {
@@ -276,19 +295,19 @@ namespace TinaToolBox {
         controlButtons_ = {
             {
                 "settings", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/settings-gear.svg"), QSize(ICON_SIZE, ICON_SIZE),true    
+                QIcon(":/icons/settings-gear.svg"), QSize(ICON_SIZE, ICON_SIZE), true
             },
             {
                 "minimize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/chrome-minimize.svg"), QSize(ICON_SIZE, ICON_SIZE),false
+                QIcon(":/icons/chrome-minimize.svg"), QSize(ICON_SIZE, ICON_SIZE), false
             },
             {
                 "maximize", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/chrome-restore.svg"), QSize(ICON_SIZE, ICON_SIZE),false
+                QIcon(":/icons/chrome-restore.svg"), QSize(ICON_SIZE, ICON_SIZE), false
             },
             {
                 "close", QRect(0, 0, CONTROL_BUTTON_WIDTH, MENU_HEIGHT), false,
-                QIcon(":/icons/chrome-close.svg"), QSize(ICON_SIZE, ICON_SIZE),false
+                QIcon(":/icons/chrome-close.svg"), QSize(ICON_SIZE, ICON_SIZE), false
             }
         };
         updateControlButtonsPosition();
@@ -343,9 +362,9 @@ namespace TinaToolBox {
             }
         } else {
             // 其他按钮保持原来的矩形背景
-            QColor bgColor = button.isHovered ? 
-                (button.name == "close" ? closeHoverColor : hoverColor) : 
-                backgroundColor;
+            QColor bgColor = button.isHovered
+                                 ? (button.name == "close" ? closeHoverColor : hoverColor)
+                                 : backgroundColor;
             painter.fillRect(button.rect, bgColor);
         }
 
@@ -378,7 +397,7 @@ namespace TinaToolBox {
     }*/
 
     MainWindowMenuBar::ControlButton *MainWindowMenuBar::getControlButtonAt(const QPoint &pos) {
-        for (auto &button : controlButtons_) {
+        for (auto &button: controlButtons_) {
             if (button.useShapeDetection) {
                 // 对于设置按钮，只检查图标区域
                 int x = button.rect.x() + (button.rect.width() - button.iconSize.width()) / 2;
@@ -396,12 +415,12 @@ namespace TinaToolBox {
         }
         return nullptr;
     }
-    
+
     void MainWindowMenuBar::showMenuAt(MenuItem *item) {
         if (!item || item == activeMenuItem_) {
             return;
         }
-        
+
         // 更新状态
         if (activeMenuItem_) {
             activeMenuItem_->isActive = false;
