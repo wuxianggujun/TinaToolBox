@@ -93,6 +93,7 @@ target_link_libraries(TinaToolBox PRIVATE
         QXlsx::QXlsx
         tomlplusplus::tomlplusplus
         pdfium
+        cpp-terminal
         rust_part
 )
 
