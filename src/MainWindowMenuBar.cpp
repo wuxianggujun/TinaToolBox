@@ -52,7 +52,7 @@ namespace TinaToolBox {
 
     void MainWindowMenuBar::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
-        const QColor backgroundColor = QColor(255, 0, 0, 200);  // 半透明红色，用于测试
+        const QColor backgroundColor = QColor(255, 0, 0, 200); // 半透明红色，用于测试
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
 
@@ -81,7 +81,24 @@ namespace TinaToolBox {
             } else if (item.isHovered) {
                 bgColor = hoverColor;
             }
-            painter.fillRect(item.rect, bgColor);
+
+            // 创建菜单项的路径
+            QPainterPath itemPath;
+            if (item.rect.x() == 0) {
+                // 如果是第一个菜单项
+                // 左侧需要圆角
+                itemPath.moveTo(item.rect.x(), item.rect.bottom());
+                itemPath.lineTo(item.rect.x(), item.rect.top() + 15);
+                itemPath.arcTo(item.rect.x(), item.rect.top(), 30, 30, 180, -90);
+                itemPath.lineTo(item.rect.right(), item.rect.top());
+                itemPath.lineTo(item.rect.right(), item.rect.bottom());
+            } else {
+                // 普通矩形
+                itemPath.addRect(item.rect);
+            }
+
+            // 填充背景
+            painter.fillPath(itemPath, bgColor);
             painter.setPen(textColor);
             painter.drawText(item.rect, Qt::AlignCenter, item.text);
         }
@@ -352,6 +369,16 @@ namespace TinaToolBox {
     }*/
 
     void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
+        // 调试输出
+        qDebug() << "Button:" << button.name 
+                 << "Rect:" << button.rect 
+                 << "Window width:" << width() 
+                 << "Is rightmost:" << (button.rect.right() == width());
+        
+   
+        // 检查是否是最右边的按钮（关闭按钮）
+        bool isCloseButton = (button.name == "close");
+
         if (button.useShapeDetection) {
             // 设置按钮只在图标区域绘制背景
             if (button.isHovered) {
@@ -361,11 +388,33 @@ namespace TinaToolBox {
                 painter.fillRect(iconRect, hoverColor);
             }
         } else {
-            // 其他按钮保持原来的矩形背景
+            // 获取背景颜色
             QColor bgColor = button.isHovered
-                                 ? (button.name == "close" ? closeHoverColor : hoverColor)
-                                 : backgroundColor;
-            painter.fillRect(button.rect, bgColor);
+                ? (isCloseButton ? closeHoverColor : hoverColor)
+                : backgroundColor;
+
+            if (isCloseButton) {
+                // 为关闭按钮创建带圆角的路径
+                QPainterPath path;
+                QRect r = button.rect;
+            
+                // 确保右边界延伸到窗口边缘
+                r.setRight(width());  // 将按钮的右边界设置为窗口宽度
+            
+                path.moveTo(r.left(), r.bottom());  // 左下角
+                path.lineTo(r.left(), r.top());     // 左边线
+                path.lineTo(r.right() - 15, r.top()); // 顶边线到圆角开始处
+                path.arcTo(r.right() - 30, r.top(), 30, 30, 90, -90); // 右上角圆弧
+                path.lineTo(r.right(), r.bottom());  // 右边线
+                path.lineTo(r.left(), r.bottom());   // 底边线
+
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(bgColor);
+                painter.drawPath(path);
+            } else {
+                // 其他按钮保持矩形背景
+                painter.fillRect(button.rect, bgColor);
+            }
         }
 
         // 绘制图标
