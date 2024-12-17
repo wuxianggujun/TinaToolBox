@@ -101,7 +101,5 @@ namespace TinaToolBox {
         LogPanel *logPanel;
         QPushButton *maxButton;
         QSplitter *bottomSplitter;
-
-        static constexpr int WINDOW_RADIUS = 10; // 窗口圆角半径
     };
 }

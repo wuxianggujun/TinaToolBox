@@ -25,6 +25,7 @@
 #include "TextDocumentView.hpp"
 #include "ConfigManager.hpp"
 #include "ThemeManager.hpp"
+#include "UIConfig.hpp"
 
 
 namespace TinaToolBox {
@@ -348,6 +349,10 @@ namespace TinaToolBox {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing); // 抗锯齿
 
+        
+        // 获取圆角半径
+        int radius = UIConfig::getInstance().cornerRadius();
+        
         // 使用窗口的背景色
         painter.setBrush(palette().window());
         // 设置透明的画笔（去除边框）
@@ -358,12 +363,12 @@ namespace TinaToolBox {
         QRectF rect = this->rect();
 
         // 绘制圆角矩形
-        painter.drawRoundedRect(rect, 15, 15);
+        painter.drawRoundedRect(rect, radius, radius);
 
         // 设置窗口遮罩以实现真正的圆角效果
         if (!isMaximized()) {
             QPainterPath path;
-            path.addRoundedRect(rect, 15, 15);
+            path.addRoundedRect(rect, radius, radius);
         }
     }
 

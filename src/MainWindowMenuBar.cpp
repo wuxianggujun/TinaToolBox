@@ -8,6 +8,8 @@
 #include <QPainterPath>
 #include <spdlog/spdlog.h>
 
+#include "UIConfig.hpp"
+
 namespace TinaToolBox {
     MainWindowMenuBar::MainWindowMenuBar(QWidget *parent) : QWidget(parent) {
         setFixedHeight(MENU_HEIGHT);
@@ -52,7 +54,7 @@ namespace TinaToolBox {
 
     void MainWindowMenuBar::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
-        const QColor backgroundColor = QColor(255, 0, 0, 200); // 半透明红色，用于测试
+        
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
 
@@ -60,6 +62,8 @@ namespace TinaToolBox {
         painter.setPen(Qt::NoPen);
         painter.setBrush(backgroundColor);
 
+        // 获取圆角半径
+        int radius = UIConfig::getInstance().cornerRadius();
         // 只绘制上半部分的圆角
         QRect rect = this->rect();
         QPainterPath path;
@@ -341,32 +345,7 @@ namespace TinaToolBox {
         painter.setPen(textColor);
         painter.drawText(item.rect, Qt::AlignCenter, item.text);
     }
-
-    /*void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
-        // 绘制背景
-        QColor bgColor = button.isHovered ? (button.name == "close" ? closeHoverColor : hoverColor) : backgroundColor;
-        painter.fillRect(button.rect, bgColor);
-
-        
-        
-
-        // 绘制图标
-        if (!button.icon.isNull()) {
-            QRect iconRect = button.rect;
-            QSize iconSize = button.iconSize;
-            
-            // 计算图标的绘制位置（居中）
-            int x = iconRect.x() + (iconRect.width() - iconSize.width()) / 2;
-            int y = iconRect.y() + (iconRect.height() - iconSize.height()) / 2;
-
-            // 创建图标的渲染模式
-            QIcon::Mode mode = button.isHovered ? QIcon::Active : QIcon::Normal;
-
-            // 绘制图标
-            QRect targetRect(x, y, button.iconSize.width(), button.iconSize.height());
-            button.icon.paint(&painter, targetRect, Qt::AlignCenter, mode);
-        }
-    }*/
+    
 
     void MainWindowMenuBar::drawControlButton(QPainter &painter, const ControlButton &button) {
         // 调试输出
@@ -374,7 +353,10 @@ namespace TinaToolBox {
                  << "Rect:" << button.rect 
                  << "Window width:" << width() 
                  << "Is rightmost:" << (button.rect.right() == width());
+
         
+        // 获取圆角半径
+        int radius = UIConfig::getInstance().cornerRadius();
    
         // 检查是否是最右边的按钮（关闭按钮）
         bool isCloseButton = (button.name == "close");
@@ -403,8 +385,8 @@ namespace TinaToolBox {
             
                 path.moveTo(r.left(), r.bottom());  // 左下角
                 path.lineTo(r.left(), r.top());     // 左边线
-                path.lineTo(r.right() - 15, r.top()); // 顶边线到圆角开始处
-                path.arcTo(r.right() - 30, r.top(), 30, 30, 90, -90); // 右上角圆弧
+                path.lineTo(r.right() - radius, r.top()); // 顶边线到圆角开始处
+                path.arcTo(r.right() - (radius*2), r.top(), radius*2, radius*2, 90, -90); // 右上角圆弧
                 path.lineTo(r.right(), r.bottom());  // 右边线
                 path.lineTo(r.left(), r.bottom());   // 底边线
 
