@@ -307,8 +307,8 @@ bool PdfViewer::searchText(const QString &text, bool matchCase, bool wholeWord) 
                 double charLeft, charTop, charRight, charBottom;
                 if (FPDFText_GetCharBox(textPage, charIndex, &charLeft, &charRight,
                                         &charBottom, &charTop)) {
-                    left = min(left, charLeft);
-                    right = max(right, charRight);
+                    left = std::min(left, charLeft);
+                    right = std::max(right, charRight);
 
                     // 使用字体大小来确定合理的高度
                     double fontSize = FPDFText_GetFontSize(textPage, charIndex);
@@ -319,8 +319,8 @@ bool PdfViewer::searchText(const QString &text, bool matchCase, bool wholeWord) 
                         // 根据字体大小调整上下边界
                         double centerY = (charTop + charBottom) / 2;
                         double halfHeight = fontSize * 0.7; // 可以调整这个系数
-                        top = min(top, centerY - halfHeight);
-                        bottom = max(bottom, centerY + halfHeight);
+                        top = std::min(top, centerY - halfHeight);
+                        bottom = std::max(bottom, centerY + halfHeight);
                     }
                 }
             }

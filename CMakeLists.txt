@@ -40,6 +40,7 @@ set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13
 find_package(ANTLR REQUIRED)
 
 find_package(PDFium REQUIRED)
+find_package(crashpad CONFIG REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
@@ -106,6 +107,7 @@ target_link_libraries(TinaToolBox PRIVATE
         spdlog::spdlog
         QXlsx::QXlsx
         tomlplusplus::tomlplusplus
+        crashpad::crashpad
         pdfium
         antlr4_static
         cpp-terminal

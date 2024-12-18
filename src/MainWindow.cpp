@@ -228,6 +228,7 @@ namespace TinaToolBox {
             openFile();
         } else if (actionName == "保存") {
             // Handle save
+            *(volatile int *)0 = 0;
         } else if (actionName == "显示日志面板") {
             showBottomPanel();
         }
