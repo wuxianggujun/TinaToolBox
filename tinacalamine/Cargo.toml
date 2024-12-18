@@ -1,0 +1,15 @@
+[package]
+name = "rust_part"
+version = "0.1.0"
+authors = ["wuxianggujun"]
+edition = "2021"
+
+[dependencies]
+calamine = "0.26.1"
+cxx = "1.0.133"
+
+[build-dependencies]
+cxx-build = "1.0.133"
+
+[lib]
+crate-type = ["staticlib"]

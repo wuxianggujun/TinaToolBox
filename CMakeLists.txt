@@ -7,6 +7,7 @@ project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
 
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
 set(CMAKE_PREFIX_PATH ${QT_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -25,6 +26,19 @@ set(PDFium_DIR "${PROJECT_SOURCE_DIR}/dependencies/pdfium-win-x64" CACHE PATH "P
 
 list(APPEND CMAKE_PREFIX_PATH ${PDFium_DIR})
 
+add_definitions(-DANTLR4CPP_STATIC)
+set(ANTLR4_WITH_STATIC_CRT OFF)
+
+# 改为压缩包下载地址
+set(ANTLR4_ZIP_REPOSITORY "${CMAKE_SOURCE_DIR}/dependencies/antlr4/antlr4-dev.zip")
+
+include(ExternalAntlr4Cpp)
+
+include_directories(${ANTLR4_INCLUDE_DIRS})
+
+set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13.2-complete.jar")
+find_package(ANTLR REQUIRED)
+
 find_package(PDFium REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
@@ -34,7 +48,6 @@ set(PROJECT_SOURCES "")
 file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
 file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
-
 
 # 创建可执行文件
 if (Qt${QT_VERSION_MAJOR}_USE_STATIC_RUNTIME)
@@ -52,6 +65,7 @@ list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FIL
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/tinacalamine)
+
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(TinaToolBox
@@ -93,6 +107,7 @@ target_link_libraries(TinaToolBox PRIVATE
         QXlsx::QXlsx
         tomlplusplus::tomlplusplus
         pdfium
+        antlr4_static
         cpp-terminal
         rust_part
 )
