@@ -20,26 +20,26 @@ return baseDir_ + "/crashpad_handler";
 
     QString CrashPaths::getReportsPath() const {
         QString path = baseDir_ + "/crashes/reports";
-        QDir().mkpath(path);  // 确保目录存在
         return path;
     }
 
     QString CrashPaths::getMetricsPath() const {
         QString path = baseDir_ + "/crashes/metrics";
-        QDir().mkpath(path);  // 确保目录存在
         return path;
-    }
-
-    QString CrashPaths::getAttachmentPath() const {
-        return baseDir_ + "/crashes/attachments";
     }
 
 #if defined(Q_OS_UNIX)
     std::string CrashPaths::getPlatformString(const QString& string){
+        if (!QDir(string).exists()) {
+            QDir().mkpath(string);
+        }
         return string.toStdString();
     }
 #elif defined(Q_OS_WINDOWS)
     std::wstring CrashPaths::getPlatformString(const QString &string) {
+        if (!QDir(string).exists()) {
+            QDir().mkpath(string);
+        }
         return string.toStdWString();
     }
 #else

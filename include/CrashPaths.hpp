@@ -18,8 +18,6 @@ namespace TinaToolBox {
 
         QString getMetricsPath() const;
 
-        QString getAttachmentPath() const;
-
 #if defined(Q_OS_UNIX)
         static std::string getPlatformString(const QString &string);
 #elif defined(Q_OS_WINDOWS)

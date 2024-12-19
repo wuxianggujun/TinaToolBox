@@ -36,7 +36,7 @@ function(configure_crashed TARGET_NAME)
     message(STATUS "Target: ${TARGET_NAME}")
     message(STATUS "Crashpad handler path: ${CRASHPAD_HANDLER_PATH}")
     message(STATUS "Crashpad handler output directory: ${CRASHPAD_HANDLER_OUTPUT_DIR}")
-
+    
     # 复制 crashpad_handler 到输出目录
     add_custom_command(
             TARGET ${TARGET_NAME}

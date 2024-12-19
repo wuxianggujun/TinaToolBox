@@ -7,12 +7,11 @@
 using namespace TinaToolBox;
 
 int main(int argc, char *argv[]) {
-
-    QString dbName = "TinaToolBox";
+    
     QString appName = "TinaToolBox";
     QString appVersion = "1.1";
 
-    CrashHandler::initializeCrashpad(dbName, appName, appVersion);
+    CrashHandler::initializeCrashpad(appName, appVersion);
     
     QApplication a(argc, argv);
     

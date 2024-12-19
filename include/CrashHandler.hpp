@@ -4,15 +4,12 @@
 
 #pragma  once
 #include <QString>
-#include <memory>
-#include <client/crashpad_client.h>
-#include <client/crash_report_database.h>
-#include <client/settings.h>
+#include "NonCopyable.hpp"
 
 namespace TinaToolBox {
-    class CrashHandler {
+    class CrashHandler : public NonCopyable{
     public:
-        static bool initializeCrashpad(QString dbName, QString appName, QString appVersion);
+        static bool initializeCrashpad(const QString &appName, const QString &appVersion);
 
     private:
        static  QString getExecutableDir();
