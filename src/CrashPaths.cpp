@@ -4,6 +4,8 @@
 
 #include "CrashPaths.hpp"
 
+#include <QDir>
+
 namespace TinaToolBox {
     CrashPaths::CrashPaths(const QString &baseDir): baseDir_(baseDir) {
     }
@@ -17,11 +19,15 @@ return baseDir_ + "/crashpad_handler";
     }
 
     QString CrashPaths::getReportsPath() const {
-        return baseDir_ + "/crashes/reports";
+        QString path = baseDir_ + "/crashes/reports";
+        QDir().mkpath(path);  // 确保目录存在
+        return path;
     }
 
     QString CrashPaths::getMetricsPath() const {
-        return baseDir_ + "/crashes/metrics";
+        QString path = baseDir_ + "/crashes/metrics";
+        QDir().mkpath(path);  // 确保目录存在
+        return path;
     }
 
     QString CrashPaths::getAttachmentPath() const {

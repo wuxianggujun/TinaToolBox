@@ -33,6 +33,7 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 set(ANTLR4_ZIP_REPOSITORY "${CMAKE_SOURCE_DIR}/dependencies/antlr4/antlr4-dev.zip")
 
 include(ExternalAntlr4Cpp)
+include(CrashpadConfig)
 
 include_directories(${ANTLR4_INCLUDE_DIRS})
 
@@ -40,7 +41,7 @@ set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13
 find_package(ANTLR REQUIRED)
 
 find_package(PDFium REQUIRED)
-find_package(crashpad CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
@@ -54,7 +55,6 @@ file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
 if (Qt${QT_VERSION_MAJOR}_USE_STATIC_RUNTIME)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
-
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 
@@ -84,9 +84,10 @@ else ()
     endif ()
 endif ()
 
-find_package(spdlog CONFIG REQUIRED)
 
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
+configure_crashed(TinaToolBox)
 
 target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
@@ -94,6 +95,7 @@ target_include_directories(TinaToolBox PRIVATE
         ${PDFium_INCLUDE_DIRS}
         ${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
 )
+
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
@@ -107,7 +109,6 @@ target_link_libraries(TinaToolBox PRIVATE
         spdlog::spdlog
         QXlsx::QXlsx
         tomlplusplus::tomlplusplus
-        crashpad::crashpad
         pdfium
         antlr4_static
         cpp-terminal

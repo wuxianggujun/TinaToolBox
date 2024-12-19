@@ -16,6 +16,7 @@
 #include <QApplication>
 #include <QDateTime>
 #include <QDir>
+#include <QStandardPaths>
 #include <vector>
 #include "CrashPaths.hpp"
 #include "client/crash_report_database.h"
@@ -29,11 +30,11 @@ namespace TinaToolBox {
     bool CrashHandler::initializeCrashpad(QString dbName, QString appName, QString appVersion)
     {
         // Get directory where the exe lives so we can pass a full path to handler, reportsDir and metricsDir
-        // QString exeDir = getExecutableDir();
-        QString exeDir = QCoreApplication::applicationDirPath();
-
+        
+        // 使用应用数据目录
+        QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         // Helper class for cross-platform file systems
-        CrashPaths crashpadPaths(exeDir);
+        CrashPaths crashpadPaths(dataPath);
 
         // Ensure that crashpad_handler is shipped with your application
         FilePath handler(CrashPaths::getPlatformString(crashpadPaths.getHandlerPath()));
@@ -57,23 +58,42 @@ namespace TinaToolBox {
 
         // Initialize crashpad database
         std::unique_ptr<CrashReportDatabase> database = CrashReportDatabase::Initialize(reportsDir);
-        if (database == nullptr) return false;
+        if (!database) {
+            qDebug() << "Failed to initialize crash database";
+            return false;
+        }
 
-        // Enable automated crash uploads
-        Settings *settings = database->GetSettings();
-        if (settings == nullptr) return false;
+        // 配置设置
+        Settings* settings = database->GetSettings();
+        if (!settings) {
+            qDebug() << "Failed to get database settings";
+            return false;
+        }
         // 禁用自动上传
-        settings->SetUploadsEnabled(true);
-
-        // Attachments to be uploaded alongside the crash - default bundle size limit is 20MB
-        std::vector<FilePath> attachments;
-        FilePath attachment(CrashPaths::getPlatformString(crashpadPaths.getAttachmentPath()));
-        attachments.push_back(attachment);
-
-        // Start crash handler
+        settings->SetUploadsEnabled(false);
+        
+        // 禁用自动上传
+        settings->SetUploadsEnabled(false);
+        // 启动处理程序
         const auto client = new CrashpadClient();
-        bool status = client->StartHandler(handler, reportsDir, metricsDir, "", annotations.toStdMap(), arguments, true, true, attachments);
+   
+        // 这里传空字符串作为服务器 URL，表示不上传
+        bool status = client->StartHandler(
+            handler,
+            reportsDir,
+            metricsDir,
+            "",  // 空 URL，禁用上传
+            annotations.toStdMap(),
+            arguments,
+            true,  // 重启处理程序
+            true,  // 异步启动
+            {}     // 不需要附件
+        );
+        if (!status) {
+            qDebug() << "Failed to start crashpad handler";
+        }
         return status;
+        
     }
 
     QString CrashHandler::getExecutableDir() {
