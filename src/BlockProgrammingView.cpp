@@ -4,25 +4,28 @@
 
 #include "BlockProgrammingView.hpp"
 
+#include <QEvent>
+#include <QGraphicsSceneMouseEvent>
+
 namespace TinaToolBox {
-    BlockProgrammingView::BlockProgrammingView(QWidget *parent):QGraphicsView(parent) {
+    BlockProgrammingView::BlockProgrammingView(QWidget *parent): QGraphicsView(parent) {
         scene_ = new QGraphicsScene(this);
         setScene(scene_);
 
         scene_->setBackgroundBrush(QBrush(QColor(220, 220, 220)));
+        scene_->installEventFilter(this);
     }
 
     BlockProgrammingView::~BlockProgrammingView() {
-        for (const BlockItem* item: blockItems_) {
+        for (const BlockItem *item: blockItems_) {
             delete item;
         }
         blockItems_.clear();
 
-        for (const Block* block: blocks_) {
+        for (const Block *block: blocks_) {
             delete block;
         }
         blocks_.clear();
-        
     }
 
     void BlockProgrammingView::addBlock(Block::Type type, const QPointF &pos) {
@@ -33,6 +36,14 @@ namespace TinaToolBox {
         if (type == Block::Type::IF) {
             block->addConnector(Connector::Type::INPUT, Connector::DataType::BOOLEAN);
             block->addConnector(Connector::Type::OUTPUT, Connector::DataType::BOOLEAN);
+        } else if (type == Block::Type::LOOP) {
+            block->addConnector(Connector::Type::INPUT, Connector::DataType::BOOLEAN);
+            block->addConnector(Connector::Type::OUTPUT, Connector::DataType::BOOLEAN);
+        } else if (type == Block::Type::PRINT) {
+            block->addConnector(Connector::Type::INPUT, Connector::DataType::STRING);
+        } else if (type == Block::Type::COMMAND) {
+            block->addConnector(Connector::Type::INPUT, Connector::DataType::INTEGER);
+            block->addConnector(Connector::Type::OUTPUT, Connector::DataType::INTEGER);
         }
 
         // 创建 BlockItem 对象
@@ -44,5 +55,26 @@ namespace TinaToolBox {
         // 将 Block 和 BlockItem 添加到列表中
         blocks_.append(block);
         blockItems_.append(item);
+    }
+
+
+    bool BlockProgrammingView::eventFilter(QObject *watched, QEvent *event) {
+        if (event->type() == QEvent::GraphicsSceneMousePress) {
+            qDebug() << "QEvent::GraphicsSceneMousePress";
+        } else if (event->type() == QEvent::GraphicsSceneMouseMove) {
+            auto mouseEvent = dynamic_cast<QGraphicsSceneMouseEvent *>(event);
+            if (mouseEvent) {
+                auto items = scene_->items(mouseEvent->scenePos());
+                for (auto item: items) {
+                    if (auto blockItem = dynamic_cast<BlockItem *>(item)) {
+                        qDebug() << "BlockItem under mouse:" << blockItem->getBlock()->getType();
+                    }
+                }
+            }
+        } else if (event->type() == QEvent::GraphicsSceneMouseRelease) {
+            qDebug() << "QEvent::GraphicsSceneMouseRelease";
+        }
+
+        return QGraphicsView::eventFilter(watched, event);
     }
 } // TinaToolBox

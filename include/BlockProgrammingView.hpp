@@ -18,7 +18,9 @@ namespace TinaToolBox {
         ~BlockProgrammingView() override;
 
         void addBlock(Block::Type type, const QPointF &pos);
-
+    protected:
+        bool eventFilter(QObject *watched, QEvent *event) override;
+        
     private:
         QGraphicsScene *scene_;
         QList<Block *> blocks_;

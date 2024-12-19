@@ -6,6 +6,37 @@
 
 namespace TinaToolBox {
     Block::Block(const Type type): type_(type), parent_(nullptr) {
+        switch (type_) {
+            case IF:
+                setColor(Qt::yellow);
+                setShape(HEXAGON);
+                break;
+            case LOOP:
+                setColor(Qt::blue);
+                setShape(C_SHAPE);
+                break;
+            case PRINT:
+                setColor(Qt::green);
+                setShape(RECTANGLE);
+                break;
+            case START:
+                setColor(Qt::red);
+                setShape(ROUNDED);
+                break;
+            case COMMAND:
+                setColor(Qt::blue);
+                setShape(NOTCHED_RECTANGLE);
+                break;
+            case BOOLEAN:
+                setColor(Qt::green);
+                setShape(HEXAGON); // Or a diamond shape
+                break;
+            // ... 其他类型 ...
+            default:
+                setColor(Qt::gray);
+                setShape(RECTANGLE);
+                break;
+        }
     }
 
     Block::~Block() {
@@ -35,6 +66,22 @@ namespace TinaToolBox {
 
     Block::Type Block::getType() const {
         return type_;
+    }
+
+    QColor Block::getColor() const {
+        return color_;
+    }
+
+    void Block::setColor(const QColor &color) {
+        color_ = color;
+    }
+
+    Block::Shape Block::getShape() const {
+        return shape_;
+    }
+
+    void Block::setShape(const Shape shape) {
+        shape_ = shape;
     }
 
     const QList<QString> &Block::getParameters() const {

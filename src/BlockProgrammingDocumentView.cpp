@@ -11,7 +11,7 @@ namespace TinaToolBox {
         
         // 在这里添加一些示例积木块
         blockProgrammingView_->addBlock(Block::Type::IF, QPointF(50, 50));
-        blockProgrammingView_->addBlock(Block::Type::LOOP, QPointF(200, 50));
+        blockProgrammingView_->addBlock(Block::Type::COMMAND, QPointF(200, 50));
         blockProgrammingView_->addBlock(Block::Type::PRINT, QPointF(350, 50));
     }
 

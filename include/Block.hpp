@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <QColor>
 #include <QList>
 #include <QString>
 
@@ -10,13 +11,25 @@
 
 // 数据模型
 namespace TinaToolBox {
-
     class Block {
     public:
         enum Type {
             IF,
             LOOP,
-            PRINT
+            PRINT,
+            START,
+            END,
+            COMMAND,
+            REPORTER,
+            BOOLEAN
+        };
+
+        enum Shape {
+            RECTANGLE,
+            ROUNDED,
+            HEXAGON,
+            C_SHAPE,
+            NOTCHED_RECTANGLE, // 新增：带有凹槽和凸起的矩形
         };
 
         explicit Block(Type type);
@@ -30,6 +43,13 @@ namespace TinaToolBox {
         void addChild(Block *child);
 
         [[nodiscard]] Type getType() const;
+
+        [[nodiscard]] QColor getColor() const;
+
+        void setColor(const QColor &color);
+
+        [[nodiscard]] Shape getShape() const;
+        void setShape(Shape shape);
 
         [[nodiscard]] const QList<QString> &getParameters() const;
 
@@ -52,6 +72,8 @@ namespace TinaToolBox {
 
     private:
         Type type_;
+        QColor color_;
+        Shape shape_;
         QList<QString> parameters_;
         Block *parent_;
         QList<Block *> children_;

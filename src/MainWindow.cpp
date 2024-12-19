@@ -365,24 +365,8 @@ namespace TinaToolBox {
             painter.drawRoundedRect(rect, radius, radius);
         }
     }
-
-    void MainWindow::mousePressEvent(QMouseEvent *event) {
-        if (event->button() == Qt::LeftButton) {
-            if (!isMaximized()) {
-                dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-                event->accept();
-            }
-        }
-    }
-
-    void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-        if (event->buttons() & Qt::LeftButton) {
-            if (!isMaximized()) {
-                move(event->globalPosition().toPoint() - dragPosition);
-                event->accept();
-            }
-        }
-    }
+    
+    
 
     QWidget *MainWindow::createLeftPanel() {
         auto *leftPanel = new QWidget();
