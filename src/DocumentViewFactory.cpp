@@ -1,5 +1,6 @@
 #include "DocumentViewFactory.hpp"
 
+#include "BlockProgrammingDocumentView.hpp"
 #include "Document.hpp"
 #include "ExcelDoucmentView.hpp"
 #include "ScriptDocumentView.hpp"
@@ -8,13 +9,14 @@
 
 namespace TinaToolBox {
     std::unique_ptr<IDocumentView> DocumentViewFactory::createDocumentView(const std::shared_ptr<Document> &document) {
-        switch (document.get()->type()) {
+        switch (document->type()) {
             case Document::TEXT:
                 return createTextView(document);
             case Document::PDF:
                 return createPdfView(document);
             case Document::SCRIPT:
-                return createScriptView(document);
+                return createBlockProgrammingView(document);
+                // return createScriptView(document);
             case Document::EXCEL:
                 return createExcelView(document);
             default:
@@ -36,5 +38,10 @@ namespace TinaToolBox {
 
     std::unique_ptr<IDocumentView> DocumentViewFactory::createExcelView(const std::shared_ptr<Document> &document) {
         return std::make_unique<ExcelDocumentView>(document);
+    }
+
+    std::unique_ptr<IDocumentView> DocumentViewFactory::createBlockProgrammingView(
+        const std::shared_ptr<Document> &document) {
+        return std::make_unique<BlockProgrammingDocumentView>(document);
     }
 }
