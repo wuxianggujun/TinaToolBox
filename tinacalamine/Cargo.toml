@@ -1,5 +1,5 @@
 [package]
-name = "rust_part"
+name = "tinacalamine"
 version = "0.1.0"
 authors = ["wuxianggujun"]
 edition = "2021"
@@ -7,9 +7,10 @@ edition = "2021"
 [dependencies]
 calamine = "0.26.1"
 cxx = "1.0.133"
+lazy_static = "1.4.0"
 
 [build-dependencies]
 cxx-build = "1.0.133"
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["staticlib"] # 编译成静态库和动态库

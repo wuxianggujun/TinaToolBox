@@ -16,6 +16,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(PROJECT_SOURCES "")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
 
@@ -45,7 +46,6 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
-set(PROJECT_SOURCES "")
 
 file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
@@ -96,6 +96,8 @@ target_include_directories(TinaToolBox PRIVATE
         ${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
 )
 
+target_include_directories(TinaToolBox PRIVATE "${PROJECT_SOURCE_DIR}/tinacalamine/target/cxxbridge/tinacalamine/src")
+
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
@@ -112,7 +114,7 @@ target_link_libraries(TinaToolBox PRIVATE
         pdfium
         antlr4_static
         cpp-terminal
-        rust_part
+        tinacalamine
 )
 
 target_compile_options(TinaToolBox PRIVATE

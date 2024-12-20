@@ -1,3 +1,4 @@
+# --- 构建类型 ---
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CARGO_CMD cargo build --verbose)
     set(TARGET_DIR "debug")
@@ -6,46 +7,61 @@ else ()
     set(TARGET_DIR "release")
 endif ()
 
-# If the user is cross compiling to a different target, update the location of the target directory
-# *Note*: Make sure to install the target with rustup, as well as setting the proper environment variables, such as CC, HOST_CC, CARGO_TARGET_<triple>_LINKER, ...
-# See https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
+# --- 跨平台编译 ---
 if (DEFINED ENV{CARGO_BUILD_TARGET})
     set(TARGET_DIR "$ENV{CARGO_BUILD_TARGET}/${TARGET_DIR}")
 endif()
 
-# Set the Rust library path
-set(RUST_PART_LIB "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_DIR}/rust_part.lib")
+# --- Rust 库相关变量 ---
+set(RUST_LIB_NAME tinacalamine)
+set(RUST_SRC_DIR "${PROJECT_SOURCE_DIR}/${RUST_LIB_NAME}")
+set(RUST_LIB_DIR "${RUST_SRC_DIR}/target")
+set(RUST_PART_LIB "${RUST_LIB_DIR}/${TARGET_DIR}/${RUST_LIB_NAME}.lib")
+set(RUST_PART_CXX "${CMAKE_CURRENT_BINARY_DIR}/${RUST_LIB_NAME}.cpp")
+set(RUST_PART_CXX_HEADER "${CMAKE_CURRENT_BINARY_DIR}/${RUST_LIB_NAME}.h")
 
+# 查找所有名为 lib.rs.cc 和 lib.rs.h 的文件
+# 使用更精确的路径匹配模式, cxx在0.7版本后不再创建include 和 sources 文件夹
+file(GLOB_RECURSE RUST_GENERATED_CC "${RUST_LIB_DIR}/${TARGET_DIR}/build/${RUST_LIB_NAME}-*/out/cxxbridge/sources/${RUST_LIB_NAME}/src/lib.rs.cc")
+file(GLOB_RECURSE RUST_GENERATED_H "${RUST_LIB_DIR}/${TARGET_DIR}/build/${RUST_LIB_NAME}-*/out/cxxbridge/include/${RUST_LIB_NAME}/src/lib.rs.h")
 
-if (DEFINED ENV{CARGO_BUILD_TARGET})
-    set(TARGET_DIR "$ENV{CARGO_BUILD_TARGET}/${TARGET_DIR}")
-endif()
-
-
-set(RUST_PART_CXX "${CMAKE_CURRENT_BINARY_DIR}/rust_part.cpp")
-add_library(rust_part STATIC ${RUST_PART_CXX})
-
-# Add a custom command to build the Rust library and generate the C++ bridge code
+# --- 自定义命令，构建 Rust 库并生成 C++ 桥接代码 ---
 add_custom_command(
-        OUTPUT ${RUST_PART_CXX} ${RUST_PART_LIB}
-        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR} ${CARGO_CMD}
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/cxxbridge/rust_part/src/lib.rs.cc ${RUST_PART_CXX}
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/cxxbridge/rust_part/src/lib.rs.h ${CMAKE_CURRENT_BINARY_DIR}/rust_part.h
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_DIR}/rust_part.lib ${RUST_PART_LIB}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT ${RUST_PART_CXX} ${RUST_PART_CXX_HEADER} ${RUST_PART_LIB}
+        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${RUST_LIB_DIR} ${CARGO_CMD}
+        COMMAND ${CMAKE_COMMAND} -E copy ${RUST_GENERATED_CC} ${RUST_PART_CXX}
+        COMMAND ${CMAKE_COMMAND} -E copy ${RUST_GENERATED_H} ${RUST_PART_CXX_HEADER}
+        COMMAND ${CMAKE_COMMAND} -E copy ${RUST_LIB_DIR}/${TARGET_DIR}/${RUST_LIB_NAME}.lib ${RUST_PART_LIB}
+        WORKING_DIRECTORY ${RUST_SRC_DIR}
         COMMENT "Building Rust library and generating C++ bridge code"
+        VERBATIM
 )
 
-target_include_directories(rust_part PRIVATE
-        ${PROJECT_SOURCE_DIR}/include 
+# --- 添加静态库目标 ---
+add_library(${RUST_LIB_NAME} STATIC ${RUST_PART_CXX})
+
+# --- 添加头文件目录 ---
+target_include_directories(${RUST_LIB_NAME} PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        "${RUST_SRC_DIR}/include"
+        "${RUST_SRC_DIR}/target/cxxbridge" # 使用更通用的路径
+        ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# --- 链接库 ---
 if(WIN32)
-    target_link_libraries(rust_part ${RUST_PART_LIB})
+    target_link_libraries(${RUST_LIB_NAME} ${RUST_PART_LIB})
 else()
-    target_link_libraries(rust_part pthread dl ${RUST_PART_LIB})
+    target_link_libraries(${RUST_LIB_NAME} pthread dl ${RUST_PART_LIB})
 endif()
 
-add_test(NAME rust_part_test
-    COMMAND cargo test
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# --- 编译选项 (根据需要添加) ---
+if(MSVC)
+    target_compile_options(${RUST_LIB_NAME} PRIVATE /W4 /WX)
+    target_link_options(${RUST_LIB_NAME} PRIVATE /WX)
+endif()
+
+# --- 添加测试 ---
+add_test(NAME ${RUST_LIB_NAME}_test
+        COMMAND cargo test
+        WORKING_DIRECTORY ${RUST_SRC_DIR})
