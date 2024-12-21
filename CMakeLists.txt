@@ -8,7 +8,6 @@ project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
 set(CMAKE_PREFIX_PATH ${QT_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -32,17 +31,23 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 
 # 改为压缩包下载地址
 set(ANTLR4_ZIP_REPOSITORY "${CMAKE_SOURCE_DIR}/dependencies/antlr4/antlr4-dev.zip")
-
+include(CPM)
 include(ExternalAntlr4Cpp)
 include(CrashpadConfig)
 
 include_directories(${ANTLR4_INCLUDE_DIRS})
 
 set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13.2-complete.jar")
-find_package(ANTLR REQUIRED)
 
+CPMAddPackage(
+        NAME Corrosion
+        URL "${PROJECT_SOURCE_DIR}/dependencies/corrosion/corrosion-0.5.zip"
+)
+
+find_package(ANTLR REQUIRED)
 find_package(PDFium REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(Tesseract CONFIG REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
@@ -54,7 +59,7 @@ file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
 # 创建可执行文件
 if (Qt${QT_VERSION_MAJOR}_USE_STATIC_RUNTIME)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
+endif ()
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 
@@ -64,9 +69,6 @@ qt_add_resources(RESOURCES ${RC_FILES})
 list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FILES} ${RESOURCES})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/tinacalamine)
-
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(TinaToolBox
@@ -93,7 +95,8 @@ target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
         ${PROJECT_SOURCE_DIR}/include
         ${PDFium_INCLUDE_DIRS}
-        ${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
+        ${PROJECT_SOURCE_DIR}/tinacalamine/include
+        #        ${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
 )
 
 target_include_directories(TinaToolBox PRIVATE "${PROJECT_SOURCE_DIR}/tinacalamine/target/cxxbridge/tinacalamine/src")
@@ -101,7 +104,7 @@ target_include_directories(TinaToolBox PRIVATE "${PROJECT_SOURCE_DIR}/tinacalami
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
-target_link_libraries(TinaToolBox PRIVATE 
+target_link_libraries(TinaToolBox PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Core5Compat
         Qt${QT_VERSION_MAJOR}::Network
@@ -114,7 +117,8 @@ target_link_libraries(TinaToolBox PRIVATE
         pdfium
         antlr4_static
         cpp-terminal
-        tinacalamine
+        Tesseract::libtesseract
+        libcalamine
 )
 
 target_compile_options(TinaToolBox PRIVATE
@@ -155,4 +159,4 @@ if (WIN32)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${PDFium_DIR}/bin/pdfium.dll"
             $<TARGET_FILE_DIR:TinaToolBox>)
-endif()
+endif ()

@@ -7,3 +7,5 @@ set(CPPTERMINAL_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(CPPTERMINAL_ENABLE_DOCS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(cpp-terminal)
+
+add_subdirectory(libcalamine)

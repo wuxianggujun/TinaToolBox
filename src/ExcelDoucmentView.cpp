@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "LoadingProgressDialog.hpp"
-
+// #include "tinacalamine.h"
 
 namespace TinaToolBox {
     ExcelDocumentView::ExcelDocumentView(const std::shared_ptr<Document> &document,QWidget *parent):QObject(parent),document_(document),
@@ -30,6 +30,9 @@ namespace TinaToolBox {
         auto* progressDialog = LoadingProgressDialog::getInstance();
         try {
             QString fileName = QFileInfo(document_->filePath()).fileName();
+/**/            /*rust::Str filePath = fileName.toStdString();
+            auto fileHandle = ffi::rust_open_file(filePath);*/
+      
             progressDialog->startProgress(QString("Opening %1").arg(fileName));
         
             QXlsx::Document xlsx(document_->filePath());

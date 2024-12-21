@@ -1,10 +1,22 @@
-#pragma once
+#ifndef CALAMINEWRAPPER_H
+#define CALAMINEWRAPPER_H
 
-#include "rust/cxx.h"
+#include <memory>
 
-#include <string>
+class CalamineWrapper {
+public:
+    CalamineWrapper();
+    ~CalamineWrapper();
+    int read_a_value() const;
 
-namespace ffi {
-	struct FileHandle;
-	rust::Box<FileHandle> openFile(rust::Str filePath);
+private:
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
+};
+
+// 直接在头文件中定义 new_calamine
+inline std::unique_ptr<CalamineWrapper> new_calamine() {
+    return std::make_unique<CalamineWrapper>();
 }
+
+#endif // CALAMINEWRAPPER_H
