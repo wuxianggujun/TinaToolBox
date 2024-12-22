@@ -96,7 +96,6 @@ target_include_directories(TinaToolBox PRIVATE
         ${PROJECT_SOURCE_DIR}/include
         ${PDFium_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}/tinacalamine/include
-        #        ${CMAKE_BINARY_DIR}/tinacalamine  # 添加子模块的头文件路径
 )
 
 target_include_directories(TinaToolBox PRIVATE "${PROJECT_SOURCE_DIR}/tinacalamine/target/cxxbridge/tinacalamine/src")
@@ -118,7 +117,7 @@ target_link_libraries(TinaToolBox PRIVATE
         antlr4_static
         cpp-terminal
         Tesseract::libtesseract
-        libcalamine
+        rust_lib-shared
 )
 
 target_compile_options(TinaToolBox PRIVATE
@@ -141,6 +140,10 @@ set_target_properties(TinaToolBox PROPERTIES
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         MACOSX_BUNDLE TRUE
         WIN32_EXECUTABLE TRUE
+)
+
+set_target_properties(TinaToolBox PROPERTIES
+        MSVC_RUNTIME_LIBRARY "$<$<CONFIG:Release>:MultiThreadedDLL>$<$<CONFIG:RelWithDebInfo>:MultiThreadedDLL>$<$<CONFIG:MinSizeRel>:MultiThreadedDLL>$<$<CONFIG:Debug>:MultiThreadedDebugDLL>"
 )
 
 include(GNUInstallDirs)

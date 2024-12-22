@@ -1,19 +1,11 @@
 [package]
-name = "libcalamine"
+name = "rust-lib"
 version = "0.1.0"
-authors = ["wuxianggujun"]
-edition = "2021"
-description = "The framework for building with Rust calamine."
+authors = ["Andrew Gaspar <andrew.gaspar@outlook.com>"]
+license = "MIT"
+edition = "2018"
 
 [dependencies]
-calamine = "0.26.1"
-cxx = "1.0.133"
-lazy_static = "1.4.0"
-
-[build-dependencies]
-cxx-build = "1.0.133"
 
 [lib]
-name = "calamine"
-crate-type = ["cdylib", "staticlib"]
-doc = false
+crate-type=["staticlib", "cdylib"]

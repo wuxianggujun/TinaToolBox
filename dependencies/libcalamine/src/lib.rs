@@ -1,8 +1,7 @@
-//! This crate is used to generate `libextism` using `extism-runtime`
+use std::os::raw::c_char;
 
-
-
-fn test_version() {
-    let s = unsafe { std::ffi::CStr::from_ptr("Hello") };
-    assert!(s.to_bytes() != b"0.0.0");
+#[no_mangle]
+pub extern "C" fn rust_function(name: *const c_char) {
+    let name = unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() };
+    println!("Hello, {}! I'm Rust!", name);
 }
