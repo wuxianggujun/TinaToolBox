@@ -1,11 +1,11 @@
 [package]
-name = "rust-lib"
+name = "cxxbridge-crate"
 version = "0.1.0"
-authors = ["Andrew Gaspar <andrew.gaspar@outlook.com>"]
-license = "MIT"
 edition = "2018"
 
-[dependencies]
-
 [lib]
-crate-type=["staticlib", "cdylib"]
+crate-type = ["staticlib"]
+
+[dependencies]
+cxx = "1.0"
+

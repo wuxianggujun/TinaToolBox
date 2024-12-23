@@ -1,6 +1,4 @@
-mod foo;
-
-#[cxx::bridge(namespace = "lib")]
+#[cxx::bridge(namespace = "foo")]
 mod bridge {
     extern "Rust" {
         fn print(slice: &[u64]);
@@ -8,5 +6,5 @@ mod bridge {
 }
 
 fn print(slice: &[u64]) {
-    println!("Hello cxxbridge from lib.rs! {:?}", slice);
+    println!("Hello cxxbridge from foo/mod.rs! {:?}", slice);
 }
