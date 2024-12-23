@@ -3,16 +3,7 @@ cmake_minimum_required(VERSION 3.18...3.29 FATAL_ERROR)
 # vcpkg configuration
 set(CMAKE_TOOLCHAIN_FILE "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
-
 project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
-# 设置 CMAKE_CXX_FLAGS
-if(MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
-    message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
-    message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
-endif()
-
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
 set(CMAKE_PREFIX_PATH ${QT_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -50,7 +41,6 @@ set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13
 CPMAddPackage(
         NAME Corrosion
         URL "${PROJECT_SOURCE_DIR}/dependencies/corrosion/corrosion-0.5.zip"
-        OPTIONS "CORROSION_CXX_FLAGS -MDd" # 添加这一行，强制指定 CXX 标志
 )
 
 find_package(ANTLR REQUIRED)
@@ -98,8 +88,6 @@ target_include_directories(TinaToolBox PRIVATE
         ${PROJECT_SOURCE_DIR}/tinacalamine/include
 )
 
-target_include_directories(TinaToolBox PRIVATE "${PROJECT_SOURCE_DIR}/tinacalamine/target/cxxbridge/tinacalamine/src")
-
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
 if(MSVC)
@@ -120,7 +108,7 @@ target_link_libraries(TinaToolBox PRIVATE
         antlr4_static
         cpp-terminal
         Tesseract::libtesseract
-        cxxbridge-cpp
+#        cxxbridge-crate
 )
 
 target_compile_options(TinaToolBox PRIVATE
@@ -135,9 +123,7 @@ target_compile_options(TinaToolBox PRIVATE
 )
 
 if(MSVC)
-    # Note: This is required because we use `cxx` which uses `cc` to compile and link C++ code.
     corrosion_set_env_vars(cxxbridge_crate "CFLAGS=-MDd" "CXXFLAGS=-MDd")
-#    corrosion_set_env_vars(cxxbridge-cpp "CFLAGS=-MDd" "CXXFLAGS=-MDd")
     message(STATUS "CMAKE_EXE_LINKER_FLAGS after corrosion: ${CMAKE_EXE_LINKER_FLAGS}")
 endif()
 
