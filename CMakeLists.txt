@@ -38,9 +38,9 @@ include_directories(${ANTLR4_INCLUDE_DIRS})
 
 set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13.2-complete.jar")
 
-CPMAddPackage(
+CPMAddPackage( 
         NAME Corrosion
-        URL "${PROJECT_SOURCE_DIR}/dependencies/corrosion/corrosion-0.5.zip"
+        URL "${PROJECT_SOURCE_DIR}/dependencies/corrosion/corrosion-master.zip"
 )
 
 find_package(ANTLR REQUIRED)
@@ -108,7 +108,7 @@ target_link_libraries(TinaToolBox PRIVATE
         antlr4_static
         cpp-terminal
         Tesseract::libtesseract
-#        cxxbridge-crate
+        cxxbridge-cpp
 )
 
 target_compile_options(TinaToolBox PRIVATE
@@ -121,6 +121,7 @@ target_compile_options(TinaToolBox PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/utf-8>
         $<$<COMPILE_LANGUAGE:CUDA>:-DNDEBUG>
 )
+
 
 if(MSVC)
     corrosion_set_env_vars(cxxbridge_crate "CFLAGS=-MDd" "CXXFLAGS=-MDd")
