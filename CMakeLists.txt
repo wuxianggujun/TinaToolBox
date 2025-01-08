@@ -110,7 +110,7 @@ target_link_libraries(TinaToolBox PRIVATE
         Tesseract::libtesseract
         cxxbridge-cpp
 )
-
+ 
 target_compile_options(TinaToolBox PRIVATE
         $<$<CONFIG:Debug>:/MDd>
         $<$<CONFIG:Release>:/MD>
