@@ -1,12 +1,27 @@
+#include <iostream>
+
 #include "MainWindow.hpp"
 #include "LogSystem.hpp"
 #include "Singleton.hpp"
 #include "CrashHandler.hpp"
 #include <QApplication>
+#include <cxxbridge-cpp/foo/mod.h>
+#include <cxxbridge-cpp/lib.h>
+#include <vector>
 
 using namespace TinaToolBox;
 
 int main(int argc, char *argv[]) {
+
+    std::string file_path = "C:/Users/wuxianggujun/Downloads/工单查询 (11).xlsx"; // 替换为你的 XLSX 文件路径
+
+    bool success = lib::open_xlsx_file(file_path);
+
+    if (success) {
+        qDebug() << "Successfully opened the XLSX file from Rust!" ;
+    } else {
+        qDebug() << "Failed to open the XLSX file from Rust."; 
+    }
     
     QString appName = "TinaToolBox";
     QString appVersion = "1.1";

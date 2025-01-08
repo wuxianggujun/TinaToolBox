@@ -10,3 +10,5 @@ crate-type = ["staticlib"]
 cxx = "1.0"
 calamine = "0.26.1"
 
+[build-dependencies]
+cxx-build = "1.0"
