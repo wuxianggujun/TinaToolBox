@@ -108,7 +108,9 @@ target_link_libraries(TinaToolBox PRIVATE
         antlr4_static
         cpp-terminal
         Tesseract::libtesseract
-        cxxbridge-cpp
+        utf8cpp  
+        OpenXLSX::OpenXLSX
+#        cxxbridge-cpp
 )
  
 target_compile_options(TinaToolBox PRIVATE
@@ -123,10 +125,10 @@ target_compile_options(TinaToolBox PRIVATE
 )
 
 
-if(MSVC)
-    corrosion_set_env_vars(cxxbridge_crate "CFLAGS=-MDd" "CXXFLAGS=-MDd")
-    message(STATUS "CMAKE_EXE_LINKER_FLAGS after corrosion: ${CMAKE_EXE_LINKER_FLAGS}")
-endif()
+#if(MSVC)
+#    corrosion_set_env_vars(cxxbridge_crate "CFLAGS=-MDd" "CXXFLAGS=-MDd")
+#    message(STATUS "CMAKE_EXE_LINKER_FLAGS after corrosion: ${CMAKE_EXE_LINKER_FLAGS}")
+#endif()
 
 target_compile_definitions(TinaToolBox PRIVATE CMAKE_TOOLCHAIN_FILE="D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
