@@ -6,6 +6,8 @@
 #include <QStringConverter>
 #include <utility>
 #include <QTextStream>
+#include <QVector>
+#include <climits>
 #include "EncodingDetector.hpp"
 #include "utf8.h"
 
@@ -100,17 +102,30 @@ namespace TinaToolBox {
         } else if (currentEncoding_ == "UTF-16LE" || currentEncoding_ == "UTF-16BE") {
             const ushort* unicodeData = reinterpret_cast<const ushort*>(data.constData());
             size_t numChars = data.size() / sizeof(ushort);
-          if (currentEncoding_ == "UTF-16LE") {
-               content = QString::fromUcs4(reinterpret_cast<const uint32_t*>(unicodeData), numChars);
+
+             // 检查是否会发生窄化转换
+            if (numChars > static_cast<size_t>(std::numeric_limits<qsizetype>::max())) {
+                spdlog::error("File is too large to be loaded into a QString");
+                return false;
+            }
+
+            qsizetype qsizeNumChars = static_cast<qsizetype>(numChars);
+
+            if (currentEncoding_ == "UTF-16LE") {
+                // 将 ushort* 转换为 char32_t*
+                QVector<char32_t> ucs4Data(qsizeNumChars);
+                for (size_t i = 0; i < numChars; ++i) {
+                    ucs4Data[i] = static_cast<char32_t>(unicodeData[i]);
+                }
+                content = QString::fromUcs4(ucs4Data.constData(), qsizeNumChars);
             } else {
                 // 针对 UTF-16BE 需要进行字节序交换
-                QByteArray swappedData;
-                swappedData.resize(data.size());
+                QVector<char32_t> ucs4Data(qsizeNumChars);
                 for (size_t i = 0; i < numChars; ++i) {
-                    swappedData[2 * i] = data[2 * i + 1];
-                    swappedData[2 * i + 1] = data[2 * i];
+                    ushort swapped = ((unicodeData[i] << 8) | (unicodeData[i] >> 8));
+                    ucs4Data[i] = static_cast<char32_t>(swapped);
                 }
-                content = QString::fromUcs4(reinterpret_cast<const uint32_t*>(swappedData.constData()), numChars);
+                content = QString::fromUcs4(ucs4Data.constData(), qsizeNumChars);
             }
         } else if (currentEncoding_ == "ASCII") {
             content = QString::fromLatin1(data);
@@ -148,12 +163,26 @@ namespace TinaToolBox {
             data = content.toUtf8();
         } else if (currentEncoding_ == "UTF-16LE") {
             const ushort* unicodeData = content.utf16();
-            int size = content.size() * sizeof(ushort);
-            data = QByteArray::fromRawData(reinterpret_cast<const char*>(unicodeData), size);
+            size_t size = content.size();
+            // 检查是否会发生窄化转换
+            if (size > static_cast<size_t>(std::numeric_limits<int>::max() / static_cast<int>(sizeof(ushort)))) {
+               spdlog::error("Content is too large to be encoded in UTF-16LE");
+               return false;
+            }
+            data = QByteArray::fromRawData(reinterpret_cast<const char*>(unicodeData), static_cast<int>(size * sizeof(ushort)));
         } else if (currentEncoding_ == "UTF-16BE") {
             QByteArray utf16beData;
             const ushort* unicodeData = content.utf16();
-            for (int i = 0; i < content.size(); ++i) {
+            size_t size = content.size();
+            
+            // 检查是否会发生窄化转换
+            if (size > static_cast<size_t>(std::numeric_limits<int>::max() / static_cast<int>(sizeof(ushort)))) {
+              spdlog::error("Content is too large to be encoded in UTF-16BE");
+              return false;
+            }
+
+            utf16beData.reserve(static_cast<int>(size * sizeof(ushort)));
+            for (int i = 0; i < size; ++i) {
                 // 交换字节序
                 utf16beData.append(static_cast<char>((unicodeData[i] >> 8) & 0xFF));
                 utf16beData.append(static_cast<char>(unicodeData[i] & 0xFF));
