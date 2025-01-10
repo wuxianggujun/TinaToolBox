@@ -23,6 +23,7 @@ namespace TinaToolBox {
         void setEncoding(const QString &encoding);
         
         [[nodiscard]] QString getCurrentEncoding() const;
+        [[nodiscard]] QStringList availableEncodings() const;
 
     private slots:
         void onTextModified();

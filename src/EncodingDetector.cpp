@@ -1,10 +1,12 @@
+// EncodingDetector.cpp
 #include "EncodingDetector.hpp"
 #include <spdlog/spdlog.h>
 #include <QTextCodec>
+#include <utf8.h>
 
 namespace TinaToolBox {
     QString EncodingDetector::detect(const QByteArray &data) {
-        // 1. 首先检查 BOM
+        // 1. 检查 BOM
         if (data.size() >= 3) {
             if (data.startsWith("\xEF\xBB\xBF")) {
                 spdlog::debug("Detected UTF-8 with BOM");
@@ -20,128 +22,74 @@ namespace TinaToolBox {
             }
         }
 
-        // 2. 尝试各种编码并评分
+        // 2. 检查是否是有效的 UTF-8
+        if (isLikelyUtf8(data)) {
+           spdlog::debug("Detected Likely UTF-8 without BOM");
+           return "UTF-8";
+        }
+
+        // 3. 尝试其他编码并评分
         struct EncodingScore {
             QString encoding;
             int score;
         };
 
         QList<EncodingScore> scores;
+        QStringList encodings = {"GBK", "GB18030", "GB2312", "Big5"}; // 添加其他编码
 
-        // 测试常见编码
-        QStringList encodings = {"UTF-8", "GBK", "GB18030", "GB2312", "Big5"};
+         for (const QString &encoding: encodings) {
+           QTextCodec *codec = QTextCodec::codecForName(encoding.toLatin1());
+           if (!codec) continue;
 
-        for (const QString &encoding: encodings) {
-            QTextCodec *codec = QTextCodec::codecForName(encoding.toLatin1());
-            if (!codec) continue;
+           QTextCodec::ConverterState state;
+           codec->toUnicode(data.constData(), data.size(), &state);
 
-            QTextCodec::ConverterState state;
-            QString text = codec->toUnicode(data.constData(), data.size(), &state);
+           int score = 0;
+           if (state.invalidChars == 0) {
+             score = 60;  // 可以转换，基础分
+             scores.append({encoding, score});
+             spdlog::debug("Encoding {} score: {}", encoding.toStdString(), score);
+           }
+         }
 
-            int score = 0;
-
-            // 检查转换是否有效
-            if (state.invalidChars == 0) {
-                score += 60; // 基础分：可以完整转换
-
-                // 检查中文字符的比例
-                int chineseCount = 0;
-                for (const QChar &ch: text) {
-                    if (ch.unicode() >= 0x4E00 && ch.unicode() <= 0x9FFF) {
-                        chineseCount++;
-                    }
-                }
-
-                // 计算中文字符比例得分
-                double chineseRatio = static_cast<double>(chineseCount) / text.length();
-                score += static_cast<int>(chineseRatio * 40); // 最高40分
-
-                // 检查是否有乱码特征（如大量特殊字符）
-                int specialCharCount = 0;
-                for (const QChar &ch: text) {
-                    if (ch.unicode() < 0x20 || (ch.unicode() > 0x7E && ch.unicode() < 0x4E00)) {
-                        specialCharCount++;
-                    }
-                }
-
-                // 特殊字符比例越高，扣分越多
-                double specialRatio = static_cast<double>(specialCharCount) / text.length();
-                score -= static_cast<int>(specialRatio * 50);
-            }
-
-            scores.append({encoding, score});
-            spdlog::debug("Encoding {} score: {}", encoding.toStdString(), score);
-        }
-
-        // 3. 选择得分最高的编码
+        // 4. 选择得分最高的编码
         QString bestEncoding = "UTF-8"; // 默认UTF-8
         int bestScore = -1;
 
         for (const auto &score: scores) {
-            if (score.score > bestScore) {
-                bestScore = score.score;
-                bestEncoding = score.encoding;
-            }
+           if (score.score > bestScore) {
+               bestScore = score.score;
+               bestEncoding = score.encoding;
+             }
         }
 
-        // 如果最高分太低，可能是纯ASCII文本
+        // 5. 如果最高分太低，可能是纯ASCII文本
         if (bestScore < 30) {
-            bool isAscii = true;
-            for (char c: data) {
-                if (static_cast<unsigned char>(c) > 0x7F) {
-                    isAscii = false;
-                    break;
-                }
-            }
-            if (isAscii) {
-                spdlog::debug("Detected ASCII text");
-                return "ASCII";
-            }
+          bool isAscii = true;
+          for (char c: data) {
+              if (static_cast<unsigned char>(c) > 0x7F) {
+                isAscii = false;
+                  break;
+              }
+           }
+         if (isAscii) {
+              spdlog::debug("Detected ASCII text");
+              return "ASCII";
+         }
         }
 
         spdlog::debug("Best encoding detected: {} with score {}",
-                      bestEncoding.toStdString(), bestScore);
+                       bestEncoding.toStdString(), bestScore);
+
         return bestEncoding;
     }
 
-    bool EncodingDetector::isValidUtf8(const QByteArray &data) {
-        int i = 0;
-        while (i < data.size()) {
-            if ((data[i] & 0x80) == 0) {
-                // ASCII
-                i += 1;
-            } else if ((data[i] & 0xE0) == 0xC0) {
-                // 2字节序列
-                if (i + 1 >= data.size()) return false;
-                if ((data[i + 1] & 0xC0) != 0x80) return false;
-                i += 2;
-            } else if ((data[i] & 0xF0) == 0xE0) {
-                // 3字节序列
-                if (i + 2 >= data.size()) return false;
-                if ((data[i + 1] & 0xC0) != 0x80 ||
-                    (data[i + 2] & 0xC0) != 0x80)
-                    return false;
-                i += 3;
-            } else if ((data[i] & 0xF8) == 0xF0) {
-                // 4字节序列
-                if (i + 3 >= data.size()) return false;
-                if ((data[i + 1] & 0xC0) != 0x80 ||
-                    (data[i + 2] & 0xC0) != 0x80 ||
-                    (data[i + 3] & 0xC0) != 0x80)
-                    return false;
-                i += 4;
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool EncodingDetector::hasChineseChars(const QByteArray &data) {
-        for (int i = 0; i < data.size() - 1; i++) {
-            unsigned char c = static_cast<unsigned char>(data[i]);
-            if (c > 0x7F) return true;
-        }
-        return false;
-    }
+   bool EncodingDetector::isLikelyUtf8(const QByteArray& data) {
+     try {
+       return utf8::is_valid(data.begin(), data.end());
+     }
+      catch (const utf8::exception& e) {
+         return false;
+     }
+   }
 }

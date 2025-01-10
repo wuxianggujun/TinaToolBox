@@ -13,7 +13,6 @@ namespace TinaToolBox {
         
     private:
         // 辅助检测方法
-        static bool isValidUtf8(const QByteArray& data);
-        static bool hasChineseChars(const QByteArray& data);
+        static bool isLikelyUtf8(const QByteArray& data);
     };
 }
