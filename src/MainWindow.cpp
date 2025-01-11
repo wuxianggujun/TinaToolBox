@@ -24,6 +24,7 @@
 #include "StatusBar.hpp"
 #include "TextDocumentView.hpp"
 #include "ConfigManager.hpp"
+#include "DataFrame.hpp"
 #include "ThemeManager.hpp"
 #include "UIConfig.hpp"
 
@@ -228,7 +229,7 @@ namespace TinaToolBox {
             openFile();
         } else if (actionName == "保存") {
             // Handle save
-            *(volatile int *)0 = 0;
+            *(volatile int *) 0 = 0;
         } else if (actionName == "显示日志面板") {
             showBottomPanel();
         }
@@ -348,10 +349,10 @@ namespace TinaToolBox {
 
     void MainWindow::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
-        
+
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
-    
+
         // 设置画笔和画刷
         painter.setPen(Qt::transparent);
         painter.setBrush(palette().window());
@@ -368,8 +369,7 @@ namespace TinaToolBox {
             painter.drawRoundedRect(rect, radius, radius);
         }
     }
-    
-    
+
 
     QWidget *MainWindow::createLeftPanel() {
         auto *leftPanel = new QWidget();
@@ -389,7 +389,7 @@ namespace TinaToolBox {
         recentFilesWidget->addFunctionEntry("功能1");
         recentFilesWidget->addFunctionEntry("功能2");
         recentFilesWidget->addFunctionEntry("功能3");
-        
+
         leftPanelLayout->addWidget(recentFilesWidget);
 
         return leftPanel;
@@ -463,8 +463,15 @@ namespace TinaToolBox {
 
     void MainWindow::onFunctionEntryClicked(const QString &functionName) {
         if (functionName == "功能1") {
-            // 执行功能1的代码
-            qDebug() << "执行功能1";
+            try {
+                auto df = DataFrame::fromExcel("C:/Users/wuxianggujun/Downloads/工单查询 (重复1.11).xlsx");
+                qDebug() << "行数：" << df.rowCount() << "列数：" << df.columnCount();
+                for (const auto &name: df.getColumnNames()) {
+                   qDebug().noquote() << QString::fromStdString(name) << "\n";
+                }
+            } catch (const std::exception &e) {
+                qWarning() << "Error: " << e.what();
+            }
         } else if (functionName == "功能2") {
             // 执行功能2的代码
             qDebug() << "执行功能2";

@@ -49,7 +49,6 @@ namespace TinaToolBox {
 
         void updateVisibleItems();
         bool isScriptFile(const QString & filePath) const;
-    private:
         
         QMenu* contextMenu_{nullptr};
         FileHistoryManager& fileHistoryManager;
