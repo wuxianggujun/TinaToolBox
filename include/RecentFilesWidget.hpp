@@ -19,9 +19,12 @@ namespace TinaToolBox {
         void removeRecentFile(const QString &filePath);
 
         void setShowScriptsOnly(bool showScriptOnly);
+
+        void addFunctionEntry(const QString& functionName);
     signals:
         void fileSelected(const QString &filePath);
         void removeFileRequested(const QString &filePath);
+        void functionEntryClicked(const QString &functionName);
 
     protected:
         void contextMenuEvent(QContextMenuEvent *event) override;
@@ -32,8 +35,14 @@ namespace TinaToolBox {
 
         void setupConnections();
 
+        void addFileItem(const FileHistory& fileHistory);
+
+        void insertItem(QTreeWidgetItem* item,bool isFunctionEntry);
+        
         void onItemDoubleClicked(QTreeWidgetItem *item, int column);
 
+        void onItemClicked(QTreeWidgetItem* item, int column);
+        
         QTreeWidgetItem* createFileItem(const FileHistory& fileHistory);
         void updateFileItem(QTreeWidgetItem* item, const FileHistory& fileHistory);
         [[nodiscard]] QString formatFileSize(qint64 size) const;
@@ -46,4 +55,5 @@ namespace TinaToolBox {
         FileHistoryManager& fileHistoryManager;
         bool showScriptsOnly_ = false;
     };
+
 }

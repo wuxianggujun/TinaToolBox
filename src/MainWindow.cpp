@@ -273,6 +273,9 @@ namespace TinaToolBox {
                 this, &MainWindow::onFileSelected);
         connect(recentFilesWidget, &RecentFilesWidget::removeFileRequested,
                 this, &MainWindow::onRemoveFileRequested);
+        // 连接 functionEntryClicked 信号到槽函数
+        connect(recentFilesWidget, &RecentFilesWidget::functionEntryClicked,
+                this, &MainWindow::onFunctionEntryClicked);
 
         // 监听文档变化
         connect(&DocumentManager::getInstance(), &DocumentManager::currentDocumentChanged,
@@ -383,6 +386,10 @@ namespace TinaToolBox {
 
         recentFilesWidget = new RecentFilesWidget();
 
+        recentFilesWidget->addFunctionEntry("功能1");
+        recentFilesWidget->addFunctionEntry("功能2");
+        recentFilesWidget->addFunctionEntry("功能3");
+        
         leftPanelLayout->addWidget(recentFilesWidget);
 
         return leftPanel;
@@ -452,5 +459,18 @@ namespace TinaToolBox {
     void MainWindow::onRemoveFileRequested(const QString &filePath) {
         // 处理文件移除请求
         recentFilesWidget->removeRecentFile(filePath);
+    }
+
+    void MainWindow::onFunctionEntryClicked(const QString &functionName) {
+        if (functionName == "功能1") {
+            // 执行功能1的代码
+            qDebug() << "执行功能1";
+        } else if (functionName == "功能2") {
+            // 执行功能2的代码
+            qDebug() << "执行功能2";
+        } else if (functionName == "功能3") {
+            // 执行功能3的代码
+            qDebug() << "执行功能3";
+        }
     }
 }

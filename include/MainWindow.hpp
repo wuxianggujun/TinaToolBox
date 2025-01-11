@@ -47,6 +47,8 @@ namespace TinaToolBox {
 
         void onRemoveFileRequested(const QString &filePath);
 
+        void onFunctionEntryClicked(const QString &functionName);
+        
     private slots:
         void handleMenuAction(const QString &actionName);
 
