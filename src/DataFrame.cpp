@@ -17,7 +17,7 @@ namespace TinaToolBox {
         // 使用第一个sheet   
         auto wks = wbk.sheet(1).get<OpenXLSX::XLWorksheet>();
         df.columnNames_.reserve(wks.columnCount());
-        std::vector<std::string> headers;
+        df.columns_.reserve(wks.columnCount());
 
         // 获取第一行作为表头
         size_t colCount = 0;
@@ -28,17 +28,15 @@ namespace TinaToolBox {
                 colCount--; // 如果是空单元格，回退计数
                 break;
             }
-            // 使用utfcpp处理UTF-8字符串
             // 直接获取字符串，不进行UTF-8转换
             std::string header = cell.value().get<std::string>();
             df.columnNames_.push_back(header);
-            df.columns_[header] = Column();
-            df.columns_[header].reserve(wks.rowCount());  // 预估行数，可以根据实际情况调整
+            df.columns_.emplace_back().reserve(wks.rowCount());
         }
-        colCount--; // 调整为实际列数
-        if (colCount == 0) {
-            throw std::runtime_error("No columns found in Excel file");
-        }
+        // colCount--; // 调整为实际列数
+        // if (colCount == 0) {
+        //     throw std::runtime_error("No columns found in Excel file");
+        // }
         // 读取数据
         size_t rowNum = 2; // 从第二行开始读取数据
         while (true) {
@@ -57,34 +55,33 @@ namespace TinaToolBox {
                 }
                 if (isEmptyRow) break;
             }
-            std::vector<DataValue> rowData;
-            rowData.reserve(colCount); // 预分配空间
+            // std::vector<DataValue> rowData;
+            // rowData.reserve(colCount); // 预分配空间
 
             for (size_t col = 1; col <= colCount; col++) {
                 auto cell = wks.cell(rowNum, col);
 
                 switch (cell.value().type()) {
                     case OpenXLSX::XLValueType::Empty:
-                        rowData.emplace_back(std::string(""));
+                        df.columns_[col - 1].emplace_back(std::string(""));
                         break;
 
                     case OpenXLSX::XLValueType::Integer:
-                        rowData.emplace_back(static_cast<int>(cell.value().get<int64_t>()));
+                        df.columns_[col - 1].emplace_back(static_cast<int>(cell.value().get<int64_t>()));
                         break;
 
                     case OpenXLSX::XLValueType::Float:
-                        rowData.emplace_back(cell.value().get<double>());
+                        df.columns_[col - 1].emplace_back(cell.value().get<double>());
                         break;
 
                     default:
-                        rowData.emplace_back(cell.value().get<std::string>());
+                        df.columns_[col - 1].emplace_back(cell.value().get<std::string>());
                         break;
                 }
             }
-            df.addRow(rowData);
+            df.rowCount_++;
             rowNum++;
         }
-
         doc.close();
         return df;
     }
@@ -93,7 +90,8 @@ namespace TinaToolBox {
         if (rowCount_ == 0) {
             rowCount_ = data.size();
         }
-        columns_[name] = data;
+        columnNames_.push_back(name);
+        columns_.push_back(data);
     }
 
     void DataFrame::addRow(const std::vector<DataValue> &row) {
@@ -102,34 +100,39 @@ namespace TinaToolBox {
                                      ") does not match column size (" +
                                      std::to_string(columns_.size()) + ")");
         }
-
-        size_t col = 0;
-        for (auto &[_, column]: columns_) {
-            column.push_back(row[col++]);
+        for (size_t i = 0; i < row.size(); ++i) {
+            columns_[i].push_back(row[i]);
         }
         rowCount_++;
     }
 
     void DataFrame::removeColumn(const std::string &name) {
-        columns_.erase(name);
+        auto it = std::find(columnNames_.begin(), columnNames_.end(), name);
+        if (it == columnNames_.end()) {
+            throw std::runtime_error("Column not found: " + name);
+        }
+        size_t index = std::distance(columnNames_.begin(), it);
+        columnNames_.erase(it);
+        columns_.erase(columns_.begin() + index);
     }
 
     void DataFrame::removeRow(const size_t &index) {
         if (index >= rowCount_) {
             throw std::out_of_range("Row index out of range");
         }
-        for (auto &[_, column]: columns_) {
+        for (auto &column: columns_) {
             column.erase(column.begin() + index);
         }
         rowCount_--;
     }
 
-    Column DataFrame::getColumn(const std::string &name) const {
-        auto it = columns_.find(name);
-        if (it == columns_.end()) {
+    const Column DataFrame::getColumn(const std::string &name) const {
+        auto it = std::find(columnNames_.begin(), columnNames_.end(), name);
+        if (it == columnNames_.end()) {
             throw std::runtime_error("Column not found: " + name);
         }
-        return it->second;
+        size_t index = std::distance(columnNames_.begin(), it);
+        return columns_[index];
     }
 
     std::vector<DataValue> DataFrame::getRow(const size_t &index) const {
@@ -137,7 +140,8 @@ namespace TinaToolBox {
             throw std::out_of_range("Row index out of range");
         }
         std::vector<DataValue> row;
-        for (const auto &[_, column]: columns_) {
+        row.reserve(columns_.size());
+        for (const auto &column: columns_) {
             row.push_back(column[index]);
         }
         return row;
@@ -184,41 +188,43 @@ namespace TinaToolBox {
                   });
 
         // 重新排序所有列
-        for (auto &[_, column]: result.columns_) {
+        for (auto &col: result.columns_) {
             Column newColumn;
             newColumn.reserve(rowCount_);
-            for (size_t idx: indices) {
-                newColumn.push_back(column[idx]);
+            for (const size_t idx: indices) {
+                newColumn.push_back(col[idx]);
             }
-            column = std::move(newColumn);
+            col = std::move(newColumn);
         }
 
         return result;
     }
 
-    bool DataFrame::toSaveExcel(const std::string &filepath) const {
+    bool DataFrame::toSaveExcel(const std::string &filePath, bool forceOverwrite) const {
         try {
             OpenXLSX::XLDocument doc;
-            doc.create(filepath);
-            auto wks = doc.workbook().worksheet("Sheet1");
+            doc.create(filePath,forceOverwrite);
+            const auto wks = doc.workbook().worksheet("Sheet1");
 
             // 写入表头
-            size_t col = 1;
-            for (const auto &[name, _]: columns_) {
-                wks.cell(1, col++).value() = name;
+            for (size_t col = 0; col < columnNames_.size(); ++col) {
+                wks.cell(1, col + 1).value() = columnNames_[col];
             }
 
             // 写入数据
             for (size_t row = 0; row < rowCount_; ++row) {
-                col = 1;
-                for (const auto &[_, column]: columns_) {
-                    OpenXLSX::XLCellAssignable cell = wks.cell(row + 2, col++);
+                for (size_t col = 0; col < columns_.size(); ++col) {
+                    OpenXLSX::XLCellAssignable cell = wks.cell(row + 2, col + 1);
                     std::visit([&cell](const auto &value) {
-                        cell.value() = value;
-                    }, column[row]);
+                        if constexpr (std::is_same_v<std::decay_t<decltype(value)>, double>) {
+                            // 处理浮点数
+                            cell.value() = std::to_string(value);
+                        } else {
+                            cell.value() = value;
+                        }
+                    }, columns_[col][row]);
                 }
             }
-
             doc.save();
             doc.close();
             return true;

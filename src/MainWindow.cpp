@@ -27,6 +27,8 @@
 #include "DataFrame.hpp"
 #include "ThemeManager.hpp"
 #include "UIConfig.hpp"
+#include <QElapsedTimer>
+#include <QDebug>
 
 
 namespace TinaToolBox {
@@ -460,24 +462,34 @@ namespace TinaToolBox {
         // 处理文件移除请求
         recentFilesWidget->removeRecentFile(filePath);
     }
-
+    
     void MainWindow::onFunctionEntryClicked(const QString &functionName) {
         if (functionName == "功能1") {
             try {
+                QElapsedTimer timer;
+                timer.start();
+            
+                // 读取Excel文件
+                qDebug() << "开始读取Excel文件...";
                 auto df = DataFrame::fromExcel("C:/Users/wuxianggujun/Downloads/工单查询 (重复1.11).xlsx");
+                qDebug() << "Excel文件读取完成，耗时:" << timer.elapsed() << "毫秒";
+            
                 qDebug() << "行数：" << df.rowCount() << "列数：" << df.columnCount();
+            
+                // 重置计时器用于计算数据处理时间
+                timer.restart();
+            
+                // 数据处理
                 for (const auto &name: df.getColumnNames()) {
-                   qDebug().noquote() << QString::fromStdString(name) << "\n";
+                    qDebug().noquote() << QString::fromStdString(name);
                 }
+            
+                qDebug() << "数据处理完成，耗时:" << timer.elapsed() << "毫秒";
+                qDebug() << "总耗时:" << timer.elapsed() << "毫秒";
+            
             } catch (const std::exception &e) {
                 qWarning() << "Error: " << e.what();
             }
-        } else if (functionName == "功能2") {
-            // 执行功能2的代码
-            qDebug() << "执行功能2";
-        } else if (functionName == "功能3") {
-            // 执行功能3的代码
-            qDebug() << "执行功能3";
         }
     }
 }
