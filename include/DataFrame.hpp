@@ -4,63 +4,55 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <arrow/compute/api.h>
+#include <arrow/result.h>
+#include <parquet/arrow/writer.h>
+#include <arrow/api.h>
+#include <arrow/table.h>
+
 
 namespace TinaToolBox {
-    using DataValue = std::variant<int, double, std::string>;
-    using Column = std::vector<DataValue>;
-
+    
     class DataFrame {
     public:
         DataFrame() = default;
+        explicit DataFrame(std::shared_ptr<arrow::Table> table);
 
         static DataFrame fromExcel(const std::string &filePath);
-
-        void addColumn(const std::string &name, const Column &data);
-
-        void addRow(const std::vector<DataValue> &row);
-
-        void removeColumn(const std::string &name);
-
-        void removeRow(const size_t &index);
-
-        [[nodiscard]] const Column getColumn(const std::string &name) const;
-
-        [[nodiscard]] std::vector<DataValue> getRow(const size_t &index) const;
-
-        [[nodiscard]] DataValue getValue(const size_t &row, const std::string &column) const;
-
-        [[nodiscard]] size_t rowCount() const;
-
-        [[nodiscard]] size_t columnCount() const;
-
+        
+        // 基本操作
+        [[nodiscard]] size_t rowCount() const { return table_ ? table_->num_rows() : 0; }
+        [[nodiscard]] size_t columnCount() const { return table_ ? table_->num_columns() : 0; }
         [[nodiscard]] std::vector<std::string> getColumnNames() const;
+        
+        // 数据访问
+        [[nodiscard]] std::shared_ptr<arrow::ChunkedArray> getColumn(const std::string &name) const;
+        [[nodiscard]] arrow::Result<std::shared_ptr<arrow::RecordBatch>> getRow(int64_t index) const;
 
-        DataFrame filter(const std::string &column, const DataValue &value);
+        // arrow::Result<DataFrame> filter(const std::string &column,
+        //                                const std::shared_ptr<arrow::Scalar> &value) const;
+        // 数据操作
+        arrow::Result<DataFrame> filter(
+            const std::string& column,
+            const std::shared_ptr<arrow::Scalar>& value,
+            const std::string& comparison_operator = "equal"
+        ) const;
 
-        DataFrame sort(const std::string &column, bool ascending = true);
-
-        [[nodiscard]] bool toSaveExcel(const std::string &filePath, bool forceOverwrite) const;
-
+        arrow::Result<DataFrame> sort(
+            const std::string& column, 
+            bool ascending = true
+        ) const;
+        
+        // 类型安全的值获取
         template<typename T>
-        [[nodiscard]] T getValue(const size_t &row, const std::string &column) const {
-            auto value = getValue(row, column);
-            return std::visit([](const auto &v)-> T {
-                using ValueType = std::decay_t<decltype(v)>;
-                if constexpr (std::is_same_v<ValueType, T>) {
-                    return v;
-                } else if constexpr (std::is_arithmetic_v<T> && std::is_arithmetic_v<ValueType>) {
-                    return static_cast<T>(v);
-                } else if constexpr (std::is_same_v<ValueType, std::string>) {
-                    return std::to_string(v);
-                } else {
-                    throw std::runtime_error("Unsupported type conversion");
-                }
-            }, value);
-        }
-
+        arrow::Result<T> getValue(int64_t row, const std::string &column) const;
+        
+        [[nodiscard]] bool toSaveExcel(const std::string &filePath, bool forceOverwrite = false) const;
+        
+        // Arrow Table 访问器
+        [[nodiscard]] std::shared_ptr<arrow::Table> table() const { return table_; }
+        [[nodiscard]] std::shared_ptr<arrow::Schema> schema() const { return table_ ? table_->schema() : nullptr; }
     private:
-        std::vector<std::string> columnNames_;
-        std::vector<Column> columns_;
-        size_t rowCount_ = 0;
+        std::shared_ptr<arrow::Table> table_;
     };
 }
