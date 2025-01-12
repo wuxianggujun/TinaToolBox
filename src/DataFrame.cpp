@@ -16,8 +16,13 @@ namespace TinaToolBox {
 
         // 使用第一个sheet   
         auto wks = wbk.sheet(1).get<OpenXLSX::XLWorksheet>();
-        df.columnNames_.reserve(wks.columnCount());
-        df.columns_.reserve(wks.columnCount());
+
+        // 预先获取工作表的实际大小
+        size_t maxRow = wks.rowCount();
+        size_t maxCol = wks.columnCount();
+        
+        df.columnNames_.reserve(maxCol);
+        df.columns_.reserve(maxCol);
 
         // 获取第一行作为表头
         size_t colCount = 0;
@@ -29,58 +34,50 @@ namespace TinaToolBox {
                 break;
             }
             // 直接获取字符串，不进行UTF-8转换
-            std::string header = cell.value().get<std::string>();
+            auto header = cell.value().get<std::string>();
             df.columnNames_.push_back(header);
-            df.columns_.emplace_back().reserve(wks.rowCount());
+            df.columns_.emplace_back().reserve(maxRow);
         }
-        // colCount--; // 调整为实际列数
-        // if (colCount == 0) {
-        //     throw std::runtime_error("No columns found in Excel file");
-        // }
-        // 读取数据
-        size_t rowNum = 2; // 从第二行开始读取数据
-        while (true) {
-            auto firstCell = wks.cell(rowNum, 1);
-
-            // 检查第一列的单元格是否为空
-            if (firstCell.value().type() == OpenXLSX::XLValueType::Empty) {
-                // 再检查整行是否都为空
-                bool isEmptyRow = true;
-                for (size_t col = 1; col <= colCount; col++) {
-                    auto cell = wks.cell(rowNum, col);
-                    if (cell.value().type() != OpenXLSX::XLValueType::Empty) {
-                        isEmptyRow = false;
-                        break;
-                    }
-                }
-                if (isEmptyRow) break;
-            }
-            // std::vector<DataValue> rowData;
-            // rowData.reserve(colCount); // 预分配空间
-
+        if (colCount == 0) {
+            throw std::runtime_error("No columns found in Excel file");
+        }
+    
+        // 读取数据部分
+        for (size_t rowNum = 2; rowNum <= maxRow; rowNum++) {
+            bool hasData = false;
+        
             for (size_t col = 1; col <= colCount; col++) {
                 auto cell = wks.cell(rowNum, col);
-
-                switch (cell.value().type()) {
+                auto cellType = cell.value().type();
+            
+                if (cellType != OpenXLSX::XLValueType::Empty) {
+                    hasData = true;
+                }
+            
+                switch (cellType) {
                     case OpenXLSX::XLValueType::Empty:
-                        df.columns_[col - 1].emplace_back(std::string(""));
-                        break;
-
+                        df.columns_[col - 1].emplace_back(std::string());
+                    break;
                     case OpenXLSX::XLValueType::Integer:
                         df.columns_[col - 1].emplace_back(static_cast<int>(cell.value().get<int64_t>()));
-                        break;
-
+                    break;
                     case OpenXLSX::XLValueType::Float:
                         df.columns_[col - 1].emplace_back(cell.value().get<double>());
-                        break;
-
+                    break;
                     default:
                         df.columns_[col - 1].emplace_back(cell.value().get<std::string>());
-                        break;
+                    break;
                 }
             }
+        
+            if (!hasData) {
+                // 如果整行都是空的，删除这一行的数据并退出
+                for (auto& col : df.columns_) {
+                    col.pop_back();
+                }
+                break;
+            }
             df.rowCount_++;
-            rowNum++;
         }
         doc.close();
         return df;
