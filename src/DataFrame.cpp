@@ -9,147 +9,179 @@ namespace TinaToolBox {
     DataFrame::DataFrame(std::shared_ptr<arrow::Table> table): table_(std::move(table)) {
     }
 
-    DataFrame DataFrame::fromExcel(const std::string &filePath) {
-        DataFrame df;
+    DataFrame DataFrame::fromExcel(const std::string& filePath) {
         OpenXLSX::XLDocument doc;
         try {
             doc.open(filePath);
-        } catch (const OpenXLSX::XLInternalError &e) {
-            throw std::runtime_error("Failed to open Excel file: " + std::string(e.what()));
-        }
-
-        // 获取第一个工作表
-        auto wbk = doc.workbook();
-        if (wbk.sheetCount() == 0) {
-            throw std::runtime_error("Excel file contains no sheets");
-        }
-
-        // 使用第一个sheet   
-        auto wks = wbk.sheet(1).get<OpenXLSX::XLWorksheet>();
-
-        // 读取表头并预估列类型
-        size_t maxCol = wks.columnCount();
-        std::vector<std::shared_ptr<arrow::Field> > fields;
-        std::vector<std::shared_ptr<arrow::DataType> > columnTypes(maxCol);
-        std::vector<std::string> columnNames;
-        // 构建 Arrow Arrays
-        std::vector<std::shared_ptr<arrow::Array> > arrays;
-
-        for (size_t col = 1; col <= maxCol; col++) {
-            auto headerCell = wks.cell(1, col);
-            if (headerCell.value().type() == OpenXLSX::XLValueType::Empty) {
-                break;
+            auto wbk = doc.workbook();
+            if (wbk.sheetCount() == 0) {
+                throw std::runtime_error("Excel file contains no sheets");
             }
+            auto wks = wbk.sheet(1).get<OpenXLSX::XLWorksheet>();
 
-            columnNames.push_back(headerCell.value().get<std::string>());
+            size_t maxCol = wks.columnCount();
+            size_t maxRow = wks.rowCount() - 1;
 
-            for (size_t row = 2; row <= wks.rowCount(); row++) {
-                auto cell = wks.cell(row, col);
+            std::vector<std::shared_ptr<arrow::Field>> fields;
+            std::vector<std::shared_ptr<arrow::DataType>> columnTypes(maxCol);
+            std::vector<std::shared_ptr<arrow::ArrayBuilder>> builders(maxCol);
+            fields.reserve(maxCol);
 
-                if (cell.value().type() != OpenXLSX::XLValueType::Empty) {
-                    switch (cell.value().type()) {
-                        case OpenXLSX::XLValueType::Integer:
-                            columnTypes[col - 1] = arrow::int64();
-                            break;
-                        case OpenXLSX::XLValueType::Float:
-                            columnTypes[col - 1] = arrow::float64();
-                            break;
-                        default:
-                            columnTypes[col - 1] = arrow::utf8();
-                            break;
-                    }
-                    break;
-                }
-            }
-            if (!columnTypes[col - 1]) {
-                columnTypes[col - 1] = arrow::utf8();
-            }
-        }
-
-        // 根据推断的类型，构建schema
-        for (size_t i = 0; i < columnNames.size(); i++) {
-            fields.push_back(arrow::field(columnNames[i], columnTypes[i]));
-        }
-
-        auto schema = arrow::schema(fields);
-
-        // 使用对应类型的builder构建Arrow Arrays
-        std::vector<std::shared_ptr<arrow::ArrayBuilder> > builders;
-        for (const auto &type: columnTypes) {
-            if (type->id() == arrow::Type::INT64) {
-                builders.emplace_back(std::make_shared<arrow::Int64Builder>());
-            } else if (type->id() == arrow::Type::DOUBLE) {
-                builders.emplace_back(std::make_shared<arrow::DoubleBuilder>());
-            } else {
-                builders.emplace_back(std::make_shared<arrow::StringBuilder>());
-            }
-        }
-
-        // 读取数据
-        size_t rowCount = 0;
-        for (size_t row = 2;; row++) {
-            bool hasData = false;
-
-            for (size_t col = 1; col <= columnNames.size(); col++) {
-                auto cell = wks.cell(row, col);
+            // 读取表头
+            for (size_t col = 1; col <= maxCol; ++col) {
+                auto cell = wks.cell(OpenXLSX::XLCellReference(1, col));
+                std::string columnName;
+                
+                // 根据单元格类型获取表头
                 auto cellType = cell.value().type();
-
-                if (cellType != OpenXLSX::XLValueType::Empty) {
-                    hasData = true;
+                if (cellType == OpenXLSX::XLValueType::Empty) {
+                    columnName = "Column_" + std::to_string(col);
+                } else {
+                    columnName = cell.value().get<std::string>();
                 }
 
-                auto &builder = builders[col - 1];
-                arrow::Int64Builder *intBuilder = nullptr;
-                arrow::DoubleBuilder *doubleBuilder = nullptr;
-                arrow::StringBuilder *stringBuilder = nullptr;
-                try {
-                    switch (cellType) {
-                        case OpenXLSX::XLValueType::Empty:
-                            if (!builder->AppendNull().ok()) {
-                                throw std::runtime_error("Failed to append null to builder.");
-                            }
-                            break;
-                        case OpenXLSX::XLValueType::Integer:
-                            intBuilder = dynamic_cast<arrow::Int64Builder *>(builder.get());
-                            if (!intBuilder->Append(cell.value().get<int64_t>()).ok()) {
-                                throw std::runtime_error("Failed to append int64 to builder.");
-                            }
-                            break;
-                        case OpenXLSX::XLValueType::Float:
-                            doubleBuilder = dynamic_cast<arrow::DoubleBuilder *>(builder.get());
-                            if (!doubleBuilder->Append(cell.value().get<double>()).ok()) {
-                                throw std::runtime_error("Failed to append double to builder.");
-                            }
-                            break;
+                // 预估类型：检查前100行数据
+                bool hasNonNumeric = false;
+                bool hasDecimal = false;
+                size_t sampleSize = std::min(static_cast<size_t>(100), maxRow);
 
-                        default:
-                            stringBuilder = dynamic_cast<arrow::StringBuilder *>(builder.get());
-                            if (!stringBuilder->Append(cell.value().get<std::string>()).ok()) {
-                                throw std::runtime_error("Failed to append string to builder.");
+                for (size_t row = 2; row <= sampleSize + 1 && !hasNonNumeric; ++row) {
+                    auto sampleCell = wks.cell(OpenXLSX::XLCellReference(row, col));
+                    auto sampleType = sampleCell.value().type();
+                    
+                    if (sampleType != OpenXLSX::XLValueType::Empty) {
+                        try {
+                            switch (sampleType) {
+                                case OpenXLSX::XLValueType::Integer:
+                                    if (sampleCell.value().get<int64_t>() != 0) {
+                                        // 继续使用整数类型
+                                    }
+                                    break;
+                                case OpenXLSX::XLValueType::Float:
+                                    hasDecimal = true;
+                                    break;
+                                case OpenXLSX::XLValueType::String:
+                                    hasNonNumeric = true;
+                                    break;
+                                default:
+                                    hasNonNumeric = true;
+                                    break;
                             }
-                            break;
+                        } catch (...) {
+                            hasNonNumeric = true;
+                        }
                     }
-                } catch (const std::runtime_error &e) {
-                    doc.close();
-                    throw std::runtime_error("Row: " + std::to_string(row) + ", Col: " + std::to_string(col) +
-                                             " Error: " + e.what());
+                }
+
+                // 设置列类型
+                std::shared_ptr<arrow::DataType> type;
+                if (hasNonNumeric) {
+                    type = arrow::utf8();
+                    builders[col-1] = std::make_shared<arrow::StringBuilder>();
+                } else if (hasDecimal) {
+                    type = arrow::float64();
+                    builders[col-1] = std::make_shared<arrow::DoubleBuilder>();
+                } else {
+                    type = arrow::int64();
+                    builders[col-1] = std::make_shared<arrow::Int64Builder>();
+                }
+
+                columnTypes[col-1] = type;
+                fields.push_back(arrow::field(columnName, type));
+            }
+
+            // 读取数据
+            const size_t BATCH_SIZE = 1000;
+            for (size_t row = 2; row <= maxRow + 1; ++row) {
+                for (size_t col = 1; col <= maxCol; ++col) {
+                    auto cell = wks.cell(OpenXLSX::XLCellReference(row, col));
+                    auto& builder = builders[col-1];
+                    auto cellType = cell.value().type();
+
+                    if (cellType != OpenXLSX::XLValueType::Empty) {
+                        try {
+                            if (columnTypes[col-1]->Equals(arrow::utf8())) {
+                                std::string value;
+                                switch (cellType) {
+                                    case OpenXLSX::XLValueType::String:
+                                        value = cell.value().get<std::string>();
+                                        break;
+                                    case OpenXLSX::XLValueType::Integer:
+                                        value = std::to_string(cell.value().get<int64_t>());
+                                        break;
+                                    case OpenXLSX::XLValueType::Float:
+                                        value = std::to_string(cell.value().get<double>());
+                                        break;
+                                    default:
+                                        value = "";
+                                }
+                                auto status = static_cast<arrow::StringBuilder*>(builder.get())->Append(value);
+                                if (!status.ok()) throw std::runtime_error(status.message());
+                            } else if (columnTypes[col-1]->Equals(arrow::float64())) {
+                                double value = 0.0;
+                                switch (cellType) {
+                                    case OpenXLSX::XLValueType::Float:
+                                        value = cell.value().get<double>();
+                                        break;
+                                    case OpenXLSX::XLValueType::Integer:
+                                        value = static_cast<double>(cell.value().get<int64_t>());
+                                        break;
+                                    default:
+                                        static_cast<arrow::DoubleBuilder*>(builder.get())->AppendNull();
+                                        continue;
+                                }
+                                auto status = static_cast<arrow::DoubleBuilder*>(builder.get())->Append(value);
+                                if (!status.ok()) throw std::runtime_error(status.message());
+                            } else {
+                                int64_t value = 0;
+                                switch (cellType) {
+                                    case OpenXLSX::XLValueType::Integer:
+                                        value = cell.value().get<int64_t>();
+                                        break;
+                                    case OpenXLSX::XLValueType::Float:
+                                        value = static_cast<int64_t>(cell.value().get<double>());
+                                        break;
+                                    default:
+                                        static_cast<arrow::Int64Builder*>(builder.get())->AppendNull();
+                                        continue;
+                                }
+                                auto status = static_cast<arrow::Int64Builder*>(builder.get())->Append(value);
+                                if (!status.ok()) throw std::runtime_error(status.message());
+                            }
+                        } catch (...) {
+                            auto status = builder->AppendNull();
+                            if (!status.ok()) throw std::runtime_error(status.message());
+                        }
+                    } else {
+                        auto status = builder->AppendNull();
+                        if (!status.ok()) throw std::runtime_error(status.message());
+                    }
+                }
+
+                if ((row - 1) % BATCH_SIZE == 0) {
+                    for (auto& builder : builders) {
+                        auto status = builder->Reserve(BATCH_SIZE);
+                        if (!status.ok()) throw std::runtime_error(status.message());
+                    }
                 }
             }
 
-            if (!hasData) break;
-            rowCount++;
-        }
-        // 构建 Arrow Arrays
-        for (auto &builder: builders) {
-            std::shared_ptr<arrow::Array> array;
-            if (!builder->Finish(&array).ok()) {
-                throw std::runtime_error("Failed to finish array.");
+            std::vector<std::shared_ptr<arrow::Array>> arrays;
+            arrays.reserve(maxCol);
+
+            for (size_t i = 0; i < maxCol; ++i) {
+                std::shared_ptr<arrow::Array> array;
+                auto status = builders[i]->Finish(&array);
+                if (!status.ok()) throw std::runtime_error(status.message());
+                arrays.push_back(array);
             }
-            arrays.push_back(array);
+
+            auto schema = arrow::schema(fields);
+            return DataFrame(arrow::Table::Make(schema, arrays));
+
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Error processing Excel file: " + std::string(e.what()));
         }
-        auto table = arrow::Table::Make(schema, arrays);
-        doc.close();
-        return DataFrame(table);
     }
 
     std::vector<std::string> DataFrame::getColumnNames() const {
@@ -210,25 +242,25 @@ namespace TinaToolBox {
     // }
 
     arrow::Result<DataFrame> DataFrame::filter(const std::string &column,
-                                           const std::shared_ptr<arrow::Scalar> &value,
-                                           const std::string &comparison_operator) const {
+                                               const std::shared_ptr<arrow::Scalar> &value,
+                                               const std::string &comparison_operator) const {
         if (!table_) {
             return arrow::Status::Invalid("DataFrame is empty");
         }
-    
+
         auto col = table_->GetColumnByName(column);
         if (!col) {
             return arrow::Status::Invalid("Column not found: " + column);
         }
-    
+
         // 根据比较操作符选择函数
         std::string function_name = comparison_operator;
         if (function_name != "equal" && function_name != "not_equal" &&
             function_name != "less" && function_name != "less_equal" &&
             function_name != "greater" && function_name != "greater_equal") {
             return arrow::Status::Invalid("Invalid comparison operator: " + comparison_operator);
-            }
-    
+        }
+
         // 执行比较操作
         arrow::Result<arrow::Datum> compare_result = arrow::compute::CallFunction(function_name, {col, value});
         if (!compare_result.ok()) {
@@ -236,16 +268,18 @@ namespace TinaToolBox {
             return arrow::Status(compare_result.status().code(),
                                  "Error performing comparison operation: " + compare_result.status().message());
         }
-    
+
         // 使用过滤器
-        arrow::Result<arrow::Datum> filter_result = arrow::compute::CallFunction("filter", {table_, compare_result.ValueOrDie()});
-    
+        arrow::Result<arrow::Datum> filter_result = arrow::compute::CallFunction("filter", {
+            table_, compare_result.ValueOrDie()
+        });
+
         if (!filter_result.ok()) {
             // 直接构造 arrow::Status 对象来添加错误信息
             return arrow::Status(filter_result.status().code(),
                                  "Error filtering table: " + filter_result.status().message());
         }
-    
+
         return DataFrame(filter_result.ValueOrDie().table());
     }
 
