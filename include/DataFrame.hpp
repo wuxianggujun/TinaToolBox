@@ -9,6 +9,8 @@
 #include <parquet/arrow/writer.h>
 #include <arrow/api.h>
 #include <arrow/table.h>
+#include <thread>
+#include <mutex>
 
 
 namespace TinaToolBox {
@@ -54,5 +56,10 @@ namespace TinaToolBox {
         [[nodiscard]] std::shared_ptr<arrow::Schema> schema() const { return table_ ? table_->schema() : nullptr; }
     private:
         std::shared_ptr<arrow::Table> table_;
+        
+        // 将 appendBatch 改为非静态成员函数
+       static void appendBatch(std::shared_ptr<arrow::ArrayBuilder>& builder,
+                        const std::vector<std::variant<std::string, double, int64_t>>& batch,
+                        const std::shared_ptr<arrow::DataType>& type);
     };
 }

@@ -4,6 +4,9 @@
 #include <parquet/exception.h>
 #include <arrow/io/api.h>
 #include <utf8.h>
+#include <thread>
+#include <mutex>
+#include <variant>
 
 namespace TinaToolBox {
     DataFrame::DataFrame(std::shared_ptr<arrow::Table> table): table_(std::move(table)) {
@@ -22,150 +25,126 @@ namespace TinaToolBox {
             size_t maxCol = wks.columnCount();
             size_t maxRow = wks.rowCount() - 1;
 
-            std::vector<std::shared_ptr<arrow::Field>> fields;
+            // 预分配内存
+            std::vector<std::shared_ptr<arrow::Field>> fields(maxCol);
             std::vector<std::shared_ptr<arrow::DataType>> columnTypes(maxCol);
             std::vector<std::shared_ptr<arrow::ArrayBuilder>> builders(maxCol);
-            fields.reserve(maxCol);
-
-            // 读取表头
-            for (size_t col = 1; col <= maxCol; ++col) {
-                auto cell = wks.cell(OpenXLSX::XLCellReference(1, col));
-                std::string columnName;
-                
-                // 根据单元格类型获取表头
-                auto cellType = cell.value().type();
-                if (cellType == OpenXLSX::XLValueType::Empty) {
-                    columnName = "Column_" + std::to_string(col);
-                } else {
-                    columnName = cell.value().get<std::string>();
-                }
-
-                // 预估类型：检查前100行数据
-                bool hasNonNumeric = false;
-                bool hasDecimal = false;
-                size_t sampleSize = std::min(static_cast<size_t>(100), maxRow);
-
-                for (size_t row = 2; row <= sampleSize + 1 && !hasNonNumeric; ++row) {
-                    auto sampleCell = wks.cell(OpenXLSX::XLCellReference(row, col));
-                    auto sampleType = sampleCell.value().type();
+            
+            // 使用多线程处理列
+            const size_t num_threads = std::thread::hardware_concurrency();
+            std::vector<std::thread> threads;
+            std::mutex mutex;
+            
+            auto processColumn = [&](size_t startCol, size_t endCol) {
+                for (size_t col = startCol; col < endCol; ++col) {
+                    auto cell = wks.cell(OpenXLSX::XLCellReference(1, col + 1));
+                    std::string columnName;
                     
-                    if (sampleType != OpenXLSX::XLValueType::Empty) {
-                        try {
-                            switch (sampleType) {
-                                case OpenXLSX::XLValueType::Integer:
-                                    if (sampleCell.value().get<int64_t>() != 0) {
-                                        // 继续使用整数类型
-                                    }
-                                    break;
-                                case OpenXLSX::XLValueType::Float:
-                                    hasDecimal = true;
-                                    break;
-                                case OpenXLSX::XLValueType::String:
-                                    hasNonNumeric = true;
-                                    break;
-                                default:
-                                    hasNonNumeric = true;
-                                    break;
-                            }
-                        } catch (...) {
-                            hasNonNumeric = true;
-                        }
-                    }
-                }
-
-                // 设置列类型
-                std::shared_ptr<arrow::DataType> type;
-                if (hasNonNumeric) {
-                    type = arrow::utf8();
-                    builders[col-1] = std::make_shared<arrow::StringBuilder>();
-                } else if (hasDecimal) {
-                    type = arrow::float64();
-                    builders[col-1] = std::make_shared<arrow::DoubleBuilder>();
-                } else {
-                    type = arrow::int64();
-                    builders[col-1] = std::make_shared<arrow::Int64Builder>();
-                }
-
-                columnTypes[col-1] = type;
-                fields.push_back(arrow::field(columnName, type));
-            }
-
-            // 读取数据
-            const size_t BATCH_SIZE = 1000;
-            for (size_t row = 2; row <= maxRow + 1; ++row) {
-                for (size_t col = 1; col <= maxCol; ++col) {
-                    auto cell = wks.cell(OpenXLSX::XLCellReference(row, col));
-                    auto& builder = builders[col-1];
                     auto cellType = cell.value().type();
-
-                    if (cellType != OpenXLSX::XLValueType::Empty) {
-                        try {
-                            if (columnTypes[col-1]->Equals(arrow::utf8())) {
-                                std::string value;
-                                switch (cellType) {
-                                    case OpenXLSX::XLValueType::String:
-                                        value = cell.value().get<std::string>();
-                                        break;
-                                    case OpenXLSX::XLValueType::Integer:
-                                        value = std::to_string(cell.value().get<int64_t>());
-                                        break;
-                                    case OpenXLSX::XLValueType::Float:
-                                        value = std::to_string(cell.value().get<double>());
-                                        break;
-                                    default:
-                                        value = "";
-                                }
-                                auto status = static_cast<arrow::StringBuilder*>(builder.get())->Append(value);
-                                if (!status.ok()) throw std::runtime_error(status.message());
-                            } else if (columnTypes[col-1]->Equals(arrow::float64())) {
-                                double value = 0.0;
-                                switch (cellType) {
-                                    case OpenXLSX::XLValueType::Float:
-                                        value = cell.value().get<double>();
-                                        break;
-                                    case OpenXLSX::XLValueType::Integer:
-                                        value = static_cast<double>(cell.value().get<int64_t>());
-                                        break;
-                                    default:
-                                        static_cast<arrow::DoubleBuilder*>(builder.get())->AppendNull();
-                                        continue;
-                                }
-                                auto status = static_cast<arrow::DoubleBuilder*>(builder.get())->Append(value);
-                                if (!status.ok()) throw std::runtime_error(status.message());
-                            } else {
-                                int64_t value = 0;
-                                switch (cellType) {
-                                    case OpenXLSX::XLValueType::Integer:
-                                        value = cell.value().get<int64_t>();
-                                        break;
-                                    case OpenXLSX::XLValueType::Float:
-                                        value = static_cast<int64_t>(cell.value().get<double>());
-                                        break;
-                                    default:
-                                        static_cast<arrow::Int64Builder*>(builder.get())->AppendNull();
-                                        continue;
-                                }
-                                auto status = static_cast<arrow::Int64Builder*>(builder.get())->Append(value);
-                                if (!status.ok()) throw std::runtime_error(status.message());
-                            }
-                        } catch (...) {
-                            auto status = builder->AppendNull();
-                            if (!status.ok()) throw std::runtime_error(status.message());
-                        }
+                    if (cellType == OpenXLSX::XLValueType::Empty) {
+                        columnName = "Column_" + std::to_string(col + 1);
                     } else {
-                        auto status = builder->AppendNull();
-                        if (!status.ok()) throw std::runtime_error(status.message());
+                        columnName = cell.value().get<std::string>();
                     }
-                }
 
-                if ((row - 1) % BATCH_SIZE == 0) {
-                    for (auto& builder : builders) {
-                        auto status = builder->Reserve(BATCH_SIZE);
-                        if (!status.ok()) throw std::runtime_error(status.message());
+                    // 预估类型：使用批处理
+                    bool hasNonNumeric = false;
+                    bool hasDecimal = false;
+                    const size_t BATCH_SIZE = 1000;
+                    
+                    for (size_t row = 2; row <= maxRow + 1; row += BATCH_SIZE) {
+                        size_t batchEnd = std::min(row + BATCH_SIZE, maxRow + 1);
+                        for (size_t r = row; r < batchEnd && !hasNonNumeric; ++r) {
+                            auto sampleCell = wks.cell(OpenXLSX::XLCellReference(r, col + 1));
+                            auto sampleType = sampleCell.value().type();
+                            
+                            if (sampleType != OpenXLSX::XLValueType::Empty) {
+                                switch (sampleType) {
+                                    case OpenXLSX::XLValueType::Integer:
+                                        break;
+                                    case OpenXLSX::XLValueType::Float:
+                                        hasDecimal = true;
+                                        break;
+                                    default:
+                                        hasNonNumeric = true;
+                                        break;
+                                }
+                            }
+                        }
                     }
+
+                    std::shared_ptr<arrow::DataType> type;
+                    std::shared_ptr<arrow::ArrayBuilder> builder;
+                    
+                    if (hasNonNumeric) {
+                        type = arrow::utf8();
+                        builder = std::make_shared<arrow::StringBuilder>();
+                    } else if (hasDecimal) {
+                        type = arrow::float64();
+                        builder = std::make_shared<arrow::DoubleBuilder>();
+                    } else {
+                        type = arrow::int64();
+                        builder = std::make_shared<arrow::Int64Builder>();
+                    }
+
+                    // 使用批量读取数据
+                    std::vector<std::variant<std::string, double, int64_t>> batch;
+                    batch.reserve(BATCH_SIZE);
+                    
+                    for (size_t row = 2; row <= maxRow + 1; ++row) {
+                        auto cell_assignable = wks.cell(OpenXLSX::XLCellReference(row, col + 1));
+                        auto cell_type = cell_assignable.value().type();
+
+                        if (cell_type != OpenXLSX::XLValueType::Empty) {
+                            try {
+                                if (type->Equals(arrow::utf8())) {
+                                    batch.emplace_back(cell_assignable.value().get<std::string>());
+                                } else if (type->Equals(arrow::float64())) {
+                                    batch.emplace_back(cell_assignable.value().get<double>());
+                                } else {
+                                    batch.emplace_back(cell_assignable.value().get<int64_t>());
+                                }
+                            } catch (...) {
+                                batch.emplace_back(std::string());
+                            }
+                        } else {
+                            batch.emplace_back(std::string());
+                        }
+
+                        if (batch.size() == BATCH_SIZE) {
+                            std::lock_guard<std::mutex> lock(mutex);
+                            appendBatch(builder, batch, type);  // 去掉 DataFrame:: 前缀
+                            batch.clear();
+                            batch.reserve(BATCH_SIZE);
+                        }
+                    }
+
+                    if (!batch.empty()) {
+                        std::lock_guard<std::mutex> lock(mutex);
+                        appendBatch(builder, batch, type);
+                    }
+
+                    std::lock_guard<std::mutex> lock(mutex);
+                    fields[col] = arrow::field(columnName, type);
+                    columnTypes[col] = type;
+                    builders[col] = builder;
                 }
+            };
+
+            // 启动多线程处理
+            size_t cols_per_thread = maxCol / num_threads;
+            for (size_t i = 0; i < num_threads; ++i) {
+                size_t start_col = i * cols_per_thread;
+                size_t end_col = (i == num_threads - 1) ? maxCol : (i + 1) * cols_per_thread;
+                threads.emplace_back(processColumn, start_col, end_col);
             }
 
+            // 等待所有线程完成
+            for (auto& thread : threads) {
+                thread.join();
+            }
+
+            // 构建最终的 Arrow Table
             std::vector<std::shared_ptr<arrow::Array>> arrays;
             arrays.reserve(maxCol);
 
@@ -181,6 +160,46 @@ namespace TinaToolBox {
 
         } catch (const std::exception& e) {
             throw std::runtime_error("Error processing Excel file: " + std::string(e.what()));
+        }
+    }
+
+    // 辅助函数：批量追加数据
+    void DataFrame::appendBatch(std::shared_ptr<arrow::ArrayBuilder>& builder,
+                              const std::vector<std::variant<std::string, double, int64_t>>& batch,
+                              const std::shared_ptr<arrow::DataType>& type) {
+        if (type->Equals(arrow::utf8())) {
+            auto string_builder = static_cast<arrow::StringBuilder*>(builder.get());
+            for (const auto& value : batch) {
+                if (const std::string* str = std::get_if<std::string>(&value)) {
+                    auto status = string_builder->Append(*str);
+                    if (!status.ok()) throw std::runtime_error(status.message());
+                } else {
+                    auto status = string_builder->AppendNull();
+                    if (!status.ok()) throw std::runtime_error(status.message());
+                }
+            }
+        } else if (type->Equals(arrow::float64())) {
+            auto double_builder = static_cast<arrow::DoubleBuilder*>(builder.get());
+            for (const auto& value : batch) {
+                if (const double* d = std::get_if<double>(&value)) {
+                    auto status = double_builder->Append(*d);
+                    if (!status.ok()) throw std::runtime_error(status.message());
+                } else {
+                    auto status = double_builder->AppendNull();
+                    if (!status.ok()) throw std::runtime_error(status.message());
+                }
+            }
+        } else {
+            auto int_builder = static_cast<arrow::Int64Builder*>(builder.get());
+            for (const auto& value : batch) {
+                if (const int64_t* i = std::get_if<int64_t>(&value)) {
+                    auto status = int_builder->Append(*i);
+                    if (!status.ok()) throw std::runtime_error(status.message());
+                } else {
+                    auto status = int_builder->AppendNull();
+                    if (!status.ok()) throw std::runtime_error(status.message());
+                }
+            }
         }
     }
 
