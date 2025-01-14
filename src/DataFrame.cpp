@@ -1,3 +1,4 @@
+/*
 #include "DataFrame.hpp"
 #include <OpenXLSX.hpp>
 #include <arrow/util/cancel.h>
@@ -7,9 +8,13 @@
 #include <thread>
 #include <mutex>
 #include <variant>
+#include <ctpl_stl.h>
 
 namespace TinaToolBox {
     DataFrame::DataFrame(std::shared_ptr<arrow::Table> table): table_(std::move(table)) {
+        builders_mutex_ = std::mutex();
+        fields_mutex_ = std::mutex();
+        types_mutex_ = std::mutex();
     }
 
     DataFrame DataFrame::fromExcel(const std::string& filePath) {
@@ -35,6 +40,9 @@ namespace TinaToolBox {
             std::vector<std::thread> threads;
             std::mutex mutex;
             
+            // 创建线程池
+            ctpl::thread_pool p(std::thread::hardware_concurrency());
+
             auto processColumn = [&](size_t startCol, size_t endCol) {
                 for (size_t col = startCol; col < endCol; ++col) {
                     auto cell = wks.cell(OpenXLSX::XLCellReference(1, col + 1));
@@ -50,7 +58,7 @@ namespace TinaToolBox {
                     // 预估类型：使用批处理
                     bool hasNonNumeric = false;
                     bool hasDecimal = false;
-                    const size_t BATCH_SIZE = 1000;
+                    const size_t BATCH_SIZE = 500;
                     
                     for (size_t row = 2; row <= maxRow + 1; row += BATCH_SIZE) {
                         size_t batchEnd = std::min(row + BATCH_SIZE, maxRow + 1);
@@ -75,19 +83,24 @@ namespace TinaToolBox {
 
                     std::shared_ptr<arrow::DataType> type;
                     std::shared_ptr<arrow::ArrayBuilder> builder;
+                    std::string columnName;
                     
-                    if (hasNonNumeric) {
-                        type = arrow::utf8();
-                        builder = std::make_shared<arrow::StringBuilder>();
-                    } else if (hasDecimal) {
-                        type = arrow::float64();
-                        builder = std::make_shared<arrow::DoubleBuilder>();
-                    } else {
-                        type = arrow::int64();
-                        builder = std::make_shared<arrow::Int64Builder>();
+                    {
+                        std::lock_guard<std::mutex> lock(types_mutex_);
+                        // 类型确定和builder创建
+                        if (hasNonNumeric) {
+                            type = arrow::utf8();
+                            builder = std::make_shared<arrow::StringBuilder>();
+                        } else if (hasDecimal) {
+                            type = arrow::float64();
+                            builder = std::make_shared<arrow::DoubleBuilder>();
+                        } else {
+                            type = arrow::int64();
+                            builder = std::make_shared<arrow::Int64Builder>();
+                        }
                     }
 
-                    // 使用批量读取数据
+                    // 批量处理数据
                     std::vector<std::variant<std::string, double, int64_t>> batch;
                     batch.reserve(BATCH_SIZE);
                     
@@ -115,7 +128,7 @@ namespace TinaToolBox {
                             std::lock_guard<std::mutex> lock(mutex);
                             appendBatch(builder, batch, type);  // 去掉 DataFrame:: 前缀
                             batch.clear();
-                            batch.reserve(BATCH_SIZE);
+                            batch.shrink_to_fit();
                         }
                     }
 
@@ -124,39 +137,49 @@ namespace TinaToolBox {
                         appendBatch(builder, batch, type);
                     }
 
-                    std::lock_guard<std::mutex> lock(mutex);
-                    fields[col] = arrow::field(columnName, type);
-                    columnTypes[col] = type;
-                    builders[col] = builder;
+                    {
+                        std::lock_guard<std::mutex> builders_lock(builders_mutex_);
+                        std::lock_guard<std::mutex> fields_lock(fields_mutex_);
+                        fields[col] = arrow::field(columnName, type);
+                        columnTypes[col] = type;
+                        builders[col] = builder;
+                    }
                 }
             };
 
-            // 启动多线程处理
+            // 使用线程池处理任务
             size_t cols_per_thread = maxCol / num_threads;
             for (size_t i = 0; i < num_threads; ++i) {
                 size_t start_col = i * cols_per_thread;
                 size_t end_col = (i == num_threads - 1) ? maxCol : (i + 1) * cols_per_thread;
-                threads.emplace_back(processColumn, start_col, end_col);
+                p.push([&, start_col, end_col](int) {
+                    processColumn(start_col, end_col);
+                });
             }
-
-            // 等待所有线程完成
+            p.stop(true);  // 等待所有任务完成
+        } catch (const std::exception& e) {
+            // 确保所有线程都被正确清理
             for (auto& thread : threads) {
-                thread.join();
+                if (thread.joinable()) {
+                    thread.join();
+                }
             }
+            throw std::runtime_error("Thread processing failed: " + std::string(e.what()));
+        }
 
-            // 构建最终的 Arrow Table
-            std::vector<std::shared_ptr<arrow::Array>> arrays;
-            arrays.reserve(maxCol);
+        // 构建最终的 Arrow Table
+        std::vector<std::shared_ptr<arrow::Array>> arrays;
+        arrays.reserve(maxCol);
 
-            for (size_t i = 0; i < maxCol; ++i) {
-                std::shared_ptr<arrow::Array> array;
-                auto status = builders[i]->Finish(&array);
-                if (!status.ok()) throw std::runtime_error(status.message());
-                arrays.push_back(array);
-            }
+        for (size_t i = 0; i < maxCol; ++i) {
+            std::shared_ptr<arrow::Array> array;
+            auto status = builders[i]->Finish(&array);
+            if (!status.ok()) throw std::runtime_error(status.message());
+            arrays.push_back(array);
+        }
 
-            auto schema = arrow::schema(fields);
-            return DataFrame(arrow::Table::Make(schema, arrays));
+        auto schema = arrow::schema(fields);
+        return DataFrame(arrow::Table::Make(schema, arrays));
 
         } catch (const std::exception& e) {
             throw std::runtime_error("Error processing Excel file: " + std::string(e.what()));
@@ -409,3 +432,4 @@ namespace TinaToolBox {
         }
     }
 }
+*/
