@@ -84,19 +84,23 @@ TEST_F(ThreadPoolTest, ExceptionHandling) {
 }
 
 TEST_F(ThreadPoolTest, StressTest) {
-    ThreadPool pool(4);
+    ThreadPool pool(std::thread::hardware_concurrency());  // 使用所有可用核心
     const int NUM_TASKS = 10000;
     std::atomic<int> counter{0};
 
     auto start = std::chrono::high_resolution_clock::now();
 
+    // 使用批量提交而不是单个提交
+    std::vector<std::function<void()>> tasks;
+    tasks.reserve(NUM_TASKS);
     for (int i = 0; i < NUM_TASKS; ++i) {
-        pool.post([&counter] {
+        tasks.emplace_back([&counter] {
             ++counter;
             std::this_thread::sleep_for(1us);
         });
     }
-
+    
+    pool.batch_post(tasks.begin(), tasks.end());
     pool.waitForAll();
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -107,13 +111,13 @@ TEST_F(ThreadPoolTest, StressTest) {
 }
 
 TEST_F(ThreadPoolTest, ConcurrentAccess) {
-    ThreadPool pool(4);
+    ThreadPool pool(8);
     std::vector<std::future<void> > futures;
     std::atomic<int> counter{0};
     constexpr int NUM_TASKS = 1000;
 
     // 同时提交多个任务
-    futures.reserve(4);
+    futures.reserve(8);
     for (int i = 0; i < 4; ++i) {
         futures.push_back(std::async(std::launch::async, [&] {
             for (int j = 0; j < NUM_TASKS; ++j) {
