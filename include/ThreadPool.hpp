@@ -63,17 +63,7 @@ namespace TinaToolBox {
         };
 
     private:
-        struct Task;
-
-        // 工作线程本地数据
-        struct WorkerData {
-            std::deque<Task> local_queue; // 每个线程的本地任务队列
-            std::mutex local_mutex; // 本地队列的互斥锁
-            std::condition_variable local_condition_variable;
-            size_t worker_id{}; // 工作线程ID
-            std::atomic_size_t tasks_processed{0}; // 已处理任务计数
-        };
-
+        
         struct Task {
             std::packaged_task<void()> task;
             TaskPriority priority;
@@ -96,7 +86,16 @@ namespace TinaToolBox {
                 return created_time < other.created_time;
             }
         };
-
+        
+        // 工作线程本地数据
+        struct WorkerData {
+            std::deque<Task> local_queue; // 每个线程的本地任务队列
+            std::mutex local_mutex; // 本地队列的互斥锁
+            std::condition_variable local_condition_variable;
+            size_t worker_id{}; // 工作线程ID
+            std::atomic_size_t tasks_processed{0}; // 已处理任务计数
+        };
+        
         // 使用透明比较器
         using TaskQueue = std::priority_queue<Task, std::vector<Task>, std::greater<> >;
 
@@ -120,7 +119,12 @@ namespace TinaToolBox {
                 std::unique_lock<std::mutex> lock(mutex_);
                 is_active_ = false;
             }
+            // 通知所有条件变量
             condition_variable_.notify_all();
+            for (auto &worker: worker_data_) {
+                worker->local_condition_variable.notify_one();
+            }
+
             for (auto &worker: workers_) {
                 if (worker.joinable()) {
                     worker.join();
@@ -138,11 +142,16 @@ namespace TinaToolBox {
             static_assert(std::is_invocable_v<std::decay_t<Fn> >,
                           "Function must be invocable without arguments");
 
-            std::packaged_task<void()> packagedTask(std::forward<Fn>(func)); {
-                std::unique_lock<std::mutex> lock(mutex_);
-                pending_tasks_.emplace(std::move(packagedTask), priority);
+            std::packaged_task<void()> packagedTask(std::forward<Fn>(func));
+            size_t worker_id = selectWorker();
+            auto &worker = *worker_data_[worker_id];
+            {
+                std::lock_guard<std::mutex> lock(worker.local_mutex);
+                worker.local_queue.emplace_back(Task(std::move(packagedTask), priority));
             }
-            condition_variable_.notify_one();
+
+            // 通知选中的工作线程
+            worker.local_condition_variable.notify_one();
         }
 
 
@@ -150,9 +159,9 @@ namespace TinaToolBox {
         template<class Fn>
         decltype(auto) post(std::tuple<use_future_tag, Fn> &&t, TaskPriority priority = TaskPriority::Normal) {
             auto &&[_, func] = std::move(t);
-            using return_type = std::invoke_result_t<std::decay_t<Fn> >;
+            using return_type = std::invoke_result_t<std::decay_t<Fn>>;
 
-            auto task = std::make_shared<std::packaged_task<return_type()> >(
+            auto task = std::make_shared<std::packaged_task<return_type()>>(
                 std::forward<Fn>(func)
             );
             auto future = task->get_future();
@@ -164,12 +173,30 @@ namespace TinaToolBox {
         // 批量提交任务
         template<typename Iterator>
         void batch_post(Iterator begin, Iterator end, TaskPriority priority = TaskPriority::Normal) {
-            std::unique_lock<std::mutex> lock(mutex_);
-            for (auto it = begin; it != end; ++it) {
-                pending_tasks_.emplace(std::packaged_task<void()>(*it), priority);
+            // 将任务平均分配给工作线程
+            const size_t total_tasks = std::distance(begin, end);
+            const size_t tasks_per_thread = total_tasks / worker_data_.size();
+
+            auto it = begin;
+            for (size_t i = 0; i < worker_data_.size() && it != end; ++i) {
+                auto &worker = *worker_data_[i];
+                std::lock_guard<std::mutex> lock(worker.local_mutex);
+
+                // 为每个线程分配任务
+                for (size_t j = 0; j < tasks_per_thread && it != end; ++j, ++it) {
+                    worker.local_queue.emplace_back(std::packaged_task<void()>(*it), priority);
+                }
+                worker.local_condition_variable.notify_one();
             }
-            lock.unlock();
-            condition_variable_.notify_all();
+
+            // 处理剩余任务
+            if (it != end) {
+                std::lock_guard<std::mutex> lock(mutex_);
+                for (; it != end; ++it) {
+                    pending_tasks_.emplace(std::packaged_task<void()>(*it), priority);
+                }
+                condition_variable_.notify_all();
+            }
         }
 
         // 等待所有任务完成
@@ -207,67 +234,91 @@ namespace TinaToolBox {
         }
 
     private:
+        
+        // 工作线程选择策略
+        size_t selectWorker() {
+            // 简单的轮询策略
+            return next_worker_++ % worker_data_.size();
+        }
+        
         // 工作窃取
         Task stealTask(size_t worker_id) {
+            using namespace std::chrono_literals;
+            const auto timeout = 100ms; // 设置合适的超时时间
+
             for (size_t i = 0; i < workers_.size(); ++i) {
                 if (i == worker_id) continue;
 
-                std::lock_guard<std::mutex> lock(worker_data_[i]->local_mutex);
-                if (!worker_data_[i]->local_queue.empty()) {
-                    Task task = std::move(worker_data_[i]->local_queue.front());
-                    worker_data_[i]->local_queue.pop_front();
+                auto &victim = *worker_data_[i];
+                std::unique_lock<std::mutex> lock(victim.local_mutex, std::try_to_lock);
+                if (lock && !victim.local_queue.empty()) {
+                    Task task = std::move(victim.local_queue.front());
+                    victim.local_queue.pop_front();
                     ++stats_.tasks_stolen;
                     return task;
                 }
             }
-            return Task(std::packaged_task<void()>{}, TaskPriority::Normal);
+            return {};
         }
 
         void workerThread(size_t worker_id) {
             auto &local_data = *worker_data_[worker_id];
 
-            while (true) {
+            while (is_active_) {
                 Task task; {
-                    std::unique_lock<std::mutex> lock(mutex_);
-                    condition_variable_.wait(lock, [this] {
-                        return !is_active_ || !pending_tasks_.empty();
+                    // 首先尝试从本地队列获取任务
+                    std::unique_lock<std::mutex> local_lock(local_data.local_mutex);
+
+                    // 使用local_condition_variable等待任务
+                    local_data.local_condition_variable.wait(local_lock, [&]() {
+                        std::lock_guard<std::mutex> global_lock(mutex_); // 检查全局队列时需要加锁
+                        return !is_active_ || !local_data.local_queue.empty() || !pending_tasks_.empty();
+                        // 这里需要加锁检查pending_tasks_
                     });
 
-                    if (!is_active_ && pending_tasks_.empty()) {
+                    if (!is_active_ && local_data.local_queue.empty()) {
                         return;
                     }
 
-                    // 优先处理全局队列中的高优先级任务
-                    if (!pending_tasks_.empty()) {
-                        task = std::move(const_cast<Task &>(pending_tasks_.top()));
-                        pending_tasks_.pop();
-                    } else {
-                        // 尝试从其他线程窃取任务
-                        task = stealTask(worker_id);
-                        if (!task.task.valid()) {
-                            continue;
-                        }
+                    if (!local_data.local_queue.empty()) {
+                        task = std::move(local_data.local_queue.front());
+                        local_data.local_queue.pop_front();
                     }
                 }
 
-                // 执行任务并记录统计信息
-                ++active_tasks_;
-                auto start_time = std::chrono::steady_clock::now();
-
-                try {
-                    task.task();
-                    ++stats_.tasks_completed;
-                    ++local_data.tasks_processed;
-                } catch (...) {
-                    ++stats_.tasks_failed;
+                // 如果本地队列没有任务，尝试从全局队列获取
+                if (!task.task.valid()) {
+                    std::unique_lock<std::mutex> global_lock(mutex_);
+                    if (!pending_tasks_.empty()) {
+                        task = std::move(const_cast<Task &>(pending_tasks_.top()));
+                        pending_tasks_.pop();
+                    }
                 }
 
-                auto end_time = std::chrono::steady_clock::now();
-                stats_.total_task_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    end_time - start_time).count();
+                // 如果还是没有任务，尝试窃取
+                if (!task.task.valid()) {
+                    task = stealTask(worker_id);
+                }
 
-                --active_tasks_;
-                condition_variable_.notify_all();
+                // 如果获取到任务，执行它
+                if (task.task.valid()) {
+                    ++active_tasks_;
+                    auto start_time = std::chrono::steady_clock::now();
+
+                    try {
+                        task.task();
+                        ++stats_.tasks_completed;
+                        ++local_data.tasks_processed;
+                    } catch (...) {
+                        ++stats_.tasks_failed;
+                    }
+
+                    auto end_time = std::chrono::steady_clock::now();
+                    stats_.total_task_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        end_time - start_time).count();
+
+                    --active_tasks_;
+                }
             }
         }
 
@@ -277,6 +328,7 @@ namespace TinaToolBox {
         std::condition_variable condition_variable_;
         TaskQueue pending_tasks_;
         std::atomic_size_t active_tasks_{0};
+        std::atomic_size_t next_worker_{0};
         std::vector<std::unique_ptr<WorkerData> > worker_data_;
         PoolStats stats_;
     };
