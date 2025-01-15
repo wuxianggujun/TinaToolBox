@@ -1,61 +1,44 @@
 #include "ThreadPool.hpp"
 
 namespace TinaToolBox {
-    void ThreadPool::workerThread(size_t id) {
+    void ThreadPool::workerThread() {
         while (true) {
-            Task task;
-            bool has_task = false;
-            
-            // 首先检查本地队列
+            std::vector<Task> tasks;
             {
-                std::unique_lock<std::mutex> lock(mutex_);
-                if (!local_queues_[id].empty()) {
-                    task = std::move(local_queues_[id].front());
-                    local_queues_[id].pop_front();
-                    has_task = true;
-                }
-            }
-            
-            // 如果本地队列为空，尝试从其他线程窃取任务
-            if (!has_task) {
-                std::unique_lock<std::mutex> lock(mutex_);
-                condition_.wait(lock, [this, id, &task, &has_task] {
-                    if (!is_active_) return true;
-                    
-                    // 检查所有队列
-                    for (size_t i = 0; i < local_queues_.size(); ++i) {
-                        if (!local_queues_[i].empty()) {
-                            task = std::move(local_queues_[i].front());
-                            local_queues_[i].pop_front();
-                            has_task = true;
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                
-                if (!is_active_ && !has_task) {
+                std::unique_lock<std::mutex> lock(queue_mutex_);
+                condition_.wait(lock, [this] { return !task_queue_.empty() || !is_active_; });
+
+                if (!is_active_ && task_queue_.empty()) {
                     return;
                 }
+
+                // 批量取出任务
+                for (size_t i = 0; i < BATCH_SIZE && !task_queue_.empty(); ++i) {
+                    tasks.push_back(std::move(task_queue_.front()));
+                    task_queue_.pop();
+                }
+                active_tasks_ += tasks.size(); // 只有在真正取出任务后才增加 active_tasks_
             }
 
-            if (has_task) {
-                ++active_tasks_;
+            for (auto& task : tasks) {
                 auto start = std::chrono::steady_clock::now();
-
                 try {
-                    task.task();
+                    task.func();
                     ++stats_.tasks_completed;
                 } catch (...) {
                     ++stats_.tasks_failed;
                 }
-
                 auto end = std::chrono::steady_clock::now();
-                stats_.total_task_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    end - start).count();
-
-                --active_tasks_;
-                condition_.notify_all();
+                stats_.total_task_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+                
+                {
+                    std::unique_lock<std::mutex> lock(queue_mutex_);
+                    --active_tasks_;
+                    // 如果线程池正在等待所有任务完成，并且当前没有活动任务，则通知主线程
+                    if (waiting_for_all_ && active_tasks_ == 0 && task_queue_.empty()) {
+                        condition_.notify_all();
+                    }
+                }
             }
         }
     }

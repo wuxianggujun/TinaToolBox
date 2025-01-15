@@ -1,13 +1,12 @@
 #pragma once
 #include <atomic>
 #include <condition_variable>
-#include <deque>
 #include <functional>
 #include <future>
-#include <mutex>
 #include <queue>
 #include <thread>
 #include <vector>
+#include <mutex>
 
 namespace TinaToolBox {
     struct use_future_tag {};
@@ -35,41 +34,40 @@ namespace TinaToolBox {
 
     private:
         struct Task {
-            std::packaged_task<void()> task;
+            std::function<void()> func;
             TaskPriority priority;
 
             Task() : priority(TaskPriority::Normal) {}
 
-            explicit Task(std::packaged_task<void()> t, TaskPriority p = TaskPriority::Normal)
-                : task(std::move(t)), priority(p) {}
+            explicit Task(std::function<void()> f, TaskPriority p = TaskPriority::Normal)
+                : func(std::move(f)), priority(p) {}
 
             bool operator>(const Task& other) const {
                 return priority > other.priority;
             }
         };
 
-        static constexpr size_t TASK_BATCH_SIZE = 32;
-        
         std::atomic_bool is_active_{true};
+        std::atomic_bool waiting_for_all_{false}; // 用于标记是否等待所有任务完成
         std::vector<std::thread> workers_;
-        mutable std::mutex mutex_;
+        std::queue<Task> task_queue_;
+        std::mutex queue_mutex_;
         std::condition_variable condition_;
-        std::vector<std::deque<Task>> local_queues_;
         std::atomic_size_t active_tasks_{0};
         PoolStats stats_{};
+        static constexpr size_t BATCH_SIZE = 100; // 每次处理的任务数量
 
     public:
-        explicit ThreadPool(size_t threads = std::thread::hardware_concurrency()) 
-            : local_queues_(threads) {
+        explicit ThreadPool(size_t threads = std::thread::hardware_concurrency()) {
             workers_.reserve(threads);
             for (size_t i = 0; i < threads; ++i) {
-                workers_.emplace_back(&ThreadPool::workerThread, this, i);
+                workers_.emplace_back(&ThreadPool::workerThread, this);
             }
         }
 
         ~ThreadPool() {
             {
-                std::lock_guard<std::mutex> lock(mutex_);
+                std::unique_lock<std::mutex> lock(queue_mutex_);
                 is_active_ = false;
             }
             condition_.notify_all();
@@ -87,62 +85,45 @@ namespace TinaToolBox {
 
         template<class F>
         void post(F&& f, TaskPriority priority = TaskPriority::Normal) {
-            static std::atomic<size_t> index{0};
-            auto worker_id = index++ % workers_.size();
-            
-            Task task(std::packaged_task<void()>(std::forward<F>(f)), priority);
             {
-                std::lock_guard<std::mutex> lock(mutex_);
-                local_queues_[worker_id].push_back(std::move(task));
+                std::unique_lock<std::mutex> lock(queue_mutex_);
+                task_queue_.push(Task(std::forward<F>(f), priority));
             }
             condition_.notify_one();
         }
 
         template<typename Iterator>
         void batch_post(Iterator begin, Iterator end, TaskPriority priority = TaskPriority::Normal) {
-            const size_t total_tasks = std::distance(begin, end);
-            const size_t tasks_per_thread = (total_tasks + workers_.size() - 1) / workers_.size();
-            
-            auto it = begin;
-            for (size_t i = 0; i < workers_.size() && it != end; ++i) {
-                size_t count = 0;
-                {
-                    std::lock_guard<std::mutex> lock(mutex_);
-                    while (count < tasks_per_thread && it != end) {
-                        local_queues_[i].emplace_back(std::packaged_task<void()>(*it), priority);
-                        ++it;
-                        ++count;
-                    }
+            {
+                std::unique_lock<std::mutex> lock(queue_mutex_);
+                for (auto it = begin; it != end; ++it) {
+                    task_queue_.push(Task(*it, priority));
                 }
-                condition_.notify_one();
             }
+            condition_.notify_all();
         }
 
         void waitForAll() {
-            std::unique_lock<std::mutex> lock(mutex_);
-            condition_.wait(lock, [this] {
-                // 检查所有本地队列是否为空
-                for (const auto& queue : local_queues_) {
-                    if (!queue.empty()) return false;
-                }
-                return active_tasks_ == 0;
-            });
+            waiting_for_all_ = true; // 设置等待所有任务完成的标记
+            std::unique_lock<std::mutex> lock(queue_mutex_);
+            condition_.wait(lock, [this] { return task_queue_.empty() && active_tasks_ == 0; });
+            waiting_for_all_ = false; // 重置标记
         }
 
     private:
-        void workerThread(size_t id);
+        void workerThread();
     };
 
     template<class Fn>
     auto post(ThreadPool& pool, std::tuple<use_future_tag, Fn>&& t) {
         auto&& [_, func] = std::move(t);
         using return_type = std::invoke_result_t<std::decay_t<Fn>>;
-        
+
         auto task = std::make_shared<std::packaged_task<return_type()>>(
             std::forward<Fn>(func)
         );
         auto future = task->get_future();
-        
+
         pool.post([task]() { (*task)(); });
         return future;
     }

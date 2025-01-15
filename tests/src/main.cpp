@@ -96,7 +96,6 @@ TEST_F(ThreadPoolTest, StressTest) {
     for (int i = 0; i < NUM_TASKS; ++i) {
         tasks.emplace_back([&counter] {
             ++counter;
-            std::this_thread::sleep_for(1us);
         });
     }
     
