@@ -12,7 +12,7 @@ template <typename T>
 class ThreadSafeQueue {
 public:
     // 使用 priority_queue 作为内部容器
-    using PriorityQueue = std::priority_queue<T, std::vector<T>, std::less<T>>;
+    using PriorityQueue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
     bool empty() const {
         std::lock_guard<std::mutex> lock{_queue_mutex};

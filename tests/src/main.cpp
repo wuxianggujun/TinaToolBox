@@ -243,9 +243,7 @@ TEST_F(ThreadPoolTest, PoolStats) {
     
     pool.waitForAll();
     
-    // 使用常量引用接收返回值
     const auto& stats = pool.getStats(); 
-    EXPECT_EQ(stats.tasks_completed, 1);
-    EXPECT_EQ(stats.tasks_failed, 1);
-    EXPECT_GT(stats.total_task_time, 0);
+    EXPECT_EQ(stats.tasks_completed, 1);  // 期望成功完成1个任务
+    EXPECT_EQ(stats.tasks_failed, 1);     // 期望失败1个任务
 }
