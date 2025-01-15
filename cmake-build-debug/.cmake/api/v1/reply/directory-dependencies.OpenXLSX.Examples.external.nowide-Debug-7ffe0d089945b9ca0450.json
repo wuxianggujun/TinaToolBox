@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "dependencies/OpenXLSX/Examples/external/nowide",
+		"source" : "dependencies/OpenXLSX/Examples/external/nowide"
+	}
+}

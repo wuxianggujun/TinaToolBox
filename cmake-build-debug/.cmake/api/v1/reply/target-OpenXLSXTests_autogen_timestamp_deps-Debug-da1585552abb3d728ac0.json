@@ -1,0 +1,34 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"dependencies/OpenXLSX/Tests/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 0,
+			"id" : "OpenXLSX::@8015af6a4db743a4e4b9"
+		}
+	],
+	"id" : "OpenXLSXTests_autogen_timestamp_deps::@061e6f237eab97b86c77",
+	"isGeneratorProvided" : true,
+	"name" : "OpenXLSXTests_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "dependencies/OpenXLSX/Tests",
+		"source" : "dependencies/OpenXLSX/Tests"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

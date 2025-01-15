@@ -1,0 +1,27 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"dependencies/cpp-terminal/cpp-terminal/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"id" : "cpp-terminal_autogen_timestamp_deps::@f378018f0f414173b3c4",
+	"isGeneratorProvided" : true,
+	"name" : "cpp-terminal_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "dependencies/cpp-terminal/cpp-terminal",
+		"source" : "dependencies/cpp-terminal/cpp-terminal"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

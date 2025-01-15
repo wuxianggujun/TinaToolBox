@@ -1,0 +1,219 @@
+{
+	"AUTOGEN_COMMAND_LINE_LENGTH_MAX" : 32000,
+	"BUILD_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX/OpenXLSX_autogen",
+	"CMAKE_BINARY_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX",
+	"CMAKE_EXECUTABLE" : "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/CMakeLists.txt",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCompilerFlag.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSourceCompiles.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCCompilerFlag.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCSourceCompiles.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/exportheader.cmake.in",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GNUInstallDirs.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakePackageConfigHelpers.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/WriteBasicConfigVersionFile.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/OpenXLSXConfig.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX/OpenXLSX_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "OpenXLSX_autogen/timestamp",
+	"HEADERS" : [],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX/OpenXLSX_autogen/include",
+	"MOC_COMPILATION_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX/OpenXLSX_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"ANTLR4CPP_STATIC",
+		"CHARCONV_ENABLED",
+		"ENABLE_NOWIDE",
+		"OPENXLSX_STATIC_DEFINE",
+		"WIN32"
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime/runtime/Cpp/runtime/src",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/external/zippy",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/external/pugixml",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/external/nowide"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 4,
+	"PARSE_CACHE_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX/CMakeFiles/OpenXLSX_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "D:/Programs/Qt/6.8.0/msvc2022_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "D:/Programs/Qt/6.8.0/msvc2022_64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 8,
+	"SETTINGS_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/OpenXLSX/CMakeFiles/OpenXLSX_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLCell.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLCellIterator.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLCellRange.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLCellReference.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLCellValue.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLColor.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLColumn.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLComments.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLContentTypes.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLDateTime.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLDocument.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLFormula.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLMergeCells.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLProperties.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLRelationships.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLRow.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLRowData.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLSharedStrings.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLSheet.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLStyles.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLWorkbook.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLXmlData.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLXmlFile.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLXmlParser.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/sources/XLZipArchive.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [ "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/ui" ],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

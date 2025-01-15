@@ -1,0 +1,363 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						13
+					]
+				},
+				{
+					"build" : "OpenXLSX-build",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4,
+						6
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-OpenXLSX-build-Debug-51090c7c27666b3dcee9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX"
+				},
+				{
+					"build" : "OpenXLSX-build/OpenXLSX",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-OpenXLSX-build.OpenXLSX-Debug-7f45b15385ca3e6e654b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX",
+					"targetIndexes" : 
+					[
+						11
+					]
+				},
+				{
+					"build" : "OpenXLSX-build/Documentation",
+					"jsonFile" : "directory-OpenXLSX-build.Documentation-Debug-03574ccd45a314da4a48.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 3,
+					"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Documentation",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "OpenXLSX-build/Examples",
+					"childIndexes" : 
+					[
+						5
+					],
+					"jsonFile" : "directory-OpenXLSX-build.Examples-Debug-964209c05d84452a2f32.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 4,
+					"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					]
+				},
+				{
+					"build" : "OpenXLSX-build/Examples/external/nowide",
+					"jsonFile" : "directory-OpenXLSX-build.Examples.external.nowide-Debug-ef338aee409c5dbde128.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.9"
+					},
+					"parentIndex" : 4,
+					"projectIndex" : 5,
+					"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide",
+					"targetIndexes" : 
+					[
+						14
+					]
+				},
+				{
+					"build" : "OpenXLSX-build/Tests",
+					"jsonFile" : "directory-OpenXLSX-build.Tests-Debug-a815990fd94b0a0881fb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 6,
+					"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Tests",
+					"targetIndexes" : 
+					[
+						12
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "TinaToolBoxTests",
+					"targetIndexes" : 
+					[
+						13
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4,
+						6
+					],
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "OpenXLSX",
+					"parentIndex" : 0
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "OpenXLSX.Library",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						11
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "OpenXLSX.Documentation",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						5
+					],
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "OpenXLSX.Examples",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "nowide",
+					"parentIndex" : 4,
+					"targetIndexes" : 
+					[
+						14
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						6
+					],
+					"name" : "OpenXLSX.Tests",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						12
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo1::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo1-Debug-af117f64a7115583eeb8.json",
+					"name" : "Demo1",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo10::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo10-Debug-7007db3387dd9deaee8c.json",
+					"name" : "Demo10",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo2::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo2-Debug-1a3bb43e33ad0c984390.json",
+					"name" : "Demo2",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo3::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo3-Debug-41f076ecd86c56cae1b7.json",
+					"name" : "Demo3",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo4::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo4-Debug-8b730ffb875378816c21.json",
+					"name" : "Demo4",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo5::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo5-Debug-bd80ed4b621eb8e6184e.json",
+					"name" : "Demo5",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo6::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo6-Debug-10f70189654b086300c2.json",
+					"name" : "Demo6",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo7::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo7-Debug-4b1a88d7827cd10cb505.json",
+					"name" : "Demo7",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo8::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo8-Debug-8dfb8fcf0e5224cf6065.json",
+					"name" : "Demo8",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Demo9::@331e1352f884e95110b9",
+					"jsonFile" : "target-Demo9-Debug-8dacbe2963c38b9ee31a.json",
+					"name" : "Demo9",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "Documentation::@58ff3ced4d7469f7c70a",
+					"jsonFile" : "target-Documentation-Debug-34a015427c90707e85d7.json",
+					"name" : "Documentation",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "OpenXLSX::@dab146740d88be4d3a01",
+					"jsonFile" : "target-OpenXLSX-Debug-6fb257573fd71ae66484.json",
+					"name" : "OpenXLSX",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "OpenXLSXTests::@886c056af776b5509a64",
+					"jsonFile" : "target-OpenXLSXTests-Debug-66bd7f836096ac43d383.json",
+					"name" : "OpenXLSXTests",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "TinaToolBoxTests::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-TinaToolBoxTests-Debug-8ced840e0eefeb0836e8.json",
+					"name" : "TinaToolBoxTests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "nowide::@0ebbf11a83baebb715a2",
+					"jsonFile" : "target-nowide-Debug-a6f28082b9d94c8b8492.json",
+					"name" : "nowide",
+					"projectIndex" : 5
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/tests/cmake-build-debug",
+		"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/tests"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

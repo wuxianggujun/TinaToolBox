@@ -1,0 +1,214 @@
+{
+	"AUTOGEN_COMMAND_LINE_LENGTH_MAX" : 32000,
+	"BUILD_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide/nowide_autogen",
+	"CMAKE_BINARY_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide",
+	"CMAKE_EXECUTABLE" : "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/CMakeLists.txt",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/cmake/NowideAddWarnings.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide/nowide_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "nowide_autogen/timestamp",
+	"HEADERS" : 
+	[
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/args.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_args.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/config.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_config.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/convert.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_convert.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/cstdio.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_cstdio.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/cstdlib.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_cstdlib.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/detail/convert.hpp",
+			"MU",
+			"2CMTKFAIMV/moc_convert.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/detail/is_path.hpp",
+			"MU",
+			"2CMTKFAIMV/moc_is_path.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/detail/is_string_container.hpp",
+			"MU",
+			"2CMTKFAIMV/moc_is_string_container.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/detail/utf.hpp",
+			"MU",
+			"2CMTKFAIMV/moc_utf.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/filebuf.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_filebuf.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/filesystem.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_filesystem.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/fstream.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_fstream.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/iostream.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_iostream.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/replacement.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_replacement.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/stackstring.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_stackstring.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/stat.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_stat.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/utf/convert.hpp",
+			"MU",
+			"5QFQEH4ZWI/moc_convert.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/utf/utf.hpp",
+			"MU",
+			"5QFQEH4ZWI/moc_utf.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/utf8_codecvt.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_utf8_codecvt.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include/nowide/windows.hpp",
+			"MU",
+			"6J4FLTB6SB/moc_windows.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide/nowide_autogen/include",
+	"MOC_COMPILATION_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide/nowide_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [ "ANTLR4CPP_STATIC", "NOWIDE_NO_LIB", "WIN32" ],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime/runtime/Cpp/runtime/src",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 4,
+	"PARSE_CACHE_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide/CMakeFiles/nowide_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "D:/Programs/Qt/6.8.0/msvc2022_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "D:/Programs/Qt/6.8.0/msvc2022_64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 8,
+	"SETTINGS_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/OpenXLSX/Examples/external/nowide/CMakeFiles/nowide_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/src/cstdio.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/src/cstdlib.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/src/filebuf.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/src/iostream.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/src/stat.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [ "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/ui" ],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

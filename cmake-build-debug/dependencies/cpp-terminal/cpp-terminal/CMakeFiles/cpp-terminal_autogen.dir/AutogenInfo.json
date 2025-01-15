@@ -1,0 +1,438 @@
+{
+	"AUTOGEN_COMMAND_LINE_LENGTH_MAX" : 32000,
+	"BUILD_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/cpp-terminal_autogen",
+	"CMAKE_BINARY_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal",
+	"CMAKE_EXECUTABLE" : "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/CMakeLists.txt",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GNUInstallDirs.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakePackageConfigHelpers.cmake",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/WriteBasicConfigVersionFile.cmake",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cmake/cpp-terminalConfig.cmake.in",
+		"D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in"
+	],
+	"CMAKE_SOURCE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/cpp-terminal_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "cpp-terminal_autogen/timestamp",
+	"HEADERS" : 
+	[
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/args.hpp",
+			"MU",
+			"EWIEGA46WW/moc_args.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/buffer.hpp",
+			"MU",
+			"EWIEGA46WW/moc_buffer.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/color.hpp",
+			"MU",
+			"EWIEGA46WW/moc_color.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/cursor.hpp",
+			"MU",
+			"EWIEGA46WW/moc_cursor.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/event.hpp",
+			"MU",
+			"EWIEGA46WW/moc_event.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/focus.hpp",
+			"MU",
+			"EWIEGA46WW/moc_focus.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/iostream.hpp",
+			"MU",
+			"EWIEGA46WW/moc_iostream.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/iostream_initializer.hpp",
+			"MU",
+			"EWIEGA46WW/moc_iostream_initializer.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/key.hpp",
+			"MU",
+			"EWIEGA46WW/moc_key.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/mouse.hpp",
+			"MU",
+			"EWIEGA46WW/moc_mouse.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/options.hpp",
+			"MU",
+			"EWIEGA46WW/moc_options.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/blocking_queue.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_blocking_queue.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/conversion.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_conversion.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/env.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_env.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/exception.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_exception.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/file.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_file.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/file_initializer.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_file_initializer.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/input.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_input.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/return_code.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_return_code.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/signals.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_signals.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/sigwinch.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_sigwinch.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/unicode.hpp",
+			"MU",
+			"PGVKHOT7RA/moc_unicode.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/prompt.hpp",
+			"MU",
+			"EWIEGA46WW/moc_prompt.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/screen.hpp",
+			"MU",
+			"EWIEGA46WW/moc_screen.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/stream.hpp",
+			"MU",
+			"EWIEGA46WW/moc_stream.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/style.hpp",
+			"MU",
+			"EWIEGA46WW/moc_style.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/terminal.hpp",
+			"MU",
+			"EWIEGA46WW/moc_terminal.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/terminal_impl.hpp",
+			"MU",
+			"EWIEGA46WW/moc_terminal_impl.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/terminal_initializer.hpp",
+			"MU",
+			"EWIEGA46WW/moc_terminal_initializer.cpp",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/window.hpp",
+			"MU",
+			"EWIEGA46WW/moc_window.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/cpp-terminal_autogen/include",
+	"MOC_COMPILATION_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/cpp-terminal_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [ "ANTLR4CPP_STATIC", "WIN32" ],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime/runtime/Cpp/runtime/src",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal",
+		"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 4,
+	"PARSE_CACHE_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/CMakeFiles/cpp-terminal_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "D:/Programs/Qt/6.8.0/msvc2022_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "D:/Programs/Qt/6.8.0/msvc2022_64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 8,
+	"SETTINGS_FILE" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/CMakeFiles/cpp-terminal_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/private/version.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/args.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/buffer.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/color.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/cursor.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/event.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/focus.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/iostream.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/iostream_initializer.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/key.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/mouse.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/options.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/args.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/blocking_queue.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/conversion.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/cursor.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/env.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/exception.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/file.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/file_initializer.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/input.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/return_code.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/screen.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/signals.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/sigwinch.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/terminal_impl.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/terminfo.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/tty.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/private/unicode.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/prompt.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/screen.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/stream.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/style.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/terminal.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/terminal_impl.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/terminal_initializer.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/cpp-terminal/cpp-terminal/window.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [ "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/ui" ],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

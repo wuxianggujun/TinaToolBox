@@ -1,0 +1,163 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 285,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 291,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 296,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 302,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 322,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 341,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/OpenXLSX/headers",
+			"paths" : 
+			[
+				"cmake-build-debug/OpenXLSX-build/OpenXLSX/OpenXLSX-Exports.hpp"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/OpenXLSX/headers",
+			"paths" : 
+			[
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/IZipArchive.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLCell.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLCellIterator.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLCellRange.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLCellReference.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLCellValue.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLColor.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLColumn.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLCommandQuery.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLComments.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLConstants.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLContentTypes.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLDateTime.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLDocument.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLException.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLFormula.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLIterator.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLMergeCells.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLProperties.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLRelationships.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLRow.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLRowData.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLSharedStrings.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLSheet.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLStyles.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLWorkbook.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLXmlData.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLXmlFile.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLXmlParser.hpp",
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/headers/XLZipArchive.hpp"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "include/OpenXLSX",
+			"paths" : 
+			[
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/OpenXLSX.hpp"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "lib",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"output/OpenXLSXd.lib"
+			],
+			"targetId" : "OpenXLSX::@dab146740d88be4d3a01",
+			"targetIndex" : 11,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 5,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/OpenXLSX",
+			"paths" : 
+			[
+				"C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX/OpenXLSXConfig.cmake",
+				"cmake-build-debug/OpenXLSX-build/OpenXLSX/OpenXLSX/OpenXLSXConfigVersion.cmake"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 6,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/OpenXLSX",
+			"exportName" : "OpenXLSXTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "OpenXLSX::@dab146740d88be4d3a01",
+					"index" : 11
+				}
+			],
+			"paths" : 
+			[
+				"OpenXLSX-build/OpenXLSX/CMakeFiles/Export/c72cc94553a1a0c9b05f75dae42fb1d7/OpenXLSXTargets.cmake"
+			],
+			"type" : "export"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "OpenXLSX-build/OpenXLSX",
+		"source" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/OpenXLSX"
+	}
+}

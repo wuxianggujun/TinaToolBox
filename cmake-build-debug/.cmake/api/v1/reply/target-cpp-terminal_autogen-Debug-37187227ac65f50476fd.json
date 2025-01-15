@@ -1,0 +1,71 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"dependencies/cpp-terminal/cpp-terminal/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "cpp-terminal_autogen_timestamp_deps::@f378018f0f414173b3c4"
+		}
+	],
+	"id" : "cpp-terminal_autogen::@f378018f0f414173b3c4",
+	"isGeneratorProvided" : true,
+	"name" : "cpp-terminal_autogen",
+	"paths" : 
+	{
+		"build" : "dependencies/cpp-terminal/cpp-terminal",
+		"source" : "dependencies/cpp-terminal/cpp-terminal"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1,
+				2
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/CMakeFiles/cpp-terminal_autogen",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/CMakeFiles/cpp-terminal_autogen.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/dependencies/cpp-terminal/cpp-terminal/cpp-terminal_autogen/timestamp.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "UTILITY"
+}

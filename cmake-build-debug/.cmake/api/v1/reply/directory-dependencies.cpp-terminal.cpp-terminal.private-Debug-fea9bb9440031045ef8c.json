@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "dependencies/cpp-terminal/cpp-terminal/private",
+		"source" : "dependencies/cpp-terminal/cpp-terminal/private"
+	}
+}

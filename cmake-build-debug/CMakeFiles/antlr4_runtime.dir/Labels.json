@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/antlr4_runtime"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/antlr4_runtime.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/antlr4_runtime-complete.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-build.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-configure.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-download.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-install.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-mkdir.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-patch.rule"
+		},
+		{
+			"file" : "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/antlr4_runtime/src/antlr4_runtime-stamp/antlr4_runtime-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"antlr4_runtime"
+		],
+		"name" : "antlr4_runtime"
+	}
+}

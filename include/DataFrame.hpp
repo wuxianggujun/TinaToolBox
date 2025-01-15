@@ -11,6 +11,7 @@
 #include <arrow/table.h>
 #include <thread>
 #include <mutex>
+#include <ThreadPool.hpp>
 
 
 namespace TinaToolBox {
@@ -56,7 +57,10 @@ namespace TinaToolBox {
         [[nodiscard]] std::shared_ptr<arrow::Schema> schema() const { return table_ ? table_->schema() : nullptr; }
     private:
         std::shared_ptr<arrow::Table> table_;
-        
+        static ThreadPool& getThreadPool() {
+            static ThreadPool pool;  // 单例线程池
+            return pool;
+        }
         // 将 appendBatch 改为非静态成员函数
        static void appendBatch(std::shared_ptr<arrow::ArrayBuilder>& builder,
                         const std::vector<std::variant<std::string, double, int64_t>>& batch,

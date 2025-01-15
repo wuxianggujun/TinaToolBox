@@ -1,0 +1,14 @@
+# Target labels
+ arrow-populate
+# Source files and their labels
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/CMakeFiles/arrow-populate
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/CMakeFiles/arrow-populate.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/CMakeFiles/arrow-populate-complete.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-build.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-configure.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-download.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-install.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-mkdir.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-patch.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-test.rule
+C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-subbuild/arrow-populate-prefix/src/arrow-populate-stamp/arrow-populate-update.rule

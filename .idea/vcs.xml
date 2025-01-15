@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/apachearrow-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/apachearrow-src/cpp/submodules/parquet-testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/apachearrow-src/testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/arrow-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/arrow-src/cpp/submodules/parquet-testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/arrow-src/testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/OpenXLSX" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/antlr4" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/corrosion" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/cpp-terminal" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/tomlplusplus" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/utfcpp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dependencies/utfcpp/extern/ftest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/out/build/x64-Debug/_deps/apachearrow-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/out/build/x64-Debug/_deps/apachearrow-src/cpp/submodules/parquet-testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/out/build/x64-Debug/_deps/apachearrow-src/testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/out/build/x64-Debug/_deps/arrow-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/out/build/x64-Debug/_deps/arrow-src/cpp/submodules/parquet-testing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/out/build/x64-Debug/_deps/arrow-src/testing" vcs="Git" />
+  </component>
+</project>

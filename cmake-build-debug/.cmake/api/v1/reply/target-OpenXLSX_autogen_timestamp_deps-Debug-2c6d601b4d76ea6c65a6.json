@@ -1,0 +1,31 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"dependencies/OpenXLSX/OpenXLSX/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"folder" : 
+	{
+		"name" : "libs"
+	},
+	"id" : "OpenXLSX_autogen_timestamp_deps::@8015af6a4db743a4e4b9",
+	"isGeneratorProvided" : true,
+	"name" : "OpenXLSX_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "dependencies/OpenXLSX/OpenXLSX",
+		"source" : "dependencies/OpenXLSX/OpenXLSX"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

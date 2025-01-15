@@ -1,0 +1,930 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:6 (project)"
+    message: |
+      The system is: Windows - 10.0.26100 - AMD64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:6 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: D:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.42.34433/bin/Hostx86/x64/cl.exe 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      用于 x64 的 Microsoft (R) C/C++ 优化编译器 19.42.34435 版
+      版权所有(C) Microsoft Corporation。保留所有权利。
+      
+      CMakeCXXCompilerId.cpp
+      Microsoft (R) Incremental Linker Version 14.42.34435.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      
+      /out:CMakeCXXCompilerId.exe 
+      CMakeCXXCompilerId.obj 
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.exe"
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.obj"
+      
+      The CXX compiler identification is MSVC, found in:
+        C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/3.30.5/CompilerIdCXX/CMakeCXXCompilerId.exe
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:1243 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:6 (project)"
+    message: |
+      Detecting CXX compiler /showIncludes prefix:
+        main.c
+        注意: 包含文件:  C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\ShowIncludes\\foo.h
+        
+      Found prefix "注意: 包含文件:  "
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:6 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-zthjpl"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-zthjpl"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-zthjpl'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_40544\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_40544.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_40544.dir\\build
+        Building CXX object CMakeFiles/cmTC_40544.dir/CMakeCXXCompilerABI.cpp.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_40544.dir\\CMakeCXXCompilerABI.cpp.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-zthjpl --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmF608.tmp
+        CMakeCXXCompilerABI.cpp
+        Linking CXX executable cmTC_40544.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_40544.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_40544.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmFD8B.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_40544.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_40544.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_40544.dir/manifest.res CMakeFiles\\cmTC_40544.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_40544.dir\\objects1.rsp /out:cmTC_40544.exe /implib:cmTC_40544.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-zthjpl\\cmTC_40544.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_40544.dir/intermediate.manifest CMakeFiles\\cmTC_40544.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_40544.dir/intermediate.manifest /out:CMakeFiles\\cmTC_40544.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_40544.dir/manifest.res CMakeFiles\\cmTC_40544.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_40544.dir\\objects1.rsp /out:cmTC_40544.exe /implib:cmTC_40544.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-zthjpl\\cmTC_40544.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_40544.dir/intermediate.manifest CMakeFiles\\cmTC_40544.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:6 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'CXX': D:/PROGRA~2/MICROS~1/2022/PROFES~1/VC/Tools/MSVC/1442~1.344/bin/Hostx86/x64/link.exe
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:6 (project)"
+    message: |
+      Running the CXX compiler's linker: "D:/PROGRA~2/MICROS~1/2022/PROFES~1/VC/Tools/MSVC/1442~1.344/bin/Hostx86/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.42.34435.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:103 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: D:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.42.34433/bin/Hostx86/x64/cl.exe 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      用于 x64 的 Microsoft (R) C/C++ 优化编译器 19.42.34435 版
+      版权所有(C) Microsoft Corporation。保留所有权利。
+      
+      CMakeCCompilerId.c
+      Microsoft (R) Incremental Linker Version 14.42.34435.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      
+      /out:CMakeCCompilerId.exe 
+      CMakeCCompilerId.obj 
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.exe"
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.obj"
+      
+      The C compiler identification is MSVC, found in:
+        C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/3.30.5/CompilerIdC/CMakeCCompilerId.exe
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:1243 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:103 (project)"
+    message: |
+      Detecting C compiler /showIncludes prefix:
+        main.c
+        注意: 包含文件:  C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\ShowIncludes\\foo.h
+        
+      Found prefix "注意: 包含文件:  "
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:103 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-exz9zm"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-exz9zm"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/cmake_modules"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-exz9zm'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_f6374\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_f6374.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_f6374.dir\\build
+        Building C object CMakeFiles/cmTC_f6374.dir/CMakeCCompilerABI.c.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_f6374.dir\\CMakeCCompilerABI.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-exz9zm --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm91A.tmp
+        CMakeCCompilerABI.c
+        Linking C executable cmTC_f6374.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_f6374.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_f6374.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmCC4.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_f6374.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_f6374.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_f6374.dir/manifest.res CMakeFiles\\cmTC_f6374.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_f6374.dir\\objects1.rsp /out:cmTC_f6374.exe /implib:cmTC_f6374.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-exz9zm\\cmTC_f6374.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_f6374.dir/intermediate.manifest CMakeFiles\\cmTC_f6374.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_f6374.dir/intermediate.manifest /out:CMakeFiles\\cmTC_f6374.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_f6374.dir/manifest.res CMakeFiles\\cmTC_f6374.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_f6374.dir\\objects1.rsp /out:cmTC_f6374.exe /implib:cmTC_f6374.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-exz9zm\\cmTC_f6374.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_f6374.dir/intermediate.manifest CMakeFiles\\cmTC_f6374.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:103 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'C': D:/PROGRA~2/MICROS~1/2022/PROFES~1/VC/Tools/MSVC/1442~1.344/bin/Hostx86/x64/link.exe
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:103 (project)"
+    message: |
+      Running the C compiler's linker: "D:/PROGRA~2/MICROS~1/2022/PROFES~1/VC/Tools/MSVC/1442~1.344/bin/Hostx86/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.42.34435.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/cmake_modules/SetupCxxFlags.cmake:72 (check_cxx_compiler_flag)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:446 (include)"
+    checks:
+      - "Performing Test CXX_SUPPORTS_AVX2"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-xk9r0y"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-xk9r0y"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/cmake_modules"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CXX_SUPPORTS_AVX2"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-xk9r0y'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_27604\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_27604.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_27604.dir\\build
+        Building CXX object CMakeFiles/cmTC_27604.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_27604.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-xk9r0y --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmCC1B.tmp
+        src.cxx
+        Linking CXX executable cmTC_27604.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_27604.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_27604.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmCE8D.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_27604.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_27604.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_27604.dir/manifest.res CMakeFiles\\cmTC_27604.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_27604.dir\\objects1.rsp /out:cmTC_27604.exe /implib:cmTC_27604.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-xk9r0y\\cmTC_27604.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_27604.dir/intermediate.manifest CMakeFiles\\cmTC_27604.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_27604.dir/intermediate.manifest /out:CMakeFiles\\cmTC_27604.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_27604.dir/manifest.res CMakeFiles\\cmTC_27604.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_27604.dir\\objects1.rsp /out:cmTC_27604.exe /implib:cmTC_27604.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-xk9r0y\\cmTC_27604.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_27604.dir/intermediate.manifest CMakeFiles\\cmTC_27604.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/cmake_modules/SetupCxxFlags.cmake:80 (check_cxx_source_compiles)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:446 (include)"
+    checks:
+      - "Performing Test CXX_SUPPORTS_AVX512"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-2rkqtc"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-2rkqtc"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/cmake_modules"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CXX_SUPPORTS_AVX512"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-2rkqtc'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_7c5c2\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_7c5c2.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_7c5c2.dir\\build
+        Building CXX object CMakeFiles/cmTC_7c5c2.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_7c5c2.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-2rkqtc --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmDA73.tmp
+        src.cxx
+        Linking CXX executable cmTC_7c5c2.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_7c5c2.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_7c5c2.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmDD53.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_7c5c2.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_7c5c2.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_7c5c2.dir/manifest.res CMakeFiles\\cmTC_7c5c2.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_7c5c2.dir\\objects1.rsp /out:cmTC_7c5c2.exe /implib:cmTC_7c5c2.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-2rkqtc\\cmTC_7c5c2.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_7c5c2.dir/intermediate.manifest CMakeFiles\\cmTC_7c5c2.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_7c5c2.dir/intermediate.manifest /out:CMakeFiles\\cmTC_7c5c2.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_7c5c2.dir/manifest.res CMakeFiles\\cmTC_7c5c2.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_7c5c2.dir\\objects1.rsp /out:cmTC_7c5c2.exe /implib:cmTC_7c5c2.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-2rkqtc\\cmTC_7c5c2.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_7c5c2.dir/intermediate.manifest CMakeFiles\\cmTC_7c5c2.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckLinkerFlag.cmake:37 (cmake_check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckLinkerFlag.cmake:44 (cmake_check_linker_flag)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:463 (check_linker_flag)"
+    checks:
+      - "Performing Test CXX_LINKER_SUPPORTS_VERSION_SCRIPT"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ui4zh7"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ui4zh7"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CXX_LINKER_SUPPORTS_VERSION_SCRIPT"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ui4zh7'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_c6414\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_c6414.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_c6414.dir\\build
+        Building CXX object CMakeFiles/cmTC_c6414.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_c6414.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ui4zh7 --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmEA71.tmp
+        src.cxx
+        Linking CXX executable cmTC_c6414.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_c6414.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_c6414.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmED70.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_c6414.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_c6414.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_c6414.dir/manifest.res CMakeFiles\\cmTC_c6414.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_c6414.dir\\objects1.rsp /out:cmTC_c6414.exe /implib:cmTC_c6414.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ui4zh7\\cmTC_c6414.pdb /version:0.0 /machine:x64 /NODEFAULTLIB:LIBCMT /debug /INCREMENTAL /subsystem:console -Wl,--version-script=C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/src/arrow/symbols.map kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_c6414.dir/intermediate.manifest CMakeFiles\\cmTC_c6414.dir/manifest.res
+        LINK : warning LNK4044: 无法识别的选项“/Wl,--version-script=C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/src/arrow/symbols.map”；已忽略
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_c6414.dir/intermediate.manifest /out:CMakeFiles\\cmTC_c6414.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_c6414.dir/manifest.res CMakeFiles\\cmTC_c6414.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_c6414.dir\\objects1.rsp /out:cmTC_c6414.exe /implib:cmTC_c6414.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ui4zh7\\cmTC_c6414.pdb /version:0.0 /machine:x64 /NODEFAULTLIB:LIBCMT /debug /INCREMENTAL /subsystem:console -Wl,--version-script=C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/src/arrow/symbols.map kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_c6414.dir/intermediate.manifest CMakeFiles\\cmTC_c6414.dir/manifest.res
+        LINK : warning LNK4044: 无法识别的选项“/Wl,--version-script=C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/src/arrow/symbols.map”；已忽略
+        LINK : warning LNK4044: 无法识别的选项“/Wl,--version-script=C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/src/arrow/symbols.map”；已忽略
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSymbolExists.cmake:154 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSymbolExists.cmake:72 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/cmake_modules/ThirdpartyToolchain.cmake:1254 (check_cxx_symbol_exists)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:544 (include)"
+    checks:
+      - "Looking for _M_ARM64"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-crswnw"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-crswnw"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "WIN32_ARM64_TARGET"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-crswnw'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_9a283\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_9a283.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_9a283.dir\\build
+        Building CXX object CMakeFiles/cmTC_9a283.dir/CheckSymbolExists.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_9a283.dir\\CheckSymbolExists.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-crswnw --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmFBA7.tmp
+        CheckSymbolExists.cxx
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-crswnw\\CheckSymbolExists.cxx(7): error C2065: 鈥淿M_ARM64鈥? 鏈０鏄庣殑鏍囪瘑绗?NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_9a283.dir\\CheckSymbolExists.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-crswnw --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmFBA7.tmp”: 返回代码“0x2”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_9a283.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_9a283.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSymbolExists.cmake:154 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSymbolExists.cmake:72 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/cmake_modules/ThirdpartyToolchain.cmake:1259 (check_cxx_symbol_exists)"
+      - "cmake-build-debug/_deps/arrow-src/cpp/CMakeLists.txt:544 (include)"
+    checks:
+      - "Looking for __SIZEOF_INT128__"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-eykfyp"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-eykfyp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/arrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "ARROW_USE_NATIVE_INT128"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-eykfyp'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_85e54\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_85e54.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_85e54.dir\\build
+        Building CXX object CMakeFiles/cmTC_85e54.dir/CheckSymbolExists.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_85e54.dir\\CheckSymbolExists.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-eykfyp --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm2BC.tmp
+        CheckSymbolExists.cxx
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-eykfyp\\CheckSymbolExists.cxx(7): error C2065: 鈥淿_SIZEOF_INT128__鈥? 鏈０鏄庣殑鏍囪瘑绗?NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_85e54.dir\\CheckSymbolExists.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-eykfyp --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm2BC.tmp”: 返回代码“0x2”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_85e54.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_85e54.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules/ThirdpartyToolchain.cmake:1059 (find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/CMakeLists.txt:544 (include)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ol52go"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ol52go"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ol52go'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_0b1e2\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_0b1e2.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_0b1e2.dir\\build
+        Building C object CMakeFiles/cmTC_0b1e2.dir/src.c.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_0b1e2.dir\\src.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ol52go --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm4B25.tmp
+        src.c
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ol52go\\src.c(1): fatal error C1083: 鏃犳硶鎵撳紑鍖呮嫭鏂囦欢: 鈥減thread.h鈥? No such file or directory
+        NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_0b1e2.dir\\src.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ol52go --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm4B25.tmp”: 返回代码“0x2”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_0b1e2.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_0b1e2.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindThreads.cmake:175 (_threads_check_lib)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules/ThirdpartyToolchain.cmake:1059 (find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/CMakeLists.txt:544 (include)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-a373a1"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-a373a1"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-a373a1'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_cd29a\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_cd29a.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_cd29a.dir\\build
+        Building C object CMakeFiles/cmTC_cd29a.dir/CheckFunctionExists.c.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_cd29a.dir\\CheckFunctionExists.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-a373a1 --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm53D0.tmp
+        CheckFunctionExists.c
+        Linking C executable cmTC_cd29a.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_cd29a.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_cd29a.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm572C.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_cd29a.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_cd29a.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_cd29a.dir/manifest.res CMakeFiles\\cmTC_cd29a.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_cd29a.dir\\objects1.rsp /out:cmTC_cd29a.exe /implib:cmTC_cd29a.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-a373a1\\cmTC_cd29a.pdb /version:0.0 /machine:x64 /NODEFAULTLIB:LIBCMT /debug /INCREMENTAL /subsystem:console pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_cd29a.dir/intermediate.manifest CMakeFiles\\cmTC_cd29a.dir/manifest.res
+        LINK Pass 1: command "D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_cd29a.dir\\objects1.rsp /out:cmTC_cd29a.exe /implib:cmTC_cd29a.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-a373a1\\cmTC_cd29a.pdb /version:0.0 /machine:x64 /NODEFAULTLIB:LIBCMT /debug /INCREMENTAL /subsystem:console pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_cd29a.dir/intermediate.manifest CMakeFiles\\cmTC_cd29a.dir/manifest.res" failed (exit code 1104) with the following output:
+        LINK : fatal error LNK1104: 无法打开文件“pthreads.lib”
+        NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_cd29a.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_cd29a.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm572C.tmp”: 返回代码“0xffffffff”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_cd29a.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_cd29a.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindThreads.cmake:176 (_threads_check_lib)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules/ThirdpartyToolchain.cmake:1059 (find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/CMakeLists.txt:544 (include)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-60z0tq"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-60z0tq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-60z0tq'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_aae48\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_aae48.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_aae48.dir\\build
+        Building C object CMakeFiles/cmTC_aae48.dir/CheckFunctionExists.c.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_aae48.dir\\CheckFunctionExists.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-60z0tq --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm60A1.tmp
+        CheckFunctionExists.c
+        Linking C executable cmTC_aae48.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_aae48.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_aae48.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm646B.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_aae48.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_aae48.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_aae48.dir/manifest.res CMakeFiles\\cmTC_aae48.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_aae48.dir\\objects1.rsp /out:cmTC_aae48.exe /implib:cmTC_aae48.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-60z0tq\\cmTC_aae48.pdb /version:0.0 /machine:x64 /NODEFAULTLIB:LIBCMT /debug /INCREMENTAL /subsystem:console pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_aae48.dir/intermediate.manifest CMakeFiles\\cmTC_aae48.dir/manifest.res
+        LINK Pass 1: command "D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_aae48.dir\\objects1.rsp /out:cmTC_aae48.exe /implib:cmTC_aae48.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-60z0tq\\cmTC_aae48.pdb /version:0.0 /machine:x64 /NODEFAULTLIB:LIBCMT /debug /INCREMENTAL /subsystem:console pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_aae48.dir/intermediate.manifest CMakeFiles\\cmTC_aae48.dir/manifest.res" failed (exit code 1104) with the following output:
+        LINK : fatal error LNK1104: 无法打开文件“pthread.lib”
+        NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_aae48.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_aae48.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm646B.tmp”: 返回代码“0xffffffff”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_aae48.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_aae48.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSymbolExists.cmake:154 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/FindBacktrace.cmake:73 (check_symbol_exists)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "cmake-build-debug/_deps/apachearrow-src/cpp/src/arrow/CMakeLists.txt:1103 (find_package)"
+    checks:
+      - "Looking for backtrace"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ycdtqo"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ycdtqo"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3 /EHsc /wd5105 /bigobj /utf-8 /W3 /wd4365 /wd4267 /wd4838 /wd4800 /wd4996 /wd4065 "
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1 /WX"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64  /NODEFAULTLIB:LIBCMT"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-src/cpp/cmake_modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "_Backtrace_SYM_FOUND"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ycdtqo'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_e869a\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_e869a.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_e869a.dir\\build
+        Building C object CMakeFiles/cmTC_e869a.dir/CheckSymbolExists.c.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_e869a.dir\\CheckSymbolExists.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ycdtqo --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm7BDA.tmp
+        CheckSymbolExists.c
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ycdtqo\\CheckSymbolExists.c(2): fatal error C1083: 鏃犳硶鎵撳紑鍖呮嫭鏂囦欢: 鈥渆xecinfo.h鈥? No such file or directory
+        NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_e869a.dir\\CheckSymbolExists.c.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-ycdtqo --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm7BDA.tmp”: 返回代码“0x2”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_e869a.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_e869a.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/FindWrapAtomic.cmake:36 (check_cxx_source_compiles)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:35 (_qt_internal_find_third_party_dependencies)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:45 (include)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:143 (find_dependency)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatDependencies.cmake:43 (_qt_internal_find_qt_dependencies)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfig.cmake:43 (include)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/Qt6Config.cmake:181 (find_package)"
+      - "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake:859 (_find_package)"
+      - "CMakeLists.txt:64 (find_package)"
+    checks:
+      - "Performing Test HAVE_STDATOMIC"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-swuteb"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-swuteb"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "HAVE_STDATOMIC"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-swuteb'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_1ab83\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_1ab83.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_1ab83.dir\\build
+        Building CXX object CMakeFiles/cmTC_1ab83.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_1ab83.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-swuteb --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm9108.tmp
+        src.cxx
+        Linking CXX executable cmTC_1ab83.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_1ab83.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_1ab83.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nm94C2.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_1ab83.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_1ab83.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_1ab83.dir/manifest.res CMakeFiles\\cmTC_1ab83.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_1ab83.dir\\objects1.rsp /out:cmTC_1ab83.exe /implib:cmTC_1ab83.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-swuteb\\cmTC_1ab83.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_1ab83.dir/intermediate.manifest CMakeFiles\\cmTC_1ab83.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_1ab83.dir/intermediate.manifest /out:CMakeFiles\\cmTC_1ab83.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_1ab83.dir/manifest.res CMakeFiles\\cmTC_1ab83.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_1ab83.dir\\objects1.rsp /out:cmTC_1ab83.exe /implib:cmTC_1ab83.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-swuteb\\cmTC_1ab83.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_1ab83.dir/intermediate.manifest CMakeFiles\\cmTC_1ab83.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "dependencies/OpenXLSX/OpenXLSX/CMakeLists.txt:66 (check_cxx_source_compiles)"
+    checks:
+      - "Performing Test CHARCONV_RESULT"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-gga3b8"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-gga3b8"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "CHARCONV_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-gga3b8'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_7296b\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_7296b.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_7296b.dir\\build
+        Building CXX object CMakeFiles/cmTC_7296b.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_7296b.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-gga3b8 --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmAE73.tmp
+        src.cxx
+        Linking CXX executable cmTC_7296b.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_7296b.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_7296b.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmB308.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_7296b.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_7296b.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_7296b.dir/manifest.res CMakeFiles\\cmTC_7296b.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_7296b.dir\\objects1.rsp /out:cmTC_7296b.exe /implib:cmTC_7296b.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-gga3b8\\cmTC_7296b.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_7296b.dir/intermediate.manifest CMakeFiles\\cmTC_7296b.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_7296b.dir/intermediate.manifest /out:CMakeFiles\\cmTC_7296b.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_7296b.dir/manifest.res CMakeFiles\\cmTC_7296b.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_7296b.dir\\objects1.rsp /out:cmTC_7296b.exe /implib:cmTC_7296b.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-gga3b8\\cmTC_7296b.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_7296b.dir/intermediate.manifest CMakeFiles\\cmTC_7296b.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSourceCompiles.cmake:77 (cmake_check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake:206 (check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake:263 (_check_cxx_compiler_attribute)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake:420 (_test_compiler_has_deprecated)"
+      - "dependencies/OpenXLSX/OpenXLSX/CMakeLists.txt:196 (generate_export_header)"
+    checks:
+      - "Performing Test COMPILER_HAS_DEPRECATED_ATTR"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-m8c1mg"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-m8c1mg"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "COMPILER_HAS_DEPRECATED_ATTR"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-m8c1mg'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_f1501\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_f1501.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_f1501.dir\\build
+        Building CXX object CMakeFiles/cmTC_f1501.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_f1501.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmBFE8.tmp
+        src.cxx
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg\\src.cxx(1): error C2065: 鈥淿_deprecated__鈥? 鏈０鏄庣殑鏍囪瘑绗?C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg\\src.cxx(1): error C4430: 缂哄皯绫诲瀷璇存槑绗?- 鍋囧畾涓?int銆傛敞鎰? C++ 涓嶆敮鎸侀粯璁?int
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg\\src.cxx(1): error C2062: 鎰忓鐨勭被鍨嬧€渋nt鈥?
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg\\src.cxx(1): error C2143: 璇硶閿欒: 缂哄皯鈥?鈥?鍦ㄢ€渰鈥濈殑鍓嶉潰)
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg\\src.cxx(1): error C2447: 鈥渰鈥? 缂哄皯鍑芥暟鏍囬(鏄惁鏄€佸紡鐨勫舰寮忚〃?)
+        C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg\\src.cxx(2): error C3861: 鈥渟omefunc鈥? 鎵句笉鍒版爣璇嗙
+        NMAKE : fatal error U1077: “"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_f1501.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-m8c1mg --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmBFE8.tmp”: 返回代码“0x2”
+        Stop.
+        NMAKE : fatal error U1077: “"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_f1501.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_f1501.dir\\build”: 返回代码“0x2”
+        Stop.
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckSourceCompiles.cmake:77 (cmake_check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake:206 (check_source_compiles)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake:269 (_check_cxx_compiler_attribute)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GenerateExportHeader.cmake:420 (_test_compiler_has_deprecated)"
+      - "dependencies/OpenXLSX/OpenXLSX/CMakeLists.txt:196 (generate_export_header)"
+    checks:
+      - "Performing Test COMPILER_HAS_DEPRECATED"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-gyqvdl"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-gyqvdl"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "COMPILER_HAS_DEPRECATED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-gyqvdl'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_89fc7\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_89fc7.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_89fc7.dir\\build
+        Building CXX object CMakeFiles/cmTC_89fc7.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_89fc7.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-gyqvdl --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmC612.tmp
+        src.cxx
+        Linking CXX executable cmTC_89fc7.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_89fc7.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_89fc7.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmC920.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_89fc7.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_89fc7.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_89fc7.dir/manifest.res CMakeFiles\\cmTC_89fc7.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_89fc7.dir\\objects1.rsp /out:cmTC_89fc7.exe /implib:cmTC_89fc7.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-gyqvdl\\cmTC_89fc7.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_89fc7.dir/intermediate.manifest CMakeFiles\\cmTC_89fc7.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_89fc7.dir/intermediate.manifest /out:CMakeFiles\\cmTC_89fc7.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_89fc7.dir/manifest.res CMakeFiles\\cmTC_89fc7.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_89fc7.dir\\objects1.rsp /out:cmTC_89fc7.exe /implib:cmTC_89fc7.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-gyqvdl\\cmTC_89fc7.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_89fc7.dir/intermediate.manifest CMakeFiles\\cmTC_89fc7.dir/manifest.res
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "dependencies/OpenXLSX/Examples/external/nowide/CMakeLists.txt:48 (check_cxx_source_compiles)"
+    checks:
+      - "Performing Test NOWIDE_HAS_LFS"
+    directories:
+      source: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-chwb70"
+      binary: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-chwb70"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/external/nowide/cmake;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;D:/Programs/Qt/6.8.0/msvc2022_64/lib/cmake/Qt6/3rdparty/kwin;C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/dependencies/OpenXLSX/Examples/cmake"
+      VCPKG_INSTALLED_DIR: "D:/Programs/vcpkg/installed"
+      VCPKG_PREFER_SYSTEM_LIBS: "OFF"
+      VCPKG_TARGET_TRIPLET: "x64-windows"
+      Z_VCPKG_ROOT_DIR: "D:/Programs/vcpkg"
+    buildResult:
+      variable: "NOWIDE_HAS_LFS"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-chwb70'
+        
+        Run Build Command(s): "D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe" -E env VERBOSE=1 nmake -f Makefile /nologo cmTC_ee206\\fast
+        	"D:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.42.34433\\bin\\HostX86\\x64\\nmake.exe"  -f CMakeFiles\\cmTC_ee206.dir\\build.make /nologo -L                  CMakeFiles\\cmTC_ee206.dir\\build
+        Building CXX object CMakeFiles/cmTC_ee206.dir/src.cxx.obj
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\\cmTC_ee206.dir\\src.cxx.obj.d --working-dir=C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-chwb70 --filter-prefix="注意: 包含文件:  " -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\cl.exe @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmDD05.tmp
+        src.cxx
+        Linking CXX executable cmTC_ee206.exe
+        	"D:\\Program Files\\JetBrains\\Toolbox\\CLion\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_ee206.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe --manifests -- D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_ee206.dir\\objects1.rsp @C:\\Users\\WUXIAN~1\\AppData\\Local\\Temp\\nmDFC5.tmp
+        Visual Studio Incremental Link with embedded manifests
+        Create CMakeFiles\\cmTC_ee206.dir/manifest.rc
+        Create empty: CMakeFiles\\cmTC_ee206.dir/embed.manifest
+        RC Pass 1:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_ee206.dir/manifest.res CMakeFiles\\cmTC_ee206.dir/manifest.rc
+        LINK Pass 1:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_ee206.dir\\objects1.rsp /out:cmTC_ee206.exe /implib:cmTC_ee206.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-chwb70\\cmTC_ee206.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_ee206.dir/intermediate.manifest CMakeFiles\\cmTC_ee206.dir/manifest.res
+        MT:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\mt.exe /nologo /manifest CMakeFiles\\cmTC_ee206.dir/intermediate.manifest /out:CMakeFiles\\cmTC_ee206.dir/embed.manifest /notify_update
+        RC Pass 2:
+        C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x86\\rc.exe /fo CMakeFiles\\cmTC_ee206.dir/manifest.res CMakeFiles\\cmTC_ee206.dir/manifest.rc
+        FINAL LINK:
+        D:\\PROGRA~2\\MICROS~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1442~1.344\\bin\\Hostx86\\x64\\link.exe /nologo @CMakeFiles\\cmTC_ee206.dir\\objects1.rsp /out:cmTC_ee206.exe /implib:cmTC_ee206.lib /pdb:C:\\Users\\wuxianggujun\\CodeSpace\\CMakeProjects\\TinaToolBox\\cmake-build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-chwb70\\cmTC_ee206.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\\cmTC_ee206.dir/intermediate.manifest CMakeFiles\\cmTC_ee206.dir/manifest.res
+        
+      exitCode: 0
+...

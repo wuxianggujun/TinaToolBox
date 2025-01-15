@@ -1,0 +1,14 @@
+TinaToolBoxTests_autogen/timestamp: \
+	C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/include/ThreadPool.hpp \
+	C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/src/ThreadPool.cpp \
+	C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/tests/CMakeLists.txt \
+	D:/Program\ Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake \
+	D:/Program\ Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/share/cmake-3.30/Modules/GNUInstallDirs.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/arrow/ArrowConfig.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/arrow/ArrowConfigVersion.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/arrow/ArrowOptions.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/arrow/ArrowTargets.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/parquet/ParquetConfig.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/parquet/ParquetConfigVersion.cmake \
+	D:/Programs/vcpkg/installed/x64-windows/share/parquet/ParquetTargets.cmake \
+	D:/Program\ Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe

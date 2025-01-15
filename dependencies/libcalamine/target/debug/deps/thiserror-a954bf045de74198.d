@@ -1,0 +1,10 @@
+C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\dependencies\libcalamine\target\debug\deps\libthiserror-a954bf045de74198.rmeta: D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src/lib.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\aserror.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\display.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\var.rs
+
+C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\dependencies\libcalamine\target\debug\deps\libthiserror-a954bf045de74198.rlib: D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src/lib.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\aserror.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\display.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\var.rs
+
+C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\dependencies\libcalamine\target\debug\deps\thiserror-a954bf045de74198.d: D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src/lib.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\aserror.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\display.rs D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\var.rs
+
+D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src/lib.rs:
+D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\aserror.rs:
+D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\display.rs:
+D:\Programs\Rust\cargo\bin\registry\src\index.crates.io-6f17d22bba15001f\thiserror-2.0.9\src\var.rs:
