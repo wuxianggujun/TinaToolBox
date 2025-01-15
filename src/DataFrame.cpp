@@ -28,33 +28,49 @@ namespace TinaToolBox {
 
             // 预分配内存
             std::vector<std::shared_ptr<arrow::Field>> fields(maxCol);
-            std::vector<std::shared_ptr<arrow::DataType>> columnTypes(maxCol);
             std::vector<std::shared_ptr<arrow::ArrayBuilder>> builders(maxCol);
-            
-            std::mutex mutex;
-            std::vector<std::future<void>> futures;
-            auto& pool = getThreadPool();
+            std::vector<std::vector<OpenXLSX::XLCellValue>> columnData(maxCol);
 
-            // 首先并行检测每列的类型
+            // 第一步：快速读取所有数据到内存（按列）
             for (size_t col = 0; col < maxCol; ++col) {
-                futures.push_back(pool.submit([&, col]() {
+                columnData[col].reserve(maxRow + 1);
+                for (size_t row = 1; row <= maxRow + 1; ++row) {
+                    columnData[col].push_back(wks.cell(OpenXLSX::XLCellReference(row, col + 1)).value());
+                }
+            }
+
+            // 关闭Excel文件，避免资源占用
+            doc.close();
+
+            // 使用线程池并行处理每列数据
+            auto& pool = getThreadPool();
+            std::vector<std::future<std::pair<size_t, std::shared_ptr<arrow::Array>>>> futures;
+            std::mutex mutex;
+
+            for (size_t col = 0; col < maxCol; ++col) {
+                futures.push_back(pool.submit([col, &columnData, &fields]() {
+                    const auto& colValues = columnData[col];
+                    
+                    // 获取列名
+                    std::string columnName;
+                    if (colValues[0].type() == OpenXLSX::XLValueType::Empty) {
+                        columnName = "Column_" + std::to_string(col + 1);
+                    } else {
+                        columnName = colValues[0].get<std::string>();
+                    }
+
+                    // 确定列类型
                     bool hasNonNumeric = false;
                     bool hasDecimal = false;
                     
-                    // 采样检查类型，不需要检查所有行
-                    const size_t SAMPLE_SIZE = std::min(static_cast<size_t>(1000), maxRow);
-                    const size_t SAMPLE_STEP = maxRow / SAMPLE_SIZE;
-                    
-                    for (size_t row = 1; row <= maxRow && !hasNonNumeric; row += SAMPLE_STEP) {
-                        auto cell = wks.cell(OpenXLSX::XLCellReference(row, col + 1));
-                        auto cellType = cell.value().type();
-                        
+                    for (size_t i = 1; i < colValues.size() && !hasNonNumeric; ++i) {
+                        auto cellType = colValues[i].type();
                         if (cellType != OpenXLSX::XLValueType::Empty) {
                             switch (cellType) {
-                                case OpenXLSX::XLValueType::Integer:
-                                    break;
                                 case OpenXLSX::XLValueType::Float:
                                     hasDecimal = true;
+                                    break;
+                                case OpenXLSX::XLValueType::Integer:
                                     break;
                                 default:
                                     hasNonNumeric = true;
@@ -63,19 +79,10 @@ namespace TinaToolBox {
                         }
                     }
 
-                    std::shared_ptr<arrow::DataType> type;
+                    // 创建builder和处理数据
                     std::shared_ptr<arrow::ArrayBuilder> builder;
-                    std::string columnName;
-
-                    // 获取列名
-                    auto headerCell = wks.cell(OpenXLSX::XLCellReference(1, col + 1));
-                    if (headerCell.value().type() == OpenXLSX::XLValueType::Empty) {
-                        columnName = "Column_" + std::to_string(col + 1);
-                    } else {
-                        columnName = headerCell.value().get<std::string>();
-                    }
-
-                    // 创建适当的builder
+                    std::shared_ptr<arrow::DataType> type;
+                    
                     if (hasNonNumeric) {
                         type = arrow::utf8();
                         builder = std::make_shared<arrow::StringBuilder>();
@@ -87,80 +94,51 @@ namespace TinaToolBox {
                         builder = std::make_shared<arrow::Int64Builder>();
                     }
 
-                    std::lock_guard<std::mutex> lock(mutex);
                     fields[col] = arrow::field(columnName, type);
-                    columnTypes[col] = type;
-                    builders[col] = builder;
+
+                    // 处理列数据
+                    std::vector<std::variant<std::string, double, int64_t>> batch;
+                    batch.reserve(colValues.size() - 1);
+
+                    for (size_t i = 1; i < colValues.size(); ++i) {
+                        const auto& cellValue = colValues[i];
+                        if (cellValue.type() != OpenXLSX::XLValueType::Empty) {
+                            try {
+                                if (hasNonNumeric) {
+                                    batch.emplace_back(cellValue.get<std::string>());
+                                } else if (hasDecimal) {
+                                    batch.emplace_back(cellValue.get<double>());
+                                } else {
+                                    batch.emplace_back(cellValue.get<int64_t>());
+                                }
+                            } catch (...) {
+                                batch.emplace_back(std::string());
+                            }
+                        } else {
+                            batch.emplace_back(std::string());
+                        }
+                    }
+
+                    appendBatch(builder, batch, type);
+                    
+                    std::shared_ptr<arrow::Array> array;
+                    auto status = builder->Finish(&array);
+                    if (!status.ok()) {
+                        throw std::runtime_error("Error finishing array builder: " + status.message());
+                    }
+
+                    return std::make_pair(col, array);
                 }));
             }
 
-            // 等待类型检测完成
+            // 收集结果
+            std::vector<std::shared_ptr<arrow::Array>> arrays(maxCol);
             for (auto& future : futures) {
-                future.get();
-            }
-            futures.clear();
-
-            // 分块并行处理数据
-            const size_t CHUNK_SIZE = 5000;  // 每个块的行数
-            const size_t numChunks = (maxRow + CHUNK_SIZE - 1) / CHUNK_SIZE;
-
-            for (size_t chunk = 0; chunk < numChunks; ++chunk) {
-                size_t startRow = chunk * CHUNK_SIZE + 2;  // +2 跳过标题行
-                size_t endRow = std::min(startRow + CHUNK_SIZE, maxRow + 1);
-
-                for (size_t col = 0; col < maxCol; ++col) {
-                    futures.push_back(pool.submit([&, col, startRow, endRow]() {
-                        std::vector<std::variant<std::string, double, int64_t>> batch;
-                        batch.reserve(endRow - startRow);
-
-                        for (size_t row = startRow; row <= endRow; ++row) {
-                            auto cell = wks.cell(OpenXLSX::XLCellReference(row, col + 1));
-                            auto cellType = cell.value().type();
-
-                            if (cellType != OpenXLSX::XLValueType::Empty) {
-                                try {
-                                    if (columnTypes[col]->Equals(arrow::utf8())) {
-                                        batch.emplace_back(cell.value().get<std::string>());
-                                    } else if (columnTypes[col]->Equals(arrow::float64())) {
-                                        batch.emplace_back(cell.value().get<double>());
-                                    } else {
-                                        batch.emplace_back(cell.value().get<int64_t>());
-                                    }
-                                } catch (...) {
-                                    batch.emplace_back(std::string());
-                                }
-                            } else {
-                                batch.emplace_back(std::string());
-                            }
-                        }
-
-                        std::lock_guard<std::mutex> lock(mutex);
-                        appendBatch(builders[col], batch, columnTypes[col]);
-                    }));
-                }
-
-                // 等待当前块的所有列处理完成
-                for (auto& future : futures) {
-                    future.get();
-                }
-                futures.clear();
+                auto result = future.get();
+                arrays[result.first] = result.second;
             }
 
-            // 构建最终的 Arrow Table
-            std::vector<std::shared_ptr<arrow::Array>> arrays;
-            arrays.reserve(maxCol);
-
-            for (size_t i = 0; i < maxCol; ++i) {
-                std::shared_ptr<arrow::Array> array;
-                auto status = builders[i]->Finish(&array);
-                if (!status.ok()) {
-                    throw std::runtime_error("Error finishing array builder: " + status.message());
-                }
-                arrays.push_back(array);
-            }
-
-            auto schema = arrow::schema(fields);
-            return DataFrame(arrow::Table::Make(schema, arrays));
+            return DataFrame(arrow::Table::Make(arrow::schema(fields), arrays));
 
         } catch (const std::exception& e) {
             throw std::runtime_error("Error processing Excel file: " + std::string(e.what()));
