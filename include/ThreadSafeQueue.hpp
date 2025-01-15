@@ -24,6 +24,16 @@ namespace TinaToolBox {
             queue_ = {};
         }
 
+        bool try_pop(T &value) {
+            std::lock_guard<std::mutex> lock(queue_mutex_);
+            if (queue_.empty()) {
+                return false;
+            }
+            value = std::move(queue_.front());
+            queue_.pop();
+            return true;
+        }
+
         std::optional<T> try_pop() {
             std::lock_guard<std::mutex> lock(queue_mutex_);
             if (queue_.empty()) {

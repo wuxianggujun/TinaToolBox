@@ -1,12 +1,10 @@
 #pragma once
 #include <atomic>
-#include <condition_variable>
 #include <functional>
 #include <future>
-#include <queue>
 #include <thread>
 #include <vector>
-#include <mutex>
+#include "ThreadSafeQueue.hpp"
 
 namespace TinaToolBox {
     struct use_future_tag {};
@@ -18,14 +16,12 @@ namespace TinaToolBox {
 
     class ThreadPool {
     public:
-        // 任务优先级枚举
         enum class TaskPriority {
             Low,
             Normal,
             High
         };
 
-        // 线程池统计信息
         struct PoolStats {
             std::atomic_size_t tasks_completed{0};
             std::atomic_size_t tasks_failed{0};
@@ -48,14 +44,12 @@ namespace TinaToolBox {
         };
 
         std::atomic_bool is_active_{true};
-        std::atomic_bool waiting_for_all_{false}; // 用于标记是否等待所有任务完成
+        std::atomic_bool waiting_for_all_{false};
         std::vector<std::thread> workers_;
-        std::queue<Task> task_queue_;
-        std::mutex queue_mutex_;
-        std::condition_variable condition_;
+        ThreadSafeQueue<Task> task_queue_;
         std::atomic_size_t active_tasks_{0};
         PoolStats stats_{};
-        static constexpr size_t BATCH_SIZE = 100; // 每次处理的任务数量
+        static constexpr size_t BATCH_SIZE = 100;
 
     public:
         explicit ThreadPool(size_t threads = std::thread::hardware_concurrency()) {
@@ -66,11 +60,8 @@ namespace TinaToolBox {
         }
 
         ~ThreadPool() {
-            {
-                std::unique_lock<std::mutex> lock(queue_mutex_);
-                is_active_ = false;
-            }
-            condition_.notify_all();
+            is_active_ = false;
+            task_queue_.clear();
             for (auto& worker : workers_) {
                 if (worker.joinable()) {
                     worker.join();
@@ -83,48 +74,68 @@ namespace TinaToolBox {
 
         size_t threadCount() const { return workers_.size(); }
 
+        // 添加post函数的重载，处理带future_tag的任务
+        template<typename F>
+        auto post(use_future_tag, F&& f) -> std::future<std::invoke_result_t<F>> {
+            using return_type = std::invoke_result_t<F>;
+            auto task = std::make_shared<std::packaged_task<return_type()>>(
+                std::forward<F>(f)
+            );
+            std::future<return_type> future = task->get_future();
+            
+            post([task]() { (*task)(); });
+            return future;
+        }
+        
         template<class F>
         void post(F&& f, TaskPriority priority = TaskPriority::Normal) {
-            {
-                std::unique_lock<std::mutex> lock(queue_mutex_);
-                task_queue_.push(Task(std::forward<F>(f), priority));
-            }
-            condition_.notify_one();
+            task_queue_.push(Task(std::forward<F>(f), priority));
+        }
+
+        template<typename F>
+        auto submit(F&& f, TaskPriority priority = TaskPriority::Normal) 
+            -> std::future<std::invoke_result_t<F>>
+        {
+            using return_type = std::invoke_result_t<F>;
+            auto task = std::make_shared<std::packaged_task<return_type()>>(
+                std::forward<F>(f)
+            );
+            std::future<return_type> future = task->get_future();
+            
+            post([task]() { (*task)(); }, priority);
+            return future;
         }
 
         template<typename Iterator>
         void batch_post(Iterator begin, Iterator end, TaskPriority priority = TaskPriority::Normal) {
-            {
-                std::unique_lock<std::mutex> lock(queue_mutex_);
-                for (auto it = begin; it != end; ++it) {
-                    task_queue_.push(Task(*it, priority));
-                }
+            for (auto it = begin; it != end; ++it) {
+                task_queue_.push(Task(*it, priority));
             }
-            condition_.notify_all();
         }
 
         void waitForAll() {
-            waiting_for_all_ = true; // 设置等待所有任务完成的标记
-            std::unique_lock<std::mutex> lock(queue_mutex_);
-            condition_.wait(lock, [this] { return task_queue_.empty() && active_tasks_ == 0; });
-            waiting_for_all_ = false; // 重置标记
+            waiting_for_all_ = true;
+            while (true) {
+                if (task_queue_.empty() && active_tasks_ == 0) {
+                    break;
+                }
+                std::this_thread::yield();
+            }
+            waiting_for_all_ = false;
         }
+
+        const PoolStats& getStats() const { return stats_; }
 
     private:
         void workerThread();
     };
-
-    template<class Fn>
-    auto post(ThreadPool& pool, std::tuple<use_future_tag, Fn>&& t) {
-        auto&& [_, func] = std::move(t);
-        using return_type = std::invoke_result_t<std::decay_t<Fn>>;
-
-        auto task = std::make_shared<std::packaged_task<return_type()>>(
-            std::forward<Fn>(func)
-        );
-        auto future = task->get_future();
-
-        pool.post([task]() { (*task)(); });
-        return future;
+    
+    // 添加全局post函数
+    template<typename F>
+    auto post(ThreadPool& pool, std::tuple<use_future_tag, F>&& task) 
+        -> std::future<std::invoke_result_t<std::decay_t<F>>> 
+    {
+        return pool.post(use_future_tag{}, std::forward<F>(std::get<1>(task)));
     }
+
 } // namespace TinaToolBox
