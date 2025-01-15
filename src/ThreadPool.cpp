@@ -4,31 +4,33 @@ namespace TinaToolBox {
     void ThreadPool::workerThread() {
         while (is_active_) {
             std::vector<Task> tasks;
-            Task task;
+            {
+                std::unique_lock<std::mutex> lock(task_queue_mutex_);
+                cv_new_task_.wait(lock, [this] { return !task_queue_.empty() || !is_active_; });
 
-            // 尝试获取任务
-            if (task_queue_.try_pop(task)) {
-                ++active_tasks_;
-                
+                if (!is_active_ && task_queue_.empty()) {
+                    return;
+                }
+
+                size_t numTasks = task_queue_.try_pop_batch(tasks, BATCH_SIZE);
+                active_tasks_ += numTasks;
+            }
+
+            for (auto& task : tasks) {
                 auto start = std::chrono::steady_clock::now();
                 try {
                     task.func();
+                    auto end = std::chrono::steady_clock::now();
+                    stats_.total_task_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
                     ++stats_.tasks_completed;
                 } catch (...) {
                     ++stats_.tasks_failed;
+                    task.exception = std::current_exception();
                 }
-                auto end = std::chrono::steady_clock::now();
-                stats_.total_task_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                
-                --active_tasks_;
-                
-                // 如果正在等待所有任务完成，检查是否所有任务都已完成
-                if (waiting_for_all_ && active_tasks_ == 0 && task_queue_.empty()) {
-                    continue;
-                }
-            } else {
-                // 如果没有任务，短暂休眠避免CPU空转
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+
+            if (active_tasks_.fetch_sub(static_cast<int>(tasks.size())) == tasks.size() && task_queue_.empty()) {
+                cv_all_tasks_done_.notify_all();
             }
         }
     }
