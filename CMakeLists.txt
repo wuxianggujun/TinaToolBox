@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
+#set(ARROW_PREFIX_PATH "D:/Programs/vcpkg/installed/x64-windows/share")
+#set(CMAKE_PREFIX_PATH ${QT_PREFIX_PATH} ${CMAKE_PREFIX_PATH} ${ARROW_PREFIX_PATH})
 set(CMAKE_PREFIX_PATH ${QT_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_AUTOUIC ON)
@@ -21,7 +23,7 @@ set(PROJECT_SOURCES "")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
 
-include(ArrowConfig)
+#include(ArrowConfig)
 # 设置 PDFium_DIR 指向 PDFiumConfig.cmake 所在目录
 set(PDFium_DIR "${PROJECT_SOURCE_DIR}/dependencies/pdfium-win-x64" CACHE PATH "Path to PDFiumConfig.cmake")
 
@@ -44,10 +46,11 @@ CPMAddPackage(
         NAME Corrosion
         URL "${PROJECT_SOURCE_DIR}/dependencies/corrosion/corrosion-master.zip"
 )
-find_package(Arrow CONFIG REQUIRED)
-find_package(Parquet CONFIG REQUIRED)
+
 find_package(ANTLR REQUIRED)
 find_package(PDFium REQUIRED)
+find_package(Arrow CONFIG REQUIRED)
+find_package(Parquet CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Tesseract CONFIG REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
