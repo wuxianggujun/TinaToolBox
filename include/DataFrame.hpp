@@ -9,6 +9,8 @@
 #include <parquet/arrow/writer.h>
 #include <arrow/api.h>
 #include <arrow/table.h>
+#include <arrow/type.h>
+#include <arrow/builder.h>
 #include <thread>
 #include <mutex>
 #include <ThreadPool.hpp>

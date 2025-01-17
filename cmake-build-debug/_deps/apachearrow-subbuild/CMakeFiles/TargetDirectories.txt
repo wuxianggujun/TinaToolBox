@@ -1,3 +1,0 @@
-C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-subbuild/CMakeFiles/apachearrow-populate.dir
-C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-subbuild/CMakeFiles/edit_cache.dir
-C:/Users/wuxianggujun/CodeSpace/CMakeProjects/TinaToolBox/cmake-build-debug/_deps/apachearrow-subbuild/CMakeFiles/rebuild_cache.dir

@@ -1,1 +1,0 @@
-cmd='D:/Program Files/JetBrains/Toolbox/CLion/bin/cmake/win/x64/bin/cmake.exe;-GNMake Makefiles;-C<TMP_DIR>/antlr4_runtime-cache-$<CONFIG>.cmake;-S;<SOURCE_DIR><SOURCE_SUBDIR>;-B;<BINARY_DIR>'

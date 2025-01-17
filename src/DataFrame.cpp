@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <variant>
+#include <regex>
 
 namespace TinaToolBox {
     DataFrame::DataFrame(std::shared_ptr<arrow::Table> table): table_(std::move(table)) {
@@ -21,125 +22,171 @@ namespace TinaToolBox {
             if (wbk.sheetCount() == 0) {
                 throw std::runtime_error("Excel file contains no sheets");
             }
-            auto wks = wbk.sheet(1).get<OpenXLSX::XLWorksheet>();
+            auto wks = wbk.worksheet(wbk.worksheetNames().front());
 
             size_t maxCol = wks.columnCount();
-            size_t maxRow = wks.rowCount() - 1;
-
+            size_t maxRow = wks.rowCount() - 1;  // 减去标题行
+            
             // 预分配内存
             std::vector<std::shared_ptr<arrow::Field>> fields(maxCol);
-            std::vector<std::shared_ptr<arrow::ArrayBuilder>> builders(maxCol);
-            std::vector<std::vector<OpenXLSX::XLCellValue>> columnData(maxCol);
-
-            // 第一步：快速读取所有数据到内存（按列）
-            for (size_t col = 0; col < maxCol; ++col) {
-                columnData[col].reserve(maxRow + 1);
-                for (size_t row = 1; row <= maxRow + 1; ++row) {
-                    columnData[col].push_back(wks.cell(OpenXLSX::XLCellReference(row, col + 1)).value());
+            std::vector<std::shared_ptr<arrow::Array>> arrays(maxCol);
+            
+            // 优化1：使用更大的批处理大小
+            constexpr size_t BATCH_SIZE = 5000;
+            
+            // 优化2：预分配内存以减少重新分配
+            std::vector<std::vector<std::string>> columnData(maxCol);
+            for (auto& col : columnData) {
+                col.reserve(maxRow);
+            }
+            
+            // 优化3：一次性读取整行数据
+            for (size_t row = 1; row <= maxRow + 1; ++row) {
+                for (size_t col = 1; col <= maxCol; ++col) {
+                    auto cellRef = OpenXLSX::XLCellReference(row, col);
+                    const auto& cell = wks.cell(cellRef);
+                    
+                    if (row == 1) {
+                        // 处理标题行
+                        std::string columnName;
+                        if (cell.value().type() == OpenXLSX::XLValueType::Empty) {
+                            columnName = "Column_" + std::to_string(col);
+                        } else {
+                            columnName = cell.value().get<std::string>();
+                        }
+                        fields[col-1] = std::make_shared<arrow::Field>(columnName, arrow::utf8());
+                    } else {
+                        // 处理数据行
+                        try {
+                            if (cell.value().type() == OpenXLSX::XLValueType::Empty) {
+                                columnData[col-1].push_back("");
+                            } else {
+                                const auto& value = cell.value();
+                                columnData[col-1].push_back(value.get<std::string>());
+                            }
+                        } catch (...) {
+                            columnData[col-1].push_back("");
+                        }
+                    }
                 }
             }
-
-            // 关闭Excel文件，避免资源占用
+            
+            // 关闭文档，释放资源
             doc.close();
-
-            // 使用线程池并行处理每列数据
+            
+            // 优化4：并行处理数据转换
             auto& pool = getThreadPool();
-            std::vector<std::future<std::pair<size_t, std::shared_ptr<arrow::Array>>>> futures;
-            std::mutex mutex;
-
+            std::vector<std::future<void>> futures;
+            futures.reserve(maxCol);  // 预分配 futures 容量
+            
             for (size_t col = 0; col < maxCol; ++col) {
-                futures.push_back(pool.submit([col, &columnData, &fields]() {
-                    const auto& colValues = columnData[col];
-                    
-                    // 获取列名
-                    std::string columnName;
-                    if (colValues[0].type() == OpenXLSX::XLValueType::Empty) {
-                        columnName = "Column_" + std::to_string(col + 1);
-                    } else {
-                        columnName = colValues[0].get<std::string>();
-                    }
-
-                    // 确定列类型
-                    bool hasNonNumeric = false;
-                    bool hasDecimal = false;
-                    
-                    for (size_t i = 1; i < colValues.size() && !hasNonNumeric; ++i) {
-                        auto cellType = colValues[i].type();
-                        if (cellType != OpenXLSX::XLValueType::Empty) {
-                            switch (cellType) {
-                                case OpenXLSX::XLValueType::Float:
-                                    hasDecimal = true;
-                                    break;
-                                case OpenXLSX::XLValueType::Integer:
-                                    break;
-                                default:
-                                    hasNonNumeric = true;
-                                    break;
-                            }
-                        }
-                    }
-
-                    // 创建builder和处理数据
-                    std::shared_ptr<arrow::ArrayBuilder> builder;
-                    std::shared_ptr<arrow::DataType> type;
-                    
-                    if (hasNonNumeric) {
-                        type = arrow::utf8();
-                        builder = std::make_shared<arrow::StringBuilder>();
-                    } else if (hasDecimal) {
-                        type = arrow::float64();
-                        builder = std::make_shared<arrow::DoubleBuilder>();
-                    } else {
-                        type = arrow::int64();
-                        builder = std::make_shared<arrow::Int64Builder>();
-                    }
-
-                    fields[col] = arrow::field(columnName, type);
-
-                    // 处理列数据
-                    std::vector<std::variant<std::string, double, int64_t>> batch;
-                    batch.reserve(colValues.size() - 1);
-
-                    for (size_t i = 1; i < colValues.size(); ++i) {
-                        const auto& cellValue = colValues[i];
-                        if (cellValue.type() != OpenXLSX::XLValueType::Empty) {
+                futures.push_back(
+                    pool.submit(
+                        [col, &columnData, &fields, &arrays]() {
                             try {
-                                if (hasNonNumeric) {
-                                    batch.emplace_back(cellValue.get<std::string>());
-                                } else if (hasDecimal) {
-                                    batch.emplace_back(cellValue.get<double>());
-                                } else {
-                                    batch.emplace_back(cellValue.get<int64_t>());
+                                const auto& colData = columnData[col];
+                                
+                                // 优化5：快速类型检测
+                                bool hasNonNumeric = false;
+                                bool hasDecimal = false;
+                                
+                                // 优化6：使用更快的类型检测方法
+                                const size_t sampleSize = std::min(size_t(100), colData.size());
+                                
+                                for (size_t i = 0; i < sampleSize && !hasNonNumeric; ++i) {
+                                    const auto& value = colData[i];
+                                    if (!value.empty()) {
+                                        try {
+                                            size_t pos;
+                                            std::stod(value, &pos);
+                                            if (pos != value.length()) {
+                                                hasNonNumeric = true;
+                                            } else if (value.find('.') != std::string::npos) {
+                                                hasDecimal = true;
+                                            }
+                                        } catch (...) {
+                                            hasNonNumeric = true;
+                                        }
+                                    }
                                 }
-                            } catch (...) {
-                                batch.emplace_back(std::string());
+
+                                // 优化7：创建正确大小的builder
+                                std::shared_ptr<arrow::ArrayBuilder> builder;
+                                if (hasNonNumeric) {
+                                    auto string_builder = std::make_shared<arrow::StringBuilder>();
+                                    auto status = string_builder->Reserve(colData.size());
+                                    if (!status.ok()) {
+                                        throw std::runtime_error("Failed to reserve memory: " + status.ToString());
+                                    }
+                                    builder = string_builder;
+                                } else if (hasDecimal) {
+                                    auto double_builder = std::make_shared<arrow::DoubleBuilder>();
+                                    auto status = double_builder->Reserve(colData.size());
+                                    if (!status.ok()) {
+                                        throw std::runtime_error("Failed to reserve memory: " + status.ToString());
+                                    }
+                                    builder = double_builder;
+                                } else {
+                                    auto int_builder = std::make_shared<arrow::Int64Builder>();
+                                    auto status = int_builder->Reserve(colData.size());
+                                    if (!status.ok()) {
+                                        throw std::runtime_error("Failed to reserve memory: " + status.ToString());
+                                    }
+                                    builder = int_builder;
+                                }
+                                
+                                // 优化8：预分配builder容量
+                                builder->Reserve(colData.size()).ok();
+
+                                // 优化9：批量处理数据
+                                for (size_t i = 0; i < colData.size(); i += BATCH_SIZE) {
+                                    size_t batchEnd = std::min(i + BATCH_SIZE, colData.size());
+                                    std::vector<std::variant<std::string, double, int64_t>> batch;
+                                    batch.reserve(batchEnd - i);
+
+                                    for (size_t j = i; j < batchEnd; ++j) {
+                                        const auto& value = colData[j];
+                                        if (!value.empty()) {
+                                            try {
+                                                if (hasNonNumeric) {
+                                                    batch.emplace_back(value);
+                                                } else if (hasDecimal) {
+                                                    batch.emplace_back(std::stod(value));
+                                                } else {
+                                                    batch.emplace_back(std::stoll(value));
+                                                }
+                                            } catch (...) {
+                                                batch.emplace_back(std::string());
+                                            }
+                                        } else {
+                                            batch.emplace_back(std::string());
+                                        }
+                                    }
+
+                                    appendBatch(builder, batch, fields[col]->type());
+                                }
+
+                                std::shared_ptr<arrow::Array> array;
+                                auto status = builder->Finish(&array);
+                                if (!status.ok()) {
+                                    throw std::runtime_error("Failed to finish array: " + status.ToString());
+                                }
+                                arrays[col] = array;
+                            } catch (const std::exception& e) {
+                                throw std::runtime_error("Error processing column " + std::to_string(col) + ": " + e.what());
                             }
-                        } else {
-                            batch.emplace_back(std::string());
                         }
-                    }
-
-                    appendBatch(builder, batch, type);
-                    
-                    std::shared_ptr<arrow::Array> array;
-                    auto status = builder->Finish(&array);
-                    if (!status.ok()) {
-                        throw std::runtime_error("Error finishing array builder: " + status.message());
-                    }
-
-                    return std::make_pair(col, array);
-                }));
+                    )
+                );
             }
-
-            // 收集结果
-            std::vector<std::shared_ptr<arrow::Array>> arrays(maxCol);
+            
+            // 等待所有列处理完成
             for (auto& future : futures) {
-                auto result = future.get();
-                arrays[result.first] = result.second;
+                future.get();
             }
-
+            
             return DataFrame(arrow::Table::Make(arrow::schema(fields), arrays));
-
+            
         } catch (const std::exception& e) {
             throw std::runtime_error("Error processing Excel file: " + std::string(e.what()));
         }
@@ -149,39 +196,58 @@ namespace TinaToolBox {
     void DataFrame::appendBatch(std::shared_ptr<arrow::ArrayBuilder>& builder,
                               const std::vector<std::variant<std::string, double, int64_t>>& batch,
                               const std::shared_ptr<arrow::DataType>& type) {
-        if (type->Equals(arrow::utf8())) {
-            auto string_builder = static_cast<arrow::StringBuilder*>(builder.get());
-            for (const auto& value : batch) {
-                if (const std::string* str = std::get_if<std::string>(&value)) {
-                    auto status = string_builder->Append(*str);
-                    if (!status.ok()) throw std::runtime_error(status.message());
-                } else {
-                    auto status = string_builder->AppendNull();
-                    if (!status.ok()) throw std::runtime_error(status.message());
+        try {
+            if (auto string_builder = dynamic_cast<arrow::StringBuilder*>(builder.get())) {
+                // 字符串类型处理
+                for (const auto& value : batch) {
+                    if (const std::string* str = std::get_if<std::string>(&value)) {
+                        arrow::Status status;
+                        if (str->empty()) {
+                            status = string_builder->AppendNull();
+                        } else {
+                            status = string_builder->Append(*str);
+                        }
+                        if (!status.ok()) {
+                            throw std::runtime_error("Failed to append string: " + status.ToString());
+                        }
+                    } else {
+                        auto status = string_builder->AppendNull();
+                        if (!status.ok()) {
+                            throw std::runtime_error("Failed to append null: " + status.ToString());
+                        }
+                    }
                 }
             }
-        } else if (type->Equals(arrow::float64())) {
-            auto double_builder = static_cast<arrow::DoubleBuilder*>(builder.get());
-            for (const auto& value : batch) {
-                if (const double* d = std::get_if<double>(&value)) {
-                    auto status = double_builder->Append(*d);
-                    if (!status.ok()) throw std::runtime_error(status.message());
-                } else {
-                    auto status = double_builder->AppendNull();
-                    if (!status.ok()) throw std::runtime_error(status.message());
+            else if (auto double_builder = dynamic_cast<arrow::DoubleBuilder*>(builder.get())) {
+                // 浮点数类型处理
+                for (const auto& value : batch) {
+                    arrow::Status status;
+                    if (const double* d = std::get_if<double>(&value)) {
+                        status = double_builder->Append(*d);
+                    } else {
+                        status = double_builder->AppendNull();
+                    }
+                    if (!status.ok()) {
+                        throw std::runtime_error("Failed to append double: " + status.ToString());
+                    }
                 }
             }
-        } else {
-            auto int_builder = static_cast<arrow::Int64Builder*>(builder.get());
-            for (const auto& value : batch) {
-                if (const int64_t* i = std::get_if<int64_t>(&value)) {
-                    auto status = int_builder->Append(*i);
-                    if (!status.ok()) throw std::runtime_error(status.message());
-                } else {
-                    auto status = int_builder->AppendNull();
-                    if (!status.ok()) throw std::runtime_error(status.message());
+            else if (auto int_builder = dynamic_cast<arrow::Int64Builder*>(builder.get())) {
+                // 整数类型处理
+                for (const auto& value : batch) {
+                    arrow::Status status;
+                    if (const int64_t* i = std::get_if<int64_t>(&value)) {
+                        status = int_builder->Append(*i);
+                    } else {
+                        status = int_builder->AppendNull();
+                    }
+                    if (!status.ok()) {
+                        throw std::runtime_error("Failed to append integer: " + status.ToString());
+                    }
                 }
             }
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Error in appendBatch: " + std::string(e.what()));
         }
     }
 

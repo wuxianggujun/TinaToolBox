@@ -78,8 +78,10 @@ build/
 .build/
 
 # MacOS Cache
-.DS_Store
 .vs/
 .out/
+cmake-build-*
+.vscode
+.idea
 
 
