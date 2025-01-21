@@ -1,459 +1,444 @@
 #include "DataFrame.hpp"
-#include <OpenXLSX.hpp>
-#include <arrow/util/cancel.h>
-#include <parquet/exception.h>
-#include <arrow/io/api.h>
-#include <utf8.h>
-#include <thread>
-#include <mutex>
-#include <variant>
-#include <regex>
+#include <arrow/io/file.h>
+#include <arrow/csv/api.h>
+#include <arrow/table.h>
+#include <arrow/type.h>
+#include <arrow/compute/api_scalar.h>
+#include <arrow/compute/exec.h>
+#include <memory>
+#include <xlnt/xlnt.hpp>
+#include <spdlog/spdlog.h>
+#include <algorithm>
+#include <future>
+#include <filesystem>
+#include <ctime>
 
 namespace TinaToolBox {
-    DataFrame::DataFrame(std::shared_ptr<arrow::Table> table): table_(std::move(table)) {
-   
-    }
 
-    DataFrame DataFrame::fromExcel(const std::string& filePath) {
-        OpenXLSX::XLDocument doc;
+    DataFrame::DataFrame(std::shared_ptr<arrow::Table> table) : table_(table) {}
+
+    DataFrame DataFrame::fromExcel(const std::string &filePath) {
+        auto& pool = getThreadPool();
+        xlnt::workbook wb;
         try {
-            doc.open(filePath);
-            auto wbk = doc.workbook();
-            if (wbk.sheetCount() == 0) {
-                throw std::runtime_error("Excel file contains no sheets");
-            }
-            auto wks = wbk.worksheet(wbk.worksheetNames().front());
+            wb.load(filePath);
+        } catch (const xlnt::exception& e) {
+            spdlog::error("Failed to load Excel file: {}", e.what());
+            throw std::runtime_error("Failed to load Excel file: " + std::string(e.what()));
+        }
 
-            size_t maxCol = wks.columnCount();
-            size_t maxRow = wks.rowCount() - 1;  // 减去标题行
-            
-            // 预分配内存
-            std::vector<std::shared_ptr<arrow::Field>> fields(maxCol);
-            std::vector<std::shared_ptr<arrow::Array>> arrays(maxCol);
-            
-            // 优化1：使用更大的批处理大小
-            constexpr size_t BATCH_SIZE = 5000;
-            
-            // 优化2：预分配内存以减少重新分配
-            std::vector<std::vector<std::string>> columnData(maxCol);
-            for (auto& col : columnData) {
-                col.reserve(maxRow);
-            }
-            
-            // 优化3：一次性读取整行数据
-            for (size_t row = 1; row <= maxRow + 1; ++row) {
-                for (size_t col = 1; col <= maxCol; ++col) {
-                    auto cellRef = OpenXLSX::XLCellReference(row, col);
-                    const auto& cell = wks.cell(cellRef);
-                    
-                    if (row == 1) {
-                        // 处理标题行
-                        std::string columnName;
-                        if (cell.value().type() == OpenXLSX::XLValueType::Empty) {
-                            columnName = "Column_" + std::to_string(col);
-                        } else {
-                            columnName = cell.value().get<std::string>();
-                        }
-                        fields[col-1] = std::make_shared<arrow::Field>(columnName, arrow::utf8());
-                    } else {
-                        // 处理数据行
-                        try {
-                            if (cell.value().type() == OpenXLSX::XLValueType::Empty) {
-                                columnData[col-1].push_back("");
-                            } else {
-                                const auto& value = cell.value();
-                                columnData[col-1].push_back(value.get<std::string>());
-                            }
-                        } catch (...) {
-                            columnData[col-1].push_back("");
-                        }
-                    }
-                }
-            }
-            
-            // 关闭文档，释放资源
-            doc.close();
-            
-            // 优化4：并行处理数据转换
-            auto& pool = getThreadPool();
-            std::vector<std::future<void>> futures;
-            futures.reserve(maxCol);  // 预分配 futures 容量
-            
-            for (size_t col = 0; col < maxCol; ++col) {
-                futures.push_back(
-                    pool.submit(
-                        [col, &columnData, &fields, &arrays]() {
-                            try {
-                                const auto& colData = columnData[col];
-                                
-                                // 优化5：快速类型检测
-                                bool hasNonNumeric = false;
-                                bool hasDecimal = false;
-                                
-                                // 优化6：使用更快的类型检测方法
-                                const size_t sampleSize = std::min(size_t(100), colData.size());
-                                
-                                for (size_t i = 0; i < sampleSize && !hasNonNumeric; ++i) {
-                                    const auto& value = colData[i];
-                                    if (!value.empty()) {
-                                        try {
-                                            size_t pos;
-                                            std::stod(value, &pos);
-                                            if (pos != value.length()) {
-                                                hasNonNumeric = true;
-                                            } else if (value.find('.') != std::string::npos) {
-                                                hasDecimal = true;
-                                            }
-                                        } catch (...) {
-                                            hasNonNumeric = true;
-                                        }
-                                    }
-                                }
+        xlnt::worksheet ws = wb.active_sheet();
+        auto max_row = ws.highest_row();
+        auto max_column = ws.highest_column().index;
 
-                                // 优化7：创建正确大小的builder
-                                std::shared_ptr<arrow::ArrayBuilder> builder;
-                                if (hasNonNumeric) {
-                                    auto string_builder = std::make_shared<arrow::StringBuilder>();
-                                    auto status = string_builder->Reserve(colData.size());
-                                    if (!status.ok()) {
-                                        throw std::runtime_error("Failed to reserve memory: " + status.ToString());
-                                    }
-                                    builder = string_builder;
-                                } else if (hasDecimal) {
-                                    auto double_builder = std::make_shared<arrow::DoubleBuilder>();
-                                    auto status = double_builder->Reserve(colData.size());
-                                    if (!status.ok()) {
-                                        throw std::runtime_error("Failed to reserve memory: " + status.ToString());
-                                    }
-                                    builder = double_builder;
+        std::vector<std::shared_ptr<arrow::Field>> fields;
+        std::vector<std::shared_ptr<arrow::ArrayBuilder>> builders;
+
+        // Determine column types and create builders in parallel
+        std::vector<std::future<std::pair<std::shared_ptr<arrow::Field>, std::shared_ptr<arrow::ArrayBuilder>>>> futures;
+        for (int col = 1; col <= max_column; ++col) {
+            futures.push_back(pool.submit([&ws, col]() -> std::pair<std::shared_ptr<arrow::Field>, std::shared_ptr<arrow::ArrayBuilder>> {
+                std::shared_ptr<arrow::DataType> type;
+                // Inspect first few rows to determine type
+                for (int row = 2; row <= std::min(11, (int)ws.highest_row()); ++row) {
+                    auto cell = ws.cell(col, row);
+                    if (cell.has_value()) {
+                        if (cell.is_date()) {
+                             type = std::make_shared<arrow::TimestampType>(arrow::TimeUnit::MICRO);
+                             break;
+                        }
+                        switch (cell.data_type()) {
+                            case xlnt::cell_type::number: {
+                                double value = cell.value<double>();
+                                double intpart;
+                                if (std::modf(value, &intpart) == 0.0) {
+                                    type = std::make_shared<arrow::Int64Type>();
                                 } else {
-                                    auto int_builder = std::make_shared<arrow::Int64Builder>();
-                                    auto status = int_builder->Reserve(colData.size());
-                                    if (!status.ok()) {
-                                        throw std::runtime_error("Failed to reserve memory: " + status.ToString());
-                                    }
-                                    builder = int_builder;
+                                    type = std::make_shared<arrow::DoubleType>();
                                 }
-                                
-                                // 优化8：预分配builder容量
-                                builder->Reserve(colData.size()).ok();
-
-                                // 优化9：批量处理数据
-                                for (size_t i = 0; i < colData.size(); i += BATCH_SIZE) {
-                                    size_t batchEnd = std::min(i + BATCH_SIZE, colData.size());
-                                    std::vector<std::variant<std::string, double, int64_t>> batch;
-                                    batch.reserve(batchEnd - i);
-
-                                    for (size_t j = i; j < batchEnd; ++j) {
-                                        const auto& value = colData[j];
-                                        if (!value.empty()) {
-                                            try {
-                                                if (hasNonNumeric) {
-                                                    batch.emplace_back(value);
-                                                } else if (hasDecimal) {
-                                                    batch.emplace_back(std::stod(value));
-                                                } else {
-                                                    batch.emplace_back(std::stoll(value));
-                                                }
-                                            } catch (...) {
-                                                batch.emplace_back(std::string());
-                                            }
-                                        } else {
-                                            batch.emplace_back(std::string());
-                                        }
-                                    }
-
-                                    appendBatch(builder, batch, fields[col]->type());
-                                }
-
-                                std::shared_ptr<arrow::Array> array;
-                                auto status = builder->Finish(&array);
-                                if (!status.ok()) {
-                                    throw std::runtime_error("Failed to finish array: " + status.ToString());
-                                }
-                                arrays[col] = array;
-                            } catch (const std::exception& e) {
-                                throw std::runtime_error("Error processing column " + std::to_string(col) + ": " + e.what());
+                                break;
                             }
+                            case xlnt::cell_type::boolean:
+                                type = std::make_shared<arrow::BooleanType>();
+                                break;
+                            case xlnt::cell_type::inline_string:
+                            case xlnt::cell_type::shared_string:
+                            default:
+                                type = std::make_shared<arrow::StringType>();
+                                break;
                         }
-                    )
-                );
-            }
-            
-            // 等待所有列处理完成
-            for (auto& future : futures) {
-                future.get();
-            }
-            
-            return DataFrame(arrow::Table::Make(arrow::schema(fields), arrays));
-            
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Error processing Excel file: " + std::string(e.what()));
-        }
-    }
+                        break;
+                    }
+                }
 
-    // 辅助函数：批量追加数据
-    void DataFrame::appendBatch(std::shared_ptr<arrow::ArrayBuilder>& builder,
-                              const std::vector<std::variant<std::string, double, int64_t>>& batch,
-                              const std::shared_ptr<arrow::DataType>& type) {
-        try {
-            if (auto string_builder = dynamic_cast<arrow::StringBuilder*>(builder.get())) {
-                // 字符串类型处理
-                for (const auto& value : batch) {
-                    if (const std::string* str = std::get_if<std::string>(&value)) {
-                        arrow::Status status;
-                        if (str->empty()) {
-                            status = string_builder->AppendNull();
-                        } else {
-                            status = string_builder->Append(*str);
-                        }
-                        if (!status.ok()) {
-                            throw std::runtime_error("Failed to append string: " + status.ToString());
-                        }
-                    } else {
-                        auto status = string_builder->AppendNull();
-                        if (!status.ok()) {
-                            throw std::runtime_error("Failed to append null: " + status.ToString());
-                        }
-                    }
+                if (!type) {
+                    type = std::make_shared<arrow::StringType>();
                 }
-            }
-            else if (auto double_builder = dynamic_cast<arrow::DoubleBuilder*>(builder.get())) {
-                // 浮点数类型处理
-                for (const auto& value : batch) {
-                    arrow::Status status;
-                    if (const double* d = std::get_if<double>(&value)) {
-                        status = double_builder->Append(*d);
-                    } else {
-                        status = double_builder->AppendNull();
-                    }
-                    if (!status.ok()) {
-                        throw std::runtime_error("Failed to append double: " + status.ToString());
-                    }
+
+                std::shared_ptr<arrow::ArrayBuilder> builder;
+                
+                if (type->id() == arrow::Type::TIMESTAMP) {
+                    builder = std::make_shared<arrow::TimestampBuilder>(type, arrow::default_memory_pool());
+                } else if (type->id() == arrow::Type::INT64) {
+                    builder = std::make_shared<arrow::Int64Builder>();
+                } else if (type->id() == arrow::Type::DOUBLE) {
+                    builder = std::make_shared<arrow::DoubleBuilder>();
+                } else if (type->id() == arrow::Type::BOOL) {
+                    builder = std::make_shared<arrow::BooleanBuilder>();
+                } else {
+                    builder = std::make_shared<arrow::StringBuilder>();
                 }
-            }
-            else if (auto int_builder = dynamic_cast<arrow::Int64Builder*>(builder.get())) {
-                // 整数类型处理
-                for (const auto& value : batch) {
-                    arrow::Status status;
-                    if (const int64_t* i = std::get_if<int64_t>(&value)) {
-                        status = int_builder->Append(*i);
-                    } else {
-                        status = int_builder->AppendNull();
-                    }
-                    if (!status.ok()) {
-                        throw std::runtime_error("Failed to append integer: " + status.ToString());
-                    }
+
+                std::string columnName = ws.cell(col, 1).to_string();
+                if(columnName.empty()){
+                    columnName = "Column" + std::to_string(col);
                 }
-            }
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Error in appendBatch: " + std::string(e.what()));
+                return {std::make_shared<arrow::Field>(columnName, type), builder};
+            }));
         }
+
+        for (auto& fut : futures) {
+            auto [field, builder] = fut.get();
+            fields.push_back(field);
+            builders.push_back(builder);
+        }
+
+        auto schema = std::make_shared<arrow::Schema>(fields);
+
+        // Process rows in parallel
+        std::vector<std::future<arrow::Status>> append_futures;
+        std::size_t n_threads = std::thread::hardware_concurrency();
+        std::size_t rows_per_thread = (max_row - 1 + n_threads - 1) / n_threads; 
+
+        for (std::size_t i = 0; i < n_threads; ++i) {
+            append_futures.push_back(pool.submit([&, i]() -> arrow::Status {
+                std::size_t start_row = 2 + i * rows_per_thread;
+                std::size_t end_row = std::min(start_row + rows_per_thread, (std::size_t)max_row + 1);
+
+                for (std::size_t row = start_row; row < end_row; ++row) {
+                    for (int col = 1; col <= max_column; ++col) {
+                        auto cell = ws.cell(col, row);
+                        auto& builder = builders[col - 1];
+
+                        if (!cell.has_value()) {
+                            ARROW_RETURN_NOT_OK(builder->AppendNull());
+                            continue;
+                        }
+                        
+                        if (fields[col-1]->type()->id() == arrow::Type::TIMESTAMP) {
+                            auto timestampBuilder = dynamic_cast<arrow::TimestampBuilder*>(builder.get());
+                            if (cell.is_date()) {
+                                auto dt = cell.value<xlnt::datetime>();
+                                // Convert xlnt datetime to timestamp
+                                std::tm tm = {};
+                                tm.tm_year = dt.year - 1900;
+                                tm.tm_mon = dt.month - 1;
+                                tm.tm_mday = dt.day;
+                                tm.tm_hour = dt.hour;
+                                tm.tm_min = dt.minute;
+                                tm.tm_sec = dt.second;
+                                int64_t timestamp = ::mktime(&tm) * 1000000;
+                                ARROW_RETURN_NOT_OK(timestampBuilder->Append(timestamp));
+                            } else {
+                                ARROW_RETURN_NOT_OK(builder->AppendNull());
+                            }
+                        } else if (fields[col - 1]->type()->id() == arrow::Type::INT64) {
+                            auto intBuilder = dynamic_cast<arrow::Int64Builder*>(builder.get());
+                            if (cell.data_type() == xlnt::cell_type::number) {
+                                ARROW_RETURN_NOT_OK(intBuilder->Append(static_cast<int64_t>(cell.value<double>())));
+                            } else {
+                                ARROW_RETURN_NOT_OK(builder->AppendNull());
+                            }
+                        } else if (fields[col - 1]->type()->id() == arrow::Type::DOUBLE) {
+                            auto doubleBuilder = dynamic_cast<arrow::DoubleBuilder*>(builder.get());
+                            if (cell.data_type() == xlnt::cell_type::number) {
+                                ARROW_RETURN_NOT_OK(doubleBuilder->Append(cell.value<double>()));
+                            } else {
+                                ARROW_RETURN_NOT_OK(builder->AppendNull());
+                            }
+                        } else if (fields[col - 1]->type()->id() == arrow::Type::BOOL) {
+                            auto boolBuilder = dynamic_cast<arrow::BooleanBuilder*>(builder.get());
+                            if (cell.data_type() == xlnt::cell_type::boolean) {
+                                ARROW_RETURN_NOT_OK(boolBuilder->Append(cell.value<bool>()));
+                            } else {
+                                ARROW_RETURN_NOT_OK(builder->AppendNull());
+                            }
+                        } else {
+                            auto stringBuilder = dynamic_cast<arrow::StringBuilder*>(builder.get());
+                            ARROW_RETURN_NOT_OK(stringBuilder->Append(cell.to_string()));
+                        }
+                    }
+                }
+                return arrow::Status::OK();
+            }));
+        }
+
+        // Wait for all append tasks to complete and check their status
+        for (auto& fut : append_futures) {
+            auto status = fut.get();
+            if (!status.ok()) {
+                throw std::runtime_error("Failed to process data: " + status.ToString());
+            }
+        }
+
+        std::vector<std::shared_ptr<arrow::Array>> arrays;
+        for (auto& builder : builders) {
+            std::shared_ptr<arrow::Array> array;
+            arrow::Status status = builder->Finish(&array);
+            if (!status.ok()) {
+                spdlog::error("Failed to finalize array: {}", status.ToString());
+                throw std::runtime_error("Failed to finalize array: " + status.ToString());
+            }
+            arrays.push_back(array);
+        }
+
+        auto table = arrow::Table::Make(schema, arrays);
+        return DataFrame(table);
     }
 
     std::vector<std::string> DataFrame::getColumnNames() const {
-        if (!table_) {
-            return {};
+        std::vector<std::string> names;
+        if (table_) {
+            for (const auto &field : table_->schema()->fields()) {
+                names.push_back(field->name());
+            }
         }
-        return table_->ColumnNames();
+        return names;
     }
 
     std::shared_ptr<arrow::ChunkedArray> DataFrame::getColumn(const std::string &name) const {
         if (!table_) {
-            throw std::runtime_error("DataFrame is empty.");
+            return nullptr;
         }
-        auto colum = table_->GetColumnByName(name);
-        if (!colum) {
-            throw std::runtime_error("Column not found: " + name);
-        }
-        return colum;
+        int i = table_->schema()->GetFieldIndex(name);
+        if(i == -1)
+            return nullptr;
+        return table_->column(i);
     }
 
-    arrow::Result<std::shared_ptr<arrow::RecordBatch> > DataFrame::getRow(int64_t index) const {
-        if (!table_) {
-            return arrow::Status::Invalid("DataFrame is empty.");
+    arrow::Result<std::shared_ptr<arrow::RecordBatch>> DataFrame::getRow(int64_t index) const {
+        if (!table_ || index < 0 || index >= table_->num_rows()) {
+            return arrow::Status::Invalid("Invalid row index");
         }
-
-        if (table_ < 0 || index >= table_->num_rows()) {
-            return arrow::Status::Invalid("Row index out of range");
-        }
-
-        std::vector<std::shared_ptr<arrow::Array> > arrays;
-        for (int i = 0; i < table_->num_columns(); ++i) {
-            // 对于每一列，获取对应行的值
-            arrays.push_back(table_->column(i)->chunk(0)->Slice(index, 1));
-        }
-        return arrow::RecordBatch::Make(table_->schema(), 1, arrays);
+        
+        // Create a slice of the table for the specific row
+        auto sliced_table = table_->Slice(index, 1);
+        std::shared_ptr<arrow::RecordBatch> batch;
+        ARROW_RETURN_NOT_OK(arrow::TableBatchReader(*sliced_table).ReadNext(&batch));
+        return batch;
     }
 
-    // arrow::Result<DataFrame> DataFrame::filter(const std::string &column,
-    //                                     const std::shared_ptr<arrow::Scalar> &value) const {
-    //     if (!table_) {
-    //         return arrow::Status::Invalid("DataFrame is empty");
-    //     }
-    //
-    //     auto col = table_->GetColumnByName(column);
-    //     if (!col) {
-    //         return arrow::Status::Invalid("Column not found: " + column);
-    //     }
-    //
-    //     // 使用新的Arrow compute API
-    //     ARROW_ASSIGN_OR_RAISE(auto mask,
-    //         arrow::compute::CallFunction("equal", {col, value}));
-    //
-    //     // 使用过滤器
-    //     ARROW_ASSIGN_OR_RAISE(auto filtered_table,
-    //         arrow::compute::CallFunction("filter", {table_, mask}));
-    //
-    //     return DataFrame(filtered_table.table());
-    // }
-
-    arrow::Result<DataFrame> DataFrame::filter(const std::string &column,
-                                               const std::shared_ptr<arrow::Scalar> &value,
-                                               const std::string &comparison_operator) const {
+    arrow::Result<DataFrame> DataFrame::filter(
+        const std::string& column,
+        const std::shared_ptr<arrow::Scalar>& value,
+        const std::string& comparison_operator
+    ) const {
         if (!table_) {
             return arrow::Status::Invalid("DataFrame is empty");
         }
 
-        auto col = table_->GetColumnByName(column);
+        auto col = getColumn(column);
         if (!col) {
-            return arrow::Status::Invalid("Column not found: " + column);
+            return arrow::Status::Invalid("Column not found");
         }
 
-        // 根据比较操作符选择函数
-        std::string function_name = comparison_operator;
-        if (function_name != "equal" && function_name != "not_equal" &&
-            function_name != "less" && function_name != "less_equal" &&
-            function_name != "greater" && function_name != "greater_equal") {
-            return arrow::Status::Invalid("Invalid comparison operator: " + comparison_operator);
+        // Create comparison kernel
+        std::string kernel_name;
+        if (comparison_operator == "equal") {
+            kernel_name = "equal";
+        } else if (comparison_operator == "not_equal") {
+            kernel_name = "not_equal";
+        } else if (comparison_operator == "greater") {
+            kernel_name = "greater";
+        } else if (comparison_operator == "greater_equal") {
+            kernel_name = "greater_equal";
+        } else if (comparison_operator == "less") {
+            kernel_name = "less";
+        } else if (comparison_operator == "less_equal") {
+            kernel_name = "less_equal";
+        } else {
+            return arrow::Status::Invalid("Invalid comparison operator");
         }
 
-        // 执行比较操作
-        arrow::Result<arrow::Datum> compare_result = arrow::compute::CallFunction(function_name, {col, value});
-        if (!compare_result.ok()) {
-            // 直接构造 arrow::Status 对象来添加错误信息
-            return arrow::Status(compare_result.status().code(),
-                                 "Error performing comparison operation: " + compare_result.status().message());
-        }
+        // Perform comparison
+        arrow::Datum col_datum(col);
+        arrow::Datum value_datum(value);
+        ARROW_ASSIGN_OR_RAISE(auto mask_datum, 
+            arrow::compute::CallFunction(kernel_name, {col_datum, value_datum}));
 
-        // 使用过滤器
-        arrow::Result<arrow::Datum> filter_result = arrow::compute::CallFunction("filter", {
-            table_, compare_result.ValueOrDie()
-        });
+        // Perform filtering
+        arrow::Datum table_datum(table_);
+        ARROW_ASSIGN_OR_RAISE(auto filtered_datum,
+            arrow::compute::CallFunction("filter", {table_datum, mask_datum}));
 
-        if (!filter_result.ok()) {
-            // 直接构造 arrow::Status 对象来添加错误信息
-            return arrow::Status(filter_result.status().code(),
-                                 "Error filtering table: " + filter_result.status().message());
-        }
-
-        return DataFrame(filter_result.ValueOrDie().table());
+        return DataFrame(filtered_datum.table());
     }
 
-    arrow::Result<DataFrame> DataFrame::sort(const std::string &column, bool ascending) const {
+    arrow::Result<DataFrame> DataFrame::sort(
+        const std::string& column, 
+        bool ascending
+    ) const {
         if (!table_) {
             return arrow::Status::Invalid("DataFrame is empty");
         }
 
-        // 创建排序选项
-        arrow::compute::SortOptions options({
-            arrow::compute::SortKey(column, ascending
-                                                ? arrow::compute::SortOrder::Ascending
-                                                : arrow::compute::SortOrder::Descending)
-        });
+        auto col = getColumn(column);
+        if (!col) {
+            return arrow::Status::Invalid("Column not found");
+        }
+        arrow::compute::SortOptions options({arrow::compute::SortKey(column, ascending ? arrow::compute::SortOrder::Ascending : arrow::compute::SortOrder::Descending)});
 
-        // 获取排序索引
-        ARROW_ASSIGN_OR_RAISE(auto indices,
-                              arrow::compute::CallFunction("sort_indices", {table_}, &options));
-
-        // 使用索引重新排序表
-        ARROW_ASSIGN_OR_RAISE(auto sorted_table,
-                              arrow::compute::CallFunction("take", {table_, indices}));
+        ARROW_ASSIGN_OR_RAISE(auto indices, arrow::compute::SortIndices(table_, options));
+        ARROW_ASSIGN_OR_RAISE(auto sorted_table, arrow::compute::Take(table_, indices));
 
         return DataFrame(sorted_table.table());
     }
-
 
     template<typename T>
     arrow::Result<T> DataFrame::getValue(int64_t row, const std::string &column) const {
         if (!table_) {
             return arrow::Status::Invalid("DataFrame is empty");
         }
-
-        auto col = table_->GetColumnByName(column);
+        if (row < 0 || row >= table_->num_rows()) {
+            return arrow::Status::Invalid("Row index out of bounds");
+        }
+        auto col = getColumn(column);
         if (!col) {
-            return arrow::Status::Invalid("Column not found: " + column);
+            return arrow::Status::Invalid("Column not found");
         }
-
-        if (row < 0 || row >= col->length()) {
-            return arrow::Status::Invalid("Row index out of range");
+        if (col->num_chunks() == 0) {
+            return arrow::Status::Invalid("Column has no data");
         }
-
-        // 遍历 ChunkedArray 的所有 chunk
-        int64_t current_row = row;
-        for (const auto &chunk: col->chunks()) {
-            if (current_row < chunk->length()) {
-                // 确定列的类型
-                auto type = chunk->type();
-
-                // 根据列的类型，将 ChunkedArray 转换为相应的 Array 类型
-                if (type->Equals(arrow::int64())) {
-                    auto array = std::static_pointer_cast<arrow::Int64Array>(chunk);
-                    if (array->IsValid(current_row)) {
-                        return arrow::internal::checked_cast<T>(array->Value(current_row));
-                    }
-                } else if (type->Equals(arrow::float64())) {
-                    auto array = std::static_pointer_cast<arrow::DoubleArray>(chunk);
-                    if (array->IsValid(current_row)) {
-                        return arrow::internal::checked_cast<T>(array->Value(current_row));
-                    }
-                } else if (type->Equals(arrow::utf8())) {
-                    auto array = std::static_pointer_cast<arrow::StringArray>(chunk);
-                    if (array->IsValid(current_row)) {
-                        return static_cast<T>(array->GetString(current_row));
-                        // StringArray 的 GetString 返回的是 std::string_view
-                    }
-                } else {
-                    return arrow::Status::NotImplemented("Unsupported data type for getValue");
-                }
-                break; // 找到包含指定行的 chunk 后退出循环
+        
+        if constexpr (std::is_same_v<T, std::string>) {
+            if (col->type()->id() != arrow::Type::STRING && col->type()->id() != arrow::Type::LARGE_STRING) {
+                return arrow::Status::TypeError("Column type is not string");
             }
-            current_row -= chunk->length();
+            auto array = std::static_pointer_cast<arrow::StringArray>(col->chunk(0));
+            return array->GetString(row);
+        } else if constexpr (std::is_same_v<T, int64_t>) {
+            if (col->type()->id() != arrow::Type::INT64) {
+                return arrow::Status::TypeError("Column type is not int64");
+            }
+            auto array = std::static_pointer_cast<arrow::Int64Array>(col->chunk(0));
+            return array->Value(row);
+        } else if constexpr (std::is_same_v<T, double>) {
+            if (col->type()->id() != arrow::Type::DOUBLE) {
+                return arrow::Status::TypeError("Column type is not double");
+            }
+            auto array = std::static_pointer_cast<arrow::DoubleArray>(col->chunk(0));
+            return array->Value(row);
+        } else if constexpr (std::is_same_v<T, bool>) {
+            if (col->type()->id() != arrow::Type::BOOL) {
+                return arrow::Status::TypeError("Column type is not bool");
+            }
+            auto array = std::static_pointer_cast<arrow::BooleanArray>(col->chunk(0));
+            return array->Value(row);
+        } else {
+            return arrow::Status::NotImplemented("Type not supported");
         }
-
-        return arrow::Status::Invalid("Value is null or row index is out of bounds for the chunk");
     }
 
     bool DataFrame::toSaveExcel(const std::string &filePath, bool forceOverwrite) const {
-        if (!table_) {
+        if (!forceOverwrite && std::filesystem::exists(filePath)) {
+            spdlog::error("File already exists: {}", filePath);
             return false;
+        }
+
+        if (!table_) {
+            spdlog::error("DataFrame is empty, nothing to save.");
+            return false;
+        }
+
+        xlnt::workbook wb;
+        xlnt::worksheet ws = wb.active_sheet();
+
+        // Write header
+        int col_index = 1;
+        for (const auto& field : table_->schema()->fields()) {
+            ws.cell(col_index, 1).value(field->name());
+            col_index++;
+        }
+
+        // Write data
+        for (int64_t row_index = 0; row_index < table_->num_rows(); ++row_index) {
+            for (int col_index = 0; col_index < table_->num_columns(); ++col_index) {
+                auto cell = ws.cell(col_index + 1, row_index + 2);
+                auto column = table_->column(col_index);
+
+                if (column->chunk(0)->IsNull(row_index)) {
+                    continue; // Skip null values
+                }
+
+                switch (column->type()->id()) {
+                    case arrow::Type::INT64: {
+                        auto int_array = std::static_pointer_cast<arrow::Int64Array>(column->chunk(0));
+                        cell.value(static_cast<int64_t>(int_array->Value(row_index)));
+                        break;
+                    }
+                    case arrow::Type::DOUBLE: {
+                        auto double_array = std::static_pointer_cast<arrow::DoubleArray>(column->chunk(0));
+                        cell.value(double_array->Value(row_index));
+                        break;
+                    }
+                    case arrow::Type::STRING: {
+                        auto string_array = std::static_pointer_cast<arrow::StringArray>(column->chunk(0));
+                        cell.value(string_array->GetString(row_index));
+                        break;
+                    }
+                    case arrow::Type::BOOL: {
+                        auto bool_array = std::static_pointer_cast<arrow::BooleanArray>(column->chunk(0));
+                        cell.value(bool_array->Value(row_index));
+                        break;
+                    }
+                    case arrow::Type::TIMESTAMP: {
+                        auto timestamp_array = std::static_pointer_cast<arrow::TimestampArray>(column->chunk(0));
+                        auto timestamp = timestamp_array->Value(row_index);
+                        time_t unix_time = timestamp / 1000000;
+                        #ifdef _WIN32
+                        struct tm timeinfo;
+                        if (localtime_s(&timeinfo, &unix_time) == 0) {
+                            xlnt::datetime dt(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, 
+                                           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                            cell.value(dt);
+                            cell.number_format(xlnt::number_format("yyyy-mm-dd"));
+                        }
+                        #else
+                        struct tm timeinfo;
+                        if (localtime_r(&unix_time, &timeinfo) != nullptr) {
+                            xlnt::datetime dt(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, 
+                                           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                            cell.value(dt);
+                            cell.number_format(xlnt::number_format("yyyy-mm-dd"));
+                        }
+                        #endif
+                        break;
+                    }
+                    default:
+                        spdlog::warn("Unsupported column type for Excel export: {}", column->type()->ToString());
+                        break;
+                }
+            }
         }
 
         try {
-            // 创建输出文件流
-            auto maybe_outfile = arrow::io::FileOutputStream::Open(filePath, forceOverwrite);
-            if (!maybe_outfile.ok()) {
-                return false;
-            }
-            const auto outfile = *maybe_outfile;
-
-            // Parquet写入选项
-            parquet::WriterProperties::Builder builder;
-            builder.compression(parquet::Compression::SNAPPY);
-            auto properties = builder.build();
-
-            // 写入Parquet文件
-            const auto status = parquet::arrow::WriteTable(
-                *table_,
-                arrow::default_memory_pool(),
-                outfile,
-                64 * 1024,
-                properties
-            );
-
-            return status.ok();
-        } catch (const std::exception &e) {
+            wb.save(filePath);
+            spdlog::info("DataFrame successfully saved to: {}", filePath);
+            return true;
+        } catch (const xlnt::exception& e) {
+            spdlog::error("Failed to save Excel file: {}", e.what());
             return false;
         }
     }
+
+    void DataFrame::appendBatch(std::shared_ptr<arrow::ArrayBuilder>& builder,
+                               const std::vector<std::variant<std::string, double, int64_t>>& batch,
+                               const std::shared_ptr<arrow::DataType>& type) {
+        
+    }
+
+    template arrow::Result<std::string> DataFrame::getValue<std::string>(int64_t row, const std::string &column) const;
+    template arrow::Result<int64_t> DataFrame::getValue<int64_t>(int64_t row, const std::string &column) const;
+    template arrow::Result<double> DataFrame::getValue<double>(int64_t row, const std::string &column) const;
+    template arrow::Result<bool> DataFrame::getValue<bool>(int64_t row, const std::string &column) const;
 }

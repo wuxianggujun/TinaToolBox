@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>Chromatogram_example.txt</file>
-    </qresource>
-</RCC>

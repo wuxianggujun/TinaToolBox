@@ -8,6 +8,8 @@ project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+#add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+#add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
 #set(ARROW_PREFIX_PATH "D:/Programs/vcpkg/installed/x64-windows/share")
@@ -37,6 +39,7 @@ set(ANTLR4_ZIP_REPOSITORY "${CMAKE_SOURCE_DIR}/dependencies/antlr4/antlr4-dev.zi
 include(CPM)
 include(ExternalAntlr4Cpp)
 include(CrashpadConfig)
+include(Utils)
 
 include_directories(${ANTLR4_INCLUDE_DIRS})
 
@@ -107,14 +110,12 @@ target_link_libraries(TinaToolBox PRIVATE
 
 target_link_libraries(TinaToolBox PRIVATE
         spdlog::spdlog
-#        QXlsx::QXlsx
         tomlplusplus::tomlplusplus
         pdfium
         antlr4_static
         cpp-terminal
         Tesseract::libtesseract
-        utf8cpp  
-        OpenXLSX::OpenXLSX
+        utf8cpp
         xlnt
 )
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
@@ -157,8 +158,14 @@ if (QT_VERSION_MAJOR EQUAL 6)
 endif ()
 
 if (WIN32)
-    add_custom_command(TARGET TinaToolBox POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${PDFium_DIR}/bin/pdfium.dll"
-            $<TARGET_FILE_DIR:TinaToolBox>)
-endif ()
+    # 复制 pdfium.dll
+    copy_dll(TinaToolBox "${PDFium_DIR}/bin" "pdfium.dll")
+
+    # 复制 xlnt 的 DLL
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(XLNT_DLL_NAME "xlntd.dll")
+    else()
+        set(XLNT_DLL_NAME "xlnt.dll")
+    endif()
+    copy_dll(TinaToolBox "${CMAKE_BINARY_DIR}/dependencies/xlnt/source" "${XLNT_DLL_NAME}")
+endif()
