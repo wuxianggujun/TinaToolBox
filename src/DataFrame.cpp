@@ -5,6 +5,7 @@
 #include <arrow/type.h>
 #include <arrow/compute/api_scalar.h>
 #include <arrow/compute/exec.h>
+#include <arrow/builder.h>
 #include <memory>
 #include <xlnt/xlnt.hpp>
 #include <spdlog/spdlog.h>
@@ -12,14 +13,90 @@
 #include <future>
 #include <filesystem>
 #include <ctime>
+#include <chrono>
+#include <unordered_map>
+#include <fstream>
+#include <cmath>
+#include <mutex>
+
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#include <time.h>
+#endif
+
+namespace
+{
+    // 辅助函数：将xlnt datetime转换为时间戳
+    int64_t datetime_to_timestamp(const xlnt::datetime& dt) {
+        std::tm tm = {};
+        tm.tm_year = dt.year - 1900;
+        tm.tm_mon = dt.month - 1;
+        tm.tm_mday = dt.day;
+        tm.tm_hour = dt.hour;
+        tm.tm_min = dt.minute;
+        tm.tm_sec = dt.second;
+        time_t t = ::mktime(&tm);
+        if (t == -1) {
+            throw std::runtime_error("Failed to convert datetime to timestamp");
+        }
+        return static_cast<int64_t>(t) * 1000000LL;
+    }
+
+    // 辅助函数：将时间戳转换为xlnt datetime
+    xlnt::datetime timestamp_to_datetime(int64_t timestamp) {
+        time_t unix_time = timestamp / 1000000;
+        std::tm* tm = ::localtime(&unix_time);
+        if (!tm) {
+            throw std::runtime_error("Failed to convert timestamp to datetime");
+        }
+
+        return xlnt::datetime(
+            tm->tm_year + 1900,
+            tm->tm_mon + 1,
+            tm->tm_mday,
+            tm->tm_hour,
+            tm->tm_min,
+            tm->tm_sec
+        );
+    }
+}
 
 namespace TinaToolBox {
-
+    
     DataFrame::DataFrame(std::shared_ptr<arrow::Table> table) : table_(table) {}
+
+    // 辅助函数：创建一个新的ArrayBuilder
+    static std::shared_ptr<arrow::ArrayBuilder> createBuilder(const std::shared_ptr<arrow::DataType>& type) {
+        if (!type) {
+            throw std::runtime_error("Null type passed to createBuilder");
+        }
+
+        arrow::MemoryPool* pool = arrow::default_memory_pool();
+        
+        switch (type->id()) {
+            case arrow::Type::TIMESTAMP: {
+                auto timestamp_type = std::static_pointer_cast<arrow::TimestampType>(type);
+                return std::make_shared<arrow::TimestampBuilder>(timestamp_type, pool);
+            }
+            case arrow::Type::INT64: {
+                return std::make_shared<arrow::Int64Builder>(pool);
+            }
+            case arrow::Type::DOUBLE: {
+                return std::make_shared<arrow::DoubleBuilder>(pool);
+            }
+            case arrow::Type::BOOL: {
+                return std::make_shared<arrow::BooleanBuilder>(pool);
+            }
+            default: {
+                return std::make_shared<arrow::StringBuilder>(pool);
+            }
+        }
+    }
 
     DataFrame DataFrame::fromExcel(const std::string &filePath) {
         auto& pool = getThreadPool();
         xlnt::workbook wb;
+        
         try {
             wb.load(filePath);
         } catch (const xlnt::exception& e) {
@@ -27,190 +104,233 @@ namespace TinaToolBox {
             throw std::runtime_error("Failed to load Excel file: " + std::string(e.what()));
         }
 
+        // 获取工作表的副本而不是引用
         xlnt::worksheet ws = wb.active_sheet();
-        auto max_row = ws.highest_row();
-        auto max_column = ws.highest_column().index;
+        const auto max_row = ws.highest_row();
+        const auto max_column = ws.highest_column().index;
 
         if (max_row < 1 || max_column < 1) {
             throw std::runtime_error("Excel file is empty");
         }
 
-        std::vector<std::shared_ptr<arrow::Field>> fields;
-        std::vector<std::shared_ptr<arrow::ArrayBuilder>> builders;
-        fields.reserve(max_column);
-        builders.reserve(max_column);
+        spdlog::info("Reading Excel file with {} rows and {} columns", max_row, max_column);
+        
+        // 减少采样大小，加快类型检测
+        const size_t SAMPLE_SIZE = std::min<size_t>(20, max_row - 1);
+        const size_t SAMPLE_INTERVAL = std::max<size_t>(1, (max_row - 1) / SAMPLE_SIZE);
+        
+        std::vector<std::shared_ptr<arrow::DataType>> column_types(max_column);
+        std::vector<std::string> column_names(max_column);
+        
+        // 增加chunk大小以减少内存分配次数
+        const size_t estimated_rows = max_row - 1;
+        const size_t CHUNK_SIZE = 5000;  // 更大的chunk大小
+        const size_t num_chunks = (estimated_rows + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-        // 首先确定所有列的类型，这部分不需要并行处理
+        // 预缓存所有列名，减少重复访问
         for (int col = 1; col <= max_column; ++col) {
-            std::shared_ptr<arrow::DataType> type;
-            // Inspect first few rows to determine type
-            for (int row = 2; row <= std::min(11, (int)max_row); ++row) {
-                auto cell = ws.cell(col, row);
-                if (cell.has_value()) {
-                    if (cell.is_date()) {
-                         type = std::make_shared<arrow::TimestampType>(arrow::TimeUnit::MICRO);
-                         break;
-                    }
-                    switch (cell.data_type()) {
-                        case xlnt::cell_type::number: {
-                            double value = cell.value<double>();
-                            double intpart;
-                            if (std::modf(value, &intpart) == 0.0) {
-                                type = std::make_shared<arrow::Int64Type>();
-                            } else {
-                                type = std::make_shared<arrow::DoubleType>();
-                            }
-                            break;
-                        }
-                        case xlnt::cell_type::boolean:
-                            type = std::make_shared<arrow::BooleanType>();
-                            break;
-                        case xlnt::cell_type::inline_string:
-                        case xlnt::cell_type::shared_string:
-                        default:
-                            type = std::make_shared<arrow::StringType>();
-                            break;
-                    }
-                    break;
-                }
+            column_names[col - 1] = ws.cell(col, 1).to_string();
+            if(column_names[col - 1].empty()) {
+                column_names[col - 1] = "Column" + std::to_string(col);
             }
-
-            if (!type) {
-                type = std::make_shared<arrow::StringType>();
-            }
-
-            std::shared_ptr<arrow::ArrayBuilder> builder;
-            
-            if (type->id() == arrow::Type::TIMESTAMP) {
-                builder = std::make_shared<arrow::TimestampBuilder>(type, arrow::default_memory_pool());
-            } else if (type->id() == arrow::Type::INT64) {
-                builder = std::make_shared<arrow::Int64Builder>();
-            } else if (type->id() == arrow::Type::DOUBLE) {
-                builder = std::make_shared<arrow::DoubleBuilder>();
-            } else if (type->id() == arrow::Type::BOOL) {
-                builder = std::make_shared<arrow::BooleanBuilder>();
-            } else {
-                builder = std::make_shared<arrow::StringBuilder>();
-            }
-
-            std::string columnName = ws.cell(col, 1).to_string();
-            if(columnName.empty()){
-                columnName = "Column" + std::to_string(col);
-            }
-            
-            fields.push_back(std::make_shared<arrow::Field>(columnName, type));
-            builders.push_back(builder);
         }
 
-        auto schema = std::make_shared<arrow::Schema>(fields);
-
-        // Process rows in parallel
-        const size_t CHUNK_SIZE = 1000; // 每个线程处理1000行
-        const size_t num_chunks = (max_row - 1 + CHUNK_SIZE - 1) / CHUNK_SIZE;
-        std::vector<std::future<arrow::Status>> append_futures;
-        append_futures.reserve(num_chunks);
-
-        std::mutex builders_mutex; // 保护builders的互斥锁
-
-        for (size_t chunk = 0; chunk < num_chunks; ++chunk) {
-            size_t start_row = 2 + chunk * CHUNK_SIZE;
-            size_t end_row = std::min(start_row + CHUNK_SIZE, static_cast<size_t>(max_row + 1));
-
-            append_futures.push_back(pool.submit([&, start_row, end_row]() -> arrow::Status {
-                try {
-                    for (size_t row = start_row; row < end_row; ++row) {
-                        std::lock_guard<std::mutex> lock(builders_mutex);
-                        for (int col = 1; col <= max_column; ++col) {
-                            auto cell = ws.cell(col, row);
-                            auto& builder = builders[col - 1];
-
-                            if (!cell.has_value()) {
-                                ARROW_RETURN_NOT_OK(builder->AppendNull());
-                                continue;
+        // 使用互斥锁保护worksheet访问
+        std::mutex ws_mutex;
+        
+        // 并行类型检测
+        std::vector<std::future<void>> type_futures;
+        type_futures.reserve(max_column);
+        
+        for (int col = 1; col <= max_column; ++col) {
+            type_futures.push_back(pool.submit([col, ws, max_row, SAMPLE_SIZE, SAMPLE_INTERVAL, &column_types]() {
+                std::unordered_map<arrow::Type::type, int> type_counts;
+                bool has_date = false;
+                std::vector<xlnt::cell> sample_cells;
+                sample_cells.reserve(SAMPLE_SIZE);
+                
+                // 一次性获取所有样本单元格
+                for (size_t sample_idx = 0; sample_idx < SAMPLE_SIZE; ++sample_idx) {
+                    size_t row = 2 + sample_idx * SAMPLE_INTERVAL;
+                    if (row > max_row) break;
+                    sample_cells.push_back(ws.cell(col, row));
+                }
+                
+                // 处理样本数据
+                size_t non_empty_count = 0;
+                for (const auto& cell : sample_cells) {
+                    if (non_empty_count >= 10) break;
+                    
+                    if (cell.has_value()) {
+                        non_empty_count++;
+                        if (cell.is_date()) {
+                            has_date = true;
+                            break;
+                        }
+                        switch (cell.data_type()) {
+                            case xlnt::cell_type::number: {
+                                double value = cell.value<double>();
+                                double intpart;
+                                if (std::modf(value, &intpart) == 0.0) {
+                                    type_counts[arrow::Type::INT64]++;
+                                } else {
+                                    type_counts[arrow::Type::DOUBLE]++;
+                                }
+                                break;
                             }
-                            
-                            if (fields[col-1]->type()->id() == arrow::Type::TIMESTAMP) {
-                                auto timestampBuilder = dynamic_cast<arrow::TimestampBuilder*>(builder.get());
-                                if (cell.is_date()) {
-                                    auto dt = cell.value<xlnt::datetime>();
-                                    // Convert xlnt datetime to timestamp
-                                    std::tm tm = {};
-                                    tm.tm_year = dt.year - 1900;
-                                    tm.tm_mon = dt.month - 1;
-                                    tm.tm_mday = dt.day;
-                                    tm.tm_hour = dt.hour;
-                                    tm.tm_min = dt.minute;
-                                    tm.tm_sec = dt.second;
-                                    #ifdef _WIN32
-                                    int64_t timestamp = _mktime64(&tm) * 1000000;
-                                    #else
-                                    int64_t timestamp = std::mktime(&tm) * 1000000;
-                                    #endif
-                                    ARROW_RETURN_NOT_OK(timestampBuilder->Append(timestamp));
-                                } else {
-                                    ARROW_RETURN_NOT_OK(builder->AppendNull());
-                                }
-                            } else if (fields[col - 1]->type()->id() == arrow::Type::INT64) {
-                                auto intBuilder = dynamic_cast<arrow::Int64Builder*>(builder.get());
-                                if (cell.data_type() == xlnt::cell_type::number) {
-                                    ARROW_RETURN_NOT_OK(intBuilder->Append(static_cast<int64_t>(cell.value<double>())));
-                                } else {
-                                    ARROW_RETURN_NOT_OK(builder->AppendNull());
-                                }
-                            } else if (fields[col - 1]->type()->id() == arrow::Type::DOUBLE) {
-                                auto doubleBuilder = dynamic_cast<arrow::DoubleBuilder*>(builder.get());
-                                if (cell.data_type() == xlnt::cell_type::number) {
-                                    ARROW_RETURN_NOT_OK(doubleBuilder->Append(cell.value<double>()));
-                                } else {
-                                    ARROW_RETURN_NOT_OK(builder->AppendNull());
-                                }
-                            } else if (fields[col - 1]->type()->id() == arrow::Type::BOOL) {
-                                auto boolBuilder = dynamic_cast<arrow::BooleanBuilder*>(builder.get());
-                                if (cell.data_type() == xlnt::cell_type::boolean) {
-                                    ARROW_RETURN_NOT_OK(boolBuilder->Append(cell.value<bool>()));
-                                } else {
-                                    ARROW_RETURN_NOT_OK(builder->AppendNull());
-                                }
-                            } else {
-                                auto stringBuilder = dynamic_cast<arrow::StringBuilder*>(builder.get());
-                                ARROW_RETURN_NOT_OK(stringBuilder->Append(cell.to_string()));
-                            }
+                            case xlnt::cell_type::boolean:
+                                type_counts[arrow::Type::BOOL]++;
+                                break;
+                            default:
+                                type_counts[arrow::Type::STRING]++;
+                                break;
                         }
                     }
-                    return arrow::Status::OK();
-                } catch (const std::exception& e) {
-                    return arrow::Status::Invalid("Error processing data: " + std::string(e.what()));
+                }
+                
+                if (has_date) {
+                    column_types[col - 1] = std::make_shared<arrow::TimestampType>(arrow::TimeUnit::MICRO);
+                } else if (!type_counts.empty()) {
+                    auto max_type = std::max_element(
+                        type_counts.begin(), type_counts.end(),
+                        [](const auto& p1, const auto& p2) { return p1.second < p2.second; }
+                    );
+                    
+                    switch (max_type->first) {
+                        case arrow::Type::INT64:
+                            column_types[col - 1] = std::make_shared<arrow::Int64Type>();
+                            break;
+                        case arrow::Type::DOUBLE:
+                            column_types[col - 1] = std::make_shared<arrow::DoubleType>();
+                            break;
+                        case arrow::Type::BOOL:
+                            column_types[col - 1] = std::make_shared<arrow::BooleanType>();
+                            break;
+                        default:
+                            column_types[col - 1] = std::make_shared<arrow::StringType>();
+                            break;
+                    }
+                } else {
+                    column_types[col - 1] = std::make_shared<arrow::StringType>();
                 }
             }));
         }
 
-        // Wait for all append tasks to complete and check their status
-        for (auto& fut : append_futures) {
-            try {
-                auto status = fut.get();
-                if (!status.ok()) {
-                    throw std::runtime_error("Failed to process data: " + status.ToString());
-                }
-            } catch (const std::exception& e) {
-                throw std::runtime_error(std::string("Failed to process data: ") + e.what());
-            }
+        // 等待所有类型检测完成
+        for (auto& fut : type_futures) {
+            fut.wait();
         }
 
-        std::vector<std::shared_ptr<arrow::Array>> arrays;
-        arrays.reserve(builders.size());
+        // 创建schema
+        std::vector<std::shared_ptr<arrow::Field>> fields;
+        fields.reserve(max_column);
+        for (size_t i = 0; i < max_column; ++i) {
+            fields.push_back(std::make_shared<arrow::Field>(column_names[i], column_types[i]));
+        }
+        auto schema = std::make_shared<arrow::Schema>(fields);
+
+        // 并行处理所有列
+        std::vector<std::shared_ptr<arrow::ChunkedArray>> columns(max_column);
+        std::vector<std::future<void>> column_futures;
+        column_futures.reserve(max_column);
         
-        for (auto& builder : builders) {
-            std::shared_ptr<arrow::Array> array;
-            arrow::Status status = builder->Finish(&array);
-            if (!status.ok()) {
-                spdlog::error("Failed to finalize array: {}", status.ToString());
-                throw std::runtime_error("Failed to finalize array: " + status.ToString());
-            }
-            arrays.push_back(array);
+        for (int col = 1; col <= max_column; ++col) {
+            column_futures.push_back(pool.submit([col, ws, max_row, CHUNK_SIZE, num_chunks, &column_types, &columns]() {
+                std::vector<std::shared_ptr<arrow::Array>> chunks;
+                chunks.reserve(num_chunks);
+                auto builder = createBuilder(column_types[col-1]);
+                
+                for (size_t chunk = 0; chunk < num_chunks; ++chunk) {
+                    size_t start_row = 2 + chunk * CHUNK_SIZE;
+                    size_t end_row = std::min<size_t>(start_row + CHUNK_SIZE, max_row + 1);
+                    
+                    builder->Reserve(end_row - start_row);
+                    
+                    // 一次性读取整个chunk的数据
+                    std::vector<xlnt::cell> chunk_cells;
+                    chunk_cells.reserve(end_row - start_row);
+                    for (size_t row = start_row; row < end_row; ++row) {
+                        chunk_cells.push_back(ws.cell(col, row));
+                    }
+                    
+                    // 处理chunk数据
+                    for (const auto& cell : chunk_cells) {
+                        arrow::Status status;
+
+                        if (!cell.has_value()) {
+                            status = builder->AppendNull();
+                        } else {
+                            switch (column_types[col-1]->id()) {
+                                case arrow::Type::TIMESTAMP: {
+                                    auto timestampBuilder = static_cast<arrow::TimestampBuilder*>(builder.get());
+                                    if (cell.is_date()) {
+                                        auto dt = cell.value<xlnt::datetime>();
+                                        status = timestampBuilder->Append(datetime_to_timestamp(dt));
+                                    } else {
+                                        status = builder->AppendNull();
+                                    }
+                                    break;
+                                }
+                                case arrow::Type::INT64: {
+                                    auto intBuilder = static_cast<arrow::Int64Builder*>(builder.get());
+                                    if (cell.data_type() == xlnt::cell_type::number) {
+                                        status = intBuilder->Append(static_cast<int64_t>(cell.value<double>()));
+                                    } else {
+                                        status = builder->AppendNull();
+                                    }
+                                    break;
+                                }
+                                case arrow::Type::DOUBLE: {
+                                    auto doubleBuilder = static_cast<arrow::DoubleBuilder*>(builder.get());
+                                    if (cell.data_type() == xlnt::cell_type::number) {
+                                        status = doubleBuilder->Append(cell.value<double>());
+                                    } else {
+                                        status = builder->AppendNull();
+                                    }
+                                    break;
+                                }
+                                case arrow::Type::BOOL: {
+                                    auto boolBuilder = static_cast<arrow::BooleanBuilder*>(builder.get());
+                                    if (cell.data_type() == xlnt::cell_type::boolean) {
+                                        status = boolBuilder->Append(cell.value<bool>());
+                                    } else {
+                                        status = builder->AppendNull();
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    auto stringBuilder = static_cast<arrow::StringBuilder*>(builder.get());
+                                    status = stringBuilder->Append(cell.to_string());
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!status.ok()) {
+                            throw std::runtime_error("Failed to append value: " + status.ToString());
+                        }
+                    }
+
+                    std::shared_ptr<arrow::Array> chunk_array;
+                    auto status = builder->Finish(&chunk_array);
+                    if (!status.ok()) {
+                        throw std::runtime_error("Failed to finalize array: " + status.ToString());
+                    }
+                    chunks.push_back(chunk_array);
+                    
+                    builder = createBuilder(column_types[col-1]);
+                }
+                
+                columns[col-1] = std::make_shared<arrow::ChunkedArray>(chunks);
+            }));
         }
 
-        auto table = arrow::Table::Make(schema, arrays);
-        return DataFrame(table);
+        // 等待所有列处理完成
+        for (auto& fut : column_futures) {
+            fut.wait();
+        }
+
+        return DataFrame(arrow::Table::Make(schema, columns));
     }
 
     std::vector<std::string> DataFrame::getColumnNames() const {
@@ -411,24 +531,9 @@ namespace TinaToolBox {
                     case arrow::Type::TIMESTAMP: {
                         auto timestamp_array = std::static_pointer_cast<arrow::TimestampArray>(column->chunk(0));
                         auto timestamp = timestamp_array->Value(row_index);
-                        time_t unix_time = timestamp / 1000000;
-                        #ifdef _WIN32
-                        struct tm timeinfo;
-                        if (localtime_s(&timeinfo, &unix_time) == 0) {
-                            xlnt::datetime dt(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, 
-                                           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-                            cell.value(dt);
-                            cell.number_format(xlnt::number_format("yyyy-mm-dd"));
-                        }
-                        #else
-                        struct tm timeinfo;
-                        if (localtime_r(&unix_time, &timeinfo) != nullptr) {
-                            xlnt::datetime dt(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, 
-                                           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-                            cell.value(dt);
-                            cell.number_format(xlnt::number_format("yyyy-mm-dd"));
-                        }
-                        #endif
+                        xlnt::datetime dt = timestamp_to_datetime(timestamp);
+                        cell.value(dt);
+                        cell.number_format(xlnt::number_format("yyyy-mm-dd"));
                         break;
                     }
                     default:
