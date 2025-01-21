@@ -7,9 +7,9 @@ project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
-#add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
-#add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf -8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
 #set(ARROW_PREFIX_PATH "D:/Programs/vcpkg/installed/x64-windows/share")
@@ -31,17 +31,31 @@ set(PDFium_DIR "${PROJECT_SOURCE_DIR}/dependencies/pdfium-win-x64" CACHE PATH "P
 
 list(APPEND CMAKE_PREFIX_PATH ${PDFium_DIR})
 
-add_definitions(-DANTLR4CPP_STATIC)
-set(ANTLR4_WITH_STATIC_CRT OFF)
+if(MSVC)
+    add_compile_options(/MP /bigobj /EHsc)
+    # 禁用 Qt 关键字宏，包括 emit
+#    add_compile_definitions(QT_NO_KEYWORDS)
+    add_definitions(-D_WIN32_WINNT=0x0601)
+    add_definitions(-DNOMINMAX)
+    add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+endif()
 
-# 改为压缩包下载地址
-set(ANTLR4_ZIP_REPOSITORY "${CMAKE_SOURCE_DIR}/dependencies/antlr4/antlr4-dev.zip")
+# 设置ANTLR4的编译选项
+set(ANTLR4_WITH_STATIC_CRT OFF)
+set(ANTLR4_TAG "4.13.1")
+set(ANTLR4_SHARED_LIBS OFF)
+set(ANTLR4_RUNTIME_ONLY ON)
+
 include(CPM)
-include(ExternalAntlr4Cpp)
 include(CrashpadConfig)
 include(Utils)
 
-include_directories(${ANTLR4_INCLUDE_DIRS})
+# 确保ANTLR4的include目录被正确包含
+include_directories(
+    ${ANTLR4_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/excel_script
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
 set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13.2-complete.jar")
 
@@ -55,9 +69,22 @@ find_package(PDFium REQUIRED)
 find_package(Arrow CONFIG REQUIRED)
 find_package(Parquet CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(antlr4-runtime CONFIG REQUIRED)
 find_package(Tesseract CONFIG REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
+
+# Add ANTLR4 ExcelScript grammar
+antlr_target(ExcelScript grammar/ExcelScript.g4
+        LEXER
+        PARSER
+        LISTENER
+        VISITOR
+        PACKAGE excel_script
+        OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated/excel_script)
+
+# 确保生成的文件被包含
+include_directories(${ANTLR_ExcelScript_OUTPUT_DIR})
 
 file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
@@ -68,7 +95,14 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 # 生成资源文件
 qt_add_resources(RESOURCES ${RC_FILES})
 
-list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${SOURCE_FILES} ${RC_FILES} ${UI_FILES} ${RESOURCES})
+# Add generated ANTLR files to the project sources
+list(APPEND PROJECT_SOURCES 
+    ${ANTLR_ExcelScript_CXX_OUTPUTS}
+    ${HEADER_FILES} 
+    ${SOURCE_FILES} 
+    ${RC_FILES} 
+    ${UI_FILES} 
+    ${RESOURCES})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
@@ -112,7 +146,7 @@ target_link_libraries(TinaToolBox PRIVATE
         spdlog::spdlog
         tomlplusplus::tomlplusplus
         pdfium
-        antlr4_static
+        antlr4_shared
         cpp-terminal
         Tesseract::libtesseract
         utf8cpp

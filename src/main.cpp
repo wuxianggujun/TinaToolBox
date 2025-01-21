@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include "MainWindow.hpp"
 #include "LogSystem.hpp"
 #include "Singleton.hpp"

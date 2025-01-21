@@ -7,8 +7,6 @@ set(CPPTERMINAL_ENABLE_DOCS OFF CACHE BOOL "" FORCE)
  
 add_subdirectory(cpp-terminal)
 
-#add_subdirectory(OpenXLSX)
-
 add_subdirectory(utfcpp)
 
 add_subdirectory(xlnt/source)

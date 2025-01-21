@@ -30,10 +30,14 @@
 #include <QElapsedTimer>
 #include <QDebug>
 
+#include "ExcelScriptInterpreter.hpp"
 
-namespace TinaToolBox {
-    MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent) {
+
+namespace TinaToolBox
+{
+    MainWindow::MainWindow(QWidget* parent)
+        : QMainWindow(parent)
+    {
         // QString theme = ConfigManager::getInstance().getString("app","theme","light");
 
         setWindowTitle(tr("TinaToolBox"));
@@ -54,19 +58,21 @@ namespace TinaToolBox {
         setUpUI();
     }
 
-    MainWindow::~MainWindow() {
+    MainWindow::~MainWindow()
+    {
         // 在程序退出时清理PDFium库
         PdfViewer::PDFiumLibrary::Destroy();
     }
 
 
-    void MainWindow::setUpUI() {
+    void MainWindow::setUpUI()
+    {
         createTileBar();
 
-        auto *mainContainer = new QWidget();
+        auto* mainContainer = new QWidget();
         mainLayout->addWidget(mainContainer);
 
-        auto *mainContainerLayout = new QVBoxLayout(mainContainer);
+        auto* mainContainerLayout = new QVBoxLayout(mainContainer);
         mainContainerLayout->setContentsMargins(0, 0, 0, 0);
         mainContainerLayout->setSpacing(0);
 
@@ -74,7 +80,7 @@ namespace TinaToolBox {
         mainSplitter = new QSplitter(Qt::Horizontal);
         mainContainerLayout->addWidget(mainSplitter);
 
-        auto *leftPanel = createLeftPanel();
+        auto* leftPanel = createLeftPanel();
 
         mainSplitter->addWidget(leftPanel);
 
@@ -82,14 +88,14 @@ namespace TinaToolBox {
         // rightSplitter->setChildrenCollapsible(false); // 防止子控件完全折叠
 
         documentArea = new DocumentArea();
-        auto *centerSplitter = new QSplitter(Qt::Horizontal);
+        auto* centerSplitter = new QSplitter(Qt::Horizontal);
         centerSplitter->addWidget(documentArea);
 
         // 设置属性面板
-        auto *propertyPanel = new QWidget();
+        auto* propertyPanel = new QWidget();
         propertyPanel->setMinimumWidth(200);
         propertyPanel->setMaximumWidth(350);
-        auto *propertyPanelLayout = new QVBoxLayout(propertyPanel);
+        auto* propertyPanelLayout = new QVBoxLayout(propertyPanel);
         propertyPanelLayout->setContentsMargins(0, 0, 0, 0);
         propertyPanelLayout->setSpacing(0);
 
@@ -103,7 +109,7 @@ namespace TinaToolBox {
         // 创建底部面板
         bottomPanel = new QWidget();
         bottomPanel->setMinimumHeight(150);
-        auto *bottomPanelLayout = new QVBoxLayout(bottomPanel);
+        auto* bottomPanelLayout = new QVBoxLayout(bottomPanel);
         bottomPanelLayout->setContentsMargins(0, 0, 0, 0);
         bottomPanelLayout->setSpacing(0);
 
@@ -139,7 +145,8 @@ namespace TinaToolBox {
         setupConnections();
     }
 
-    void MainWindow::createTileBar() {
+    void MainWindow::createTileBar()
+    {
         m_menuBar = new MainWindowMenuBar(this);
         setMenuWidget(m_menuBar); // 使用 setMenuWidget 而不是 setMenuBar
 
@@ -151,7 +158,8 @@ namespace TinaToolBox {
         connect(m_menuBar, &MainWindowMenuBar::menuActionTriggered, this, &MainWindow::handleMenuAction);
     }
 
-    void MainWindow::onSettingsClicked() {
+    void MainWindow::onSettingsClicked()
+    {
         /*if (documentArea) {
             documentArea->showSettingsPanel();
         }*/
@@ -166,33 +174,44 @@ namespace TinaToolBox {
         std::cout << "Standard output" << std::endl;
     }
 
-    void MainWindow::toggleMaximize() {
-        if (isMaximized()) {
+    void MainWindow::toggleMaximize()
+    {
+        if (isMaximized())
+        {
             showNormal();
-            if (m_menuBar) {
+            if (m_menuBar)
+            {
                 m_menuBar->updateMaximizeButton(false);
             }
-        } else {
+        }
+        else
+        {
             showMaximized();
-            if (m_menuBar) {
+            if (m_menuBar)
+            {
                 m_menuBar->updateMaximizeButton(true);
             }
         }
     }
 
-    void MainWindow::onFileDoubleClicked(const QTreeWidgetItem *item) {
+    void MainWindow::onFileDoubleClicked(const QTreeWidgetItem* item)
+    {
         QString filePath = item->data(0, Qt::UserRole).toString();
-        if (!filePath.isEmpty()) {
-            if (documentArea) {
+        if (!filePath.isEmpty())
+        {
+            if (documentArea)
+            {
                 DocumentManager::getInstance().openDocument(filePath);
                 updateFileHistory(filePath);
             }
         }
     }
 
-    void MainWindow::onRunButtonStateChanged(bool isRunning) {
+    void MainWindow::onRunButtonStateChanged(bool isRunning)
+    {
         auto doc = TinaToolBox::DocumentManager::getInstance().getCurrentDocument();
-        if (!doc || !doc->isScript()) {
+        if (!doc || !doc->isScript())
+        {
             return;
         }
 
@@ -203,8 +222,9 @@ namespace TinaToolBox {
             scriptRunner_->stop();
         }*/
 
-        FILE *fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)", "r");
-        if (!fh) {
+        FILE* fh = fopen(R"(C:\Users\wuxianggujun\CodeSpace\CMakeProjects\TinaToolBox\scripts\test.ttb)", "r");
+        if (!fh)
+        {
             qDebug() << "Failed to open file";
             return;
         }
@@ -218,52 +238,68 @@ namespace TinaToolBox {
         simpleparser::Tokenizer tokenizer;
         std::vector<simpleparser::Token> tokens = tokenizer.parse(fileContents);
 
-        for (const simpleparser::Token &currToken: tokens) {
+        for (const simpleparser::Token& currToken : tokens)
+        {
             currToken.debugPrint();
         }
     }
 
-    void MainWindow::handleMenuAction(const QString &actionName) {
+    void MainWindow::handleMenuAction(const QString& actionName)
+    {
         qDebug() << "Execute menu action: " << actionName;
-        if (actionName == "新建") {
+        if (actionName == "新建")
+        {
             // Handle new file
-        } else if (actionName == "打开") {
+        }
+        else if (actionName == "打开")
+        {
             openFile();
-        } else if (actionName == "保存") {
+        }
+        else if (actionName == "保存")
+        {
             // Handle save
-            *(volatile int *) 0 = 0;
-        } else if (actionName == "显示日志面板") {
+            *(volatile int*)0 = 0;
+        }
+        else if (actionName == "显示日志面板")
+        {
             showBottomPanel();
         }
     }
 
-    bool MainWindow::isTitleBarArea(const QPoint &pos) const {
+    bool MainWindow::isTitleBarArea(const QPoint& pos) const
+    {
         if (!titleBar) return false;
         return titleBar->geometry().contains(pos);
     }
 
-    void MainWindow::showBottomPanel() {
+    void MainWindow::showBottomPanel()
+    {
         bottomPanel->show();
     }
 
-    void MainWindow::hideBottomPanel() {
+    void MainWindow::hideBottomPanel()
+    {
         bottomPanel->hide();
     }
 
 
-    void MainWindow::openFile() {
+    void MainWindow::openFile()
+    {
         QString filePath = QFileDialog::getOpenFileName(
             this,
             tr("打开文件"),
             QString(),
             tr("所有文件 (*.*);;脚本文件 (*.ttd)")
         );
-        if (!filePath.isEmpty()) {
-            auto &manager = DocumentManager::getInstance();
-            if (auto document = manager.openDocument(filePath)) {
+        if (!filePath.isEmpty())
+        {
+            auto& manager = DocumentManager::getInstance();
+            if (auto document = manager.openDocument(filePath))
+            {
                 updateFileHistory(filePath);
                 // 如果当前是脚本视图且打开的是非脚本文件，切换到所有文件视图
-                if (viewModeComboBox->currentIndex() == 1 && !document->isScript()) {
+                if (viewModeComboBox->currentIndex() == 1 && !document->isScript())
+                {
                     viewModeComboBox->setCurrentIndex(0);
                 }
             }
@@ -271,7 +307,8 @@ namespace TinaToolBox {
     }
 
     // 连接信号
-    void MainWindow::setupConnections() {
+    void MainWindow::setupConnections()
+    {
         connect(recentFilesWidget, &RecentFilesWidget::fileSelected,
                 this, &MainWindow::onFileSelected);
         connect(recentFilesWidget, &RecentFilesWidget::removeFileRequested,
@@ -282,13 +319,17 @@ namespace TinaToolBox {
 
         // 监听文档变化
         connect(&DocumentManager::getInstance(), &DocumentManager::currentDocumentChanged,
-                this, [this](const std::shared_ptr<Document> &document) {
-                    if (document) {
+                this, [this](const std::shared_ptr<Document>& document)
+                {
+                    if (document)
+                    {
                         statusBar->setFilePath(document->filePath());
 
                         // 获取当前文档视图
-                        if (auto *docView = documentArea->getCurrentDocumentView()) {
-                            if (auto *textView = dynamic_cast<TextDocumentView *>(docView->getDocumentView())) {
+                        if (auto* docView = documentArea->getCurrentDocumentView())
+                        {
+                            if (auto* textView = dynamic_cast<TextDocumentView*>(docView->getDocumentView()))
+                            {
                                 // 显示当前编码
                                 statusBar->setEncoding(textView->getCurrentEncoding());
                                 statusBar->setEncodingVisible(true);
@@ -307,41 +348,53 @@ namespace TinaToolBox {
 
                                 spdlog::debug("Connections established for document: {}",
                                               document->filePath().toStdString());
-                            } else {
+                            }
+                            else
+                            {
                                 statusBar->setEncodingVisible(false);
                             }
                         }
-                    } else {
+                    }
+                    else
+                    {
                         statusBar->setFilePath("");
                         statusBar->setEncodingVisible(false);
                     }
                 });
     }
 
-    void MainWindow::updateFileHistory(const QString &filePath) {
+    void MainWindow::updateFileHistory(const QString& filePath)
+    {
         if (filePath.isEmpty()) return;
 
         recentFilesWidget->addRecentFile(filePath);
     }
 
-    bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
-        if (obj == this) {
-            if (event->type() == QEvent::MouseMove) {
-                auto *mouseEvent = dynamic_cast<QMouseEvent *>(event);
+    bool MainWindow::eventFilter(QObject* obj, QEvent* event)
+    {
+        if (obj == this)
+        {
+            if (event->type() == QEvent::MouseMove)
+            {
+                auto* mouseEvent = dynamic_cast<QMouseEvent*>(event);
                 return false;
-            } else if (event->type() == QEvent::Leave) {
+            }
+            else if (event->type() == QEvent::Leave)
+            {
                 return false;
             }
         }
         return QMainWindow::eventFilter(obj, event);
     }
 
-    void MainWindow::closeEvent(QCloseEvent *event) {
+    void MainWindow::closeEvent(QCloseEvent* event)
+    {
         // 关闭所有打开的文档
-        auto &manager = DocumentManager::getInstance();
+        auto& manager = DocumentManager::getInstance();
         const auto documents = manager.getDocuments().values();
 
-        for (const auto &doc: documents) {
+        for (const auto& doc : documents)
+        {
             manager.closeDocument(doc);
         }
         // 等待所有清理完成
@@ -349,7 +402,8 @@ namespace TinaToolBox {
         event->accept();
     }
 
-    void MainWindow::paintEvent(QPaintEvent *event) {
+    void MainWindow::paintEvent(QPaintEvent* event)
+    {
         Q_UNUSED(event);
 
         QPainter painter(this);
@@ -362,10 +416,13 @@ namespace TinaToolBox {
         // 获取窗口矩形
         QRectF rect = this->rect();
 
-        if (isMaximized()) {
+        if (isMaximized())
+        {
             // 最大化时绘制普通矩形
             painter.drawRect(rect);
-        } else {
+        }
+        else
+        {
             // 非最大化时绘制圆角矩形
             int radius = UIConfig::getInstance().cornerRadius();
             painter.drawRoundedRect(rect, radius, radius);
@@ -373,16 +430,17 @@ namespace TinaToolBox {
     }
 
 
-    QWidget *MainWindow::createLeftPanel() {
-        auto *leftPanel = new QWidget();
+    QWidget* MainWindow::createLeftPanel()
+    {
+        auto* leftPanel = new QWidget();
         leftPanel->setMaximumWidth(350);
         leftPanel->setMinimumWidth(200);
 
-        auto *leftPanelLayout = new QVBoxLayout(leftPanel);
+        auto* leftPanelLayout = new QVBoxLayout(leftPanel);
         leftPanelLayout->setContentsMargins(0, 0, 0, 0);
         leftPanelLayout->setSpacing(0);
 
-        auto *toolBar = createFileListToolBar();
+        auto* toolBar = createFileListToolBar();
 
         leftPanelLayout->addWidget(toolBar);
 
@@ -397,12 +455,13 @@ namespace TinaToolBox {
         return leftPanel;
     }
 
-    QWidget *MainWindow::createFileListToolBar() {
-        auto *toolBar = new QWidget();
-        auto *toolBarLayout = new QHBoxLayout(toolBar);
+    QWidget* MainWindow::createFileListToolBar()
+    {
+        auto* toolBar = new QWidget();
+        auto* toolBarLayout = new QHBoxLayout(toolBar);
         toolBarLayout->setContentsMargins(5, 2, 5, 2);
 
-        auto *outputLabel = new QLabel("文件列表");
+        auto* outputLabel = new QLabel("文件列表");
         outputLabel->setStyleSheet("color: #333333; font-weight: bold;");
         toolBarLayout->addWidget(outputLabel);
 
@@ -441,8 +500,10 @@ namespace TinaToolBox {
             "}"
         );
         connect(viewModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                this, [this](int index) {
-                    if (recentFilesWidget) {
+                this, [this](int index)
+                {
+                    if (recentFilesWidget)
+                    {
                         recentFilesWidget->setShowScriptsOnly(index == 1); // 1 表示"脚本文件"选项
                     }
                 });
@@ -451,45 +512,67 @@ namespace TinaToolBox {
         return toolBar;
     }
 
-    void MainWindow::onFileSelected(const QString &filePath) {
-        if (!filePath.isEmpty()) {
+    void MainWindow::onFileSelected(const QString& filePath)
+    {
+        if (!filePath.isEmpty())
+        {
             DocumentManager::getInstance().openDocument(filePath);
             updateFileHistory(filePath);
         }
     }
 
-    void MainWindow::onRemoveFileRequested(const QString &filePath) {
+    void MainWindow::onRemoveFileRequested(const QString& filePath)
+    {
         // 处理文件移除请求
         recentFilesWidget->removeRecentFile(filePath);
     }
-    
-    void MainWindow::onFunctionEntryClicked(const QString &functionName) {
-        if (functionName == "功能1") {
-            try {
+
+    void MainWindow::onFunctionEntryClicked(const QString& functionName)
+    {
+        if (functionName == "功能1")
+        {
+            try
+            {
                 QElapsedTimer timer;
                 timer.start();
-            
+
                 // 读取Excel文件
                 qDebug() << "开始读取Excel文件...";
                 auto df = DataFrame::fromExcel("C:/Users/wuxianggujun/Downloads/工单查询 (重复1.11).xlsx");
                 qDebug() << "Excel文件读取完成，耗时:" << timer.elapsed() << "毫秒";
-            
+
                 qDebug() << "行数：" << df.rowCount() << "列数：" << df.columnCount();
-            
+
                 // 重置计时器用于计算数据处理时间
                 timer.restart();
-            
+
                 // 数据处理
-                for (const auto &name: df.getColumnNames()) {
+                for (const auto& name : df.getColumnNames())
+                {
                     qDebug().noquote() << QString::fromStdString(name);
                 }
-            
+
                 qDebug() << "数据处理完成，耗时:" << timer.elapsed() << "毫秒";
                 qDebug() << "总耗时:" << timer.elapsed() << "毫秒";
-            
-            } catch (const std::exception &e) {
+            }
+            catch (const std::exception& e)
+            {
                 qWarning() << "Error: " << e.what();
             }
+        }
+        if (functionName == "功能2")
+        {
+            // ExcelScriptInterpreter interpreter;
+            //
+            // // 执行一个简单的脚本
+            // std::string script = R"(
+            //         open "test.xlsx"
+            //         select sheet 1
+            //         read A1
+            //         write "Hello" to B1
+            //    )";
+            //
+            // interpreter.executeScript(script);
         }
     }
 }
