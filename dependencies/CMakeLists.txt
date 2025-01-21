@@ -1,4 +1,4 @@
-add_subdirectory(QXlsx/QXlsx)
+#add_subdirectory(QXlsx/QXlsx)
 add_subdirectory(tomlplusplus)
 
 # 在 add_subdirectory 之前设置选项
@@ -12,4 +12,4 @@ add_subdirectory(OpenXLSX)
 
 add_subdirectory(utfcpp)
 
-#add_subdirectory(libcalamine)
+add_subdirectory(xlnt)

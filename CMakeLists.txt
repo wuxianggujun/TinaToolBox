@@ -91,7 +91,6 @@ target_include_directories(TinaToolBox PRIVATE
         ${QT_PREFIX_PATH}/include
         ${PROJECT_SOURCE_DIR}/include
         ${PDFium_INCLUDE_DIRS}
-        ${PROJECT_SOURCE_DIR}/tinacalamine/include
 )
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
@@ -108,7 +107,7 @@ target_link_libraries(TinaToolBox PRIVATE
 
 target_link_libraries(TinaToolBox PRIVATE
         spdlog::spdlog
-        QXlsx::QXlsx
+#        QXlsx::QXlsx
         tomlplusplus::tomlplusplus
         pdfium
         antlr4_static
@@ -116,7 +115,7 @@ target_link_libraries(TinaToolBox PRIVATE
         Tesseract::libtesseract
         utf8cpp  
         OpenXLSX::OpenXLSX
-#        cxxbridge-cpp
+        xlnt
 )
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Arrow::arrow_static,Arrow::arrow_shared>")
@@ -132,11 +131,6 @@ target_compile_options(TinaToolBox PRIVATE
         $<$<COMPILE_LANGUAGE:CUDA>:-DNDEBUG>
 )
 
-
-#if(MSVC)
-#    corrosion_set_env_vars(cxxbridge_crate "CFLAGS=-MDd" "CXXFLAGS=-MDd")
-#    message(STATUS "CMAKE_EXE_LINKER_FLAGS after corrosion: ${CMAKE_EXE_LINKER_FLAGS}")
-#endif()
 
 target_compile_definitions(TinaToolBox PRIVATE CMAKE_TOOLCHAIN_FILE="D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
