@@ -66,11 +66,13 @@ CPMAddPackage(
 
 find_package(ANTLR REQUIRED)
 find_package(PDFium REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(Arrow CONFIG REQUIRED)
 find_package(Parquet CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(antlr4-runtime CONFIG REQUIRED)
 find_package(Tesseract CONFIG REQUIRED)
+
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat Widgets Network SQL)
 
@@ -152,6 +154,7 @@ target_link_libraries(TinaToolBox PRIVATE
         utf8cpp
         xlnt
 )
+target_link_libraries(TinaToolBox PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Arrow::arrow_static,Arrow::arrow_shared>")
 

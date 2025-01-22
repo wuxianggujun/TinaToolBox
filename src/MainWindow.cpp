@@ -33,7 +33,7 @@
 #include "ExcelScriptInterpreter.hpp"
 #include "ExcelHandler.hpp"
 #include "ThreadPool.hpp"
-
+#include "TTBFile.hpp"
 
 namespace TinaToolBox
 {
@@ -563,37 +563,78 @@ namespace TinaToolBox
         }
         if (functionName == "功能2")
         {
-            // 创建Excel处理器
-            auto excelHandler = std::make_shared<ExcelHandler>();
-            
-            // 创建并运行解释器
-            auto interpreter = std::make_shared<ExcelScriptInterpreter>(excelHandler);
-            
-            // 示例脚本
-            std::string script = R"(
-                open "test.xlsx"
-                select sheet 1
-                read A1
-                write "Hello" to B1
-            )";
-            
-            // 使用线程池异步执行脚本
-            static ThreadPool pool;  // 创建静态线程池实例
-            
-            auto future = pool.submit([interpreter, script]() {
-                return interpreter->executeScript(script);
-            }, ThreadPool::TaskPriority::Normal);
-
-            // 获取执行结果（这里可以设置超时时间，或者使用其他方式等待结果）
             try {
-                auto result = future.get();  // 等待执行完成并获取结果
+                // 创建Excel处理器
+                auto excelHandler = std::make_shared<ExcelHandler>();
+
+                // 创建并运行解释器
+                auto interpreter = std::make_shared<ExcelScriptInterpreter>(excelHandler);
+
+                // 使用线程池异步执行脚本
+                static ThreadPool pool; // 创建静态线程池实例
+                
+                // 创建TTB文件
+                std::map<std::string, std::string> config = {
+                    {"author", "John Doe"},
+                    {"version", "1.0"},
+                    {"description", "Excel automation script"},
+                    {"target_file", "data.xlsx"}
+                };
+
+                std::string script = R"(
+                    open "test.xlsx"
+                    select sheet 1
+                    read A1
+                    write "Hello" to B1
+                )";
+
+                // 生成随机密钥
+                auto key = TTBFile::generateKey();
+
+                std::cout << "Creating encrypted TTB file..." << std::endl;
+                
+                // 创建加密文件（只加密脚本内容）
+                if (!TTBFile::createEncrypted("example.ttb", config, script, key,
+                                            TinaToolBox::EncryptionFlags::ConfigEncrypted)) {
+                    std::cerr << "Failed to create TTB file - check file size limits" << std::endl;
+                    return;
+                }
+
+                std::cout << "TTB file created successfully" << std::endl;
+
+                // 读取TTB文件
+                std::cout << "Loading encrypted TTB file..." << std::endl;
+                auto ttbFile = TTBFile::loadEncrypted("example.ttb", key);
+                if (!ttbFile) {
+                    std::cerr << "Failed to load TTB file" << std::endl;
+                    return;
+                }
+
+                std::cout << "TTB file loaded successfully" << std::endl;
+
+                // 获取配置
+                std::string author = ttbFile->getConfigValue("author");
+                std::string targetFile = ttbFile->getConfigValue("target_file");
+                std::cout << "Script author: " << author << std::endl;
+                std::cout << "Target file: " << targetFile << std::endl;
+
+                // 获取脚本内容并异步执行
+                auto scriptContent = ttbFile->getScript();
+                std::cout << "Executing script..." << std::endl;
+                
+                auto future = pool.submit([interpreter, scriptContent]() {
+                    return interpreter->executeScript(scriptContent);
+                }, ThreadPool::TaskPriority::Normal);
+
+                // 获取执行结果
+                auto result = future.get(); // 等待执行完成并获取结果
                 if (result == ExcelScriptInterpreter::ErrorCode::SUCCESS) {
                     std::cout << "Script executed successfully" << std::endl;
                 } else {
                     std::cerr << "Script execution failed: " << interpreter->getLastError() << std::endl;
                 }
             } catch (const std::exception& e) {
-                std::cerr << "Error executing script in thread pool: " << e.what() << std::endl;
+                std::cerr << "Error: " << e.what() << std::endl;
             }
         }
     }
