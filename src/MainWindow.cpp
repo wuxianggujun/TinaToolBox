@@ -31,6 +31,7 @@
 #include <QDebug>
 
 #include "ExcelScriptInterpreter.hpp"
+#include "ExcelHandler.hpp"
 
 
 namespace TinaToolBox
@@ -562,17 +563,25 @@ namespace TinaToolBox
         }
         if (functionName == "功能2")
         {
-            // ExcelScriptInterpreter interpreter;
-            //
-            // // 执行一个简单的脚本
-            // std::string script = R"(
-            //         open "test.xlsx"
-            //         select sheet 1
-            //         read A1
-            //         write "Hello" to B1
-            //    )";
-            //
-            // interpreter.executeScript(script);
+            // 创建Excel处理器
+            auto excelHandler = std::make_shared<ExcelHandler>();
+            
+            // 创建并运行解释器
+            ExcelScriptInterpreter interpreter(excelHandler);
+            
+            // 示例脚本
+            std::string script = R"(
+                open "test.xlsx"
+                select sheet 1
+                read A1
+                write "Hello" to B1
+            )";
+            
+            if (interpreter.executeScript(script)) {
+                std::cout << "Script executed successfully" << std::endl;
+            } else {
+                std::cerr << "Script execution failed" << std::endl;
+            }
         }
     }
 }

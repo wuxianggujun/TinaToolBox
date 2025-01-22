@@ -7,9 +7,9 @@ project(TinaToolBox VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
-add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf -8>")
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+#add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf -8>")
+#add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 set(QT_PREFIX_PATH "D:\\Programs\\Qt\\6.8.0\\msvc2022_64")
 #set(ARROW_PREFIX_PATH "D:/Programs/vcpkg/installed/x64-windows/share")
@@ -80,7 +80,7 @@ antlr_target(ExcelScript grammar/ExcelScript.g4
         PARSER
         LISTENER
         VISITOR
-        PACKAGE excel_script
+        PACKAGE TinaToolBox
         OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated/excel_script)
 
 # 确保生成的文件被包含
