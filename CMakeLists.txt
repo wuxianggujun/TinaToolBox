@@ -172,6 +172,8 @@ target_compile_options(TinaToolBox PRIVATE
 
 target_compile_definitions(TinaToolBox PRIVATE CMAKE_TOOLCHAIN_FILE="D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
+
+
 if (${QT_VERSION} VERSION_LESS 6.1.0)
     set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.TinaToolBox)
 endif ()
@@ -205,4 +207,29 @@ if (WIN32)
         set(XLNT_DLL_NAME "xlnt.dll")
     endif()
     copy_dll(TinaToolBox "${CMAKE_BINARY_DIR}/dependencies/xlnt/source" "${XLNT_DLL_NAME}")
+endif()
+
+if (WIN32)
+    # Define resource file and output .res file
+    set(RESOURCE_FILE ${PROJECT_SOURCE_DIR}/resources/resources.rc) # Correct path to resources.rc
+    set(RESOURCE_OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/resources_ttb.res) # Output .res in build directory
+
+    # Custom command to compile resources.rc using rc.exe
+    add_custom_command(
+            OUTPUT ${RESOURCE_OUTPUT_FILE}
+            COMMAND rc.exe -fo ${RESOURCE_OUTPUT_FILE} ${RESOURCE_FILE}
+            DEPENDS ${RESOURCE_FILE}
+            COMMENT "Compiling resources.rc..."
+            VERBATIM
+    )
+
+    # Custom target to ensure resource compilation happens before linking
+    add_custom_target(CompileResources ALL
+            DEPENDS ${RESOURCE_OUTPUT_FILE}
+            COMMENT "Ensuring resource compilation..."
+    )
+
+    # Link the generated resources.res file to your executable
+    target_link_libraries(TinaToolBox PRIVATE ${RESOURCE_OUTPUT_FILE})
+    add_dependencies(TinaToolBox CompileResources) # Ensure CompileResources target runs before TinaToolBox target
 endif()

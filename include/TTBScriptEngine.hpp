@@ -39,6 +39,11 @@ namespace TinaToolBox
         Error executeScript(const std::string& filename,
                           const AESKey& key = AESKey());
 
+        // 加载并执行TTB文件 (通过 TTBFile 对象)  <--- 添加这个重载
+        Error executeScript(const std::string& filename, // 为了保持接口一致，可以保留 filename 参数，即使在这里可能不直接使用
+                          const AESKey& key,
+                          TTBFile* ttbFile);
+
         // 获取最后一次错误信息
         std::string getLastError() const;
 

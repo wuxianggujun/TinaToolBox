@@ -564,18 +564,22 @@ namespace TinaToolBox
         }
         if (functionName == "功能2")
         {
-            try {
+            try
+            {
                 TTBScriptEngine engine;
-                
+
                 // 设置进度回调
-                engine.setProgressCallback([](const std::string& message, int progress) {
+                engine.setProgressCallback([](const std::string& message, int progress)
+                {
                     std::cout << "[" << progress << "%] " << message << std::endl;
                 });
-                
+
                 // 设置配置更新回调
-                engine.setConfigUpdateCallback([](const std::map<std::string, std::string>& config) {
+                engine.setConfigUpdateCallback([](const std::map<std::string, std::string>& config)
+                {
                     std::cout << "Configuration updated:" << std::endl;
-                    for (const auto& [key, value] : config) {
+                    for (const auto& [key, value] : config)
+                    {
                         std::cout << key << ": " << value << std::endl;
                     }
                 });
@@ -609,26 +613,62 @@ namespace TinaToolBox
                     print config "description"
                 )";
 
-                // 创建加密的TTB文件
-                auto result = engine.createScript("example.ttb", config, script, true);
-                if (result != TTBScriptEngine::Error::SUCCESS) {
-                    std::cerr << "Failed to create script: " << engine.getLastError() << std::endl;
+                // 创建 TTB 文件 (这次我们指定文件名 "my_script_container.ttb")
+                std::string ttbFilename = "my_script_container.ttb"; // 指定要生成的文件名
+                auto createResult = engine.createScript(ttbFilename, config, script, true); // 创建加密的 TTB 文件
+
+                if (createResult != TTBScriptEngine::Error::SUCCESS)
+                {
+                    std::cerr << "Failed to create TTB script file: " << engine.getLastError() << std::endl;
+                    return;
+                }
+                std::cout << "TTB file '" << ttbFilename.c_str() << "' created successfully." << std::endl;
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Error: " << e.what() << std::endl;
+            }
+        }
+
+        if (functionName == "功能3")
+        {
+            try {
+                TTBScriptEngine engine;
+
+                // 设置进度回调 (保持不变)
+                engine.setProgressCallback([](const std::string& message, int progress) {
+                    std::cout << "[" << progress << "%] " << message << std::endl;
+                });
+
+                // 设置配置更新回调 (保持不变)
+                engine.setConfigUpdateCallback([](const std::map<std::string, std::string>& config) {
+                    std::cout << "Configuration updated:" << std::endl;
+                    for (const auto& [key, value] : config) {
+                        std::cout << key << ": " << value << std::endl;
+                    }
+                });
+
+                // 从资源加载 TTB 文件 (这次加载的是 SCRIPT_CONTAINER_TTB 资源)
+                std::unique_ptr<TTBFile> ttbFile = TTBFile::loadFromResource("SCRIPT_CONTAINER_TTB", "RCDATA");
+                if (!ttbFile) {
+                    std::cerr << "Failed to load TTB script container from resource." << std::endl;
                     return;
                 }
 
-                // 执行脚本
-                result = engine.executeScript("example.ttb");
+                // 执行脚本 (执行从资源加载的 TTB 文件)
+                TTBScriptEngine::Error result = engine.executeScript("", {},ttbFile.get()); // 执行从资源加载的 TTB 文件
                 if (result != TTBScriptEngine::Error::SUCCESS) {
-                    std::cerr << "Failed to execute script: " << engine.getLastError() << std::endl;
+                    std::cerr << "Failed to execute script from TTB container: " << engine.getLastError() << std::endl;
                     return;
                 }
 
-                // 获取最终配置
+                // 获取最终配置 (保持不变)
                 const auto& finalConfig = engine.getCurrentConfig();
-                std::cout << "\nFinal configuration:" << std::endl;
+                std::cout << "\nFinal configuration (from embedded TTB script):" << std::endl;
                 for (const auto& [key, value] : finalConfig) {
                     std::cout << key << ": " << value << std::endl;
                 }
+
 
             } catch (const std::exception& e) {
                 std::cerr << "Error: " << e.what() << std::endl;

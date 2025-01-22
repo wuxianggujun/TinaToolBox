@@ -120,6 +120,40 @@ TTBScriptEngine::Error TTBScriptEngine::executeScript(
     }
 }
 
+TTBScriptEngine::Error TTBScriptEngine::executeScript(const std::string& filename, const AESKey& key, TTBFile* ttbFile)
+{
+    try {
+        if (!ttbFile) {
+            pimpl->lastError = "TTBFile object is null";
+            return Error::FILE_LOAD_ERROR; // 或者更合适的错误码
+        }
+
+        pimpl->reportProgress("Setting up interpreter...", 30);
+        const auto& config = ttbFile->getConfig();
+        pimpl->interpreter->setInitialConfig(config);
+        pimpl->updateConfig(config);
+
+        pimpl->reportProgress("Executing script...", 50);
+        const auto& scriptContent = ttbFile->getScript();
+        auto result = pimpl->interpreter->executeScript(scriptContent);
+
+        if (result != ExcelScriptInterpreter::ErrorCode::SUCCESS) {
+            pimpl->lastError = pimpl->interpreter->getLastError();
+            return Error::SCRIPT_EXECUTION_ERROR;
+        }
+
+        pimpl->reportProgress("Updating configuration...", 80);
+        pimpl->updateConfig(pimpl->interpreter->getAllConfig());
+
+        pimpl->reportProgress("Script executed successfully", 100);
+        return Error::SUCCESS;
+    }
+    catch (const std::exception& e) {
+        pimpl->lastError = e.what();
+        return Error::SCRIPT_EXECUTION_ERROR;
+    }
+}
+
 std::string TTBScriptEngine::getLastError() const {
     return pimpl->lastError;
 }
