@@ -24,6 +24,17 @@ namespace TinaToolBox
     class ExcelScriptInterpreter : public ExcelScriptBaseVisitor
     {
     public:
+        // 定义错误码枚举
+        enum class ErrorCode {
+            SUCCESS = 0,
+            FILE_NOT_FOUND = 1,
+            SHEET_NOT_FOUND = 2,
+            CELL_ACCESS_ERROR = 3,
+            INVALID_VALUE = 4,
+            PARSE_ERROR = 5,
+            EXECUTION_ERROR = 6
+        };
+
         explicit ExcelScriptInterpreter(std::shared_ptr<ExcelHandler> handler = nullptr);
         
         // 设置Excel处理器
@@ -37,10 +48,14 @@ namespace TinaToolBox
         std::any visitWriteCellStatement(ExcelScriptParser::WriteCellStatementContext* ctx) override;
         
         // 执行脚本
-        bool executeScript(const std::string& script);
+        ErrorCode executeScript(const std::string& script);
+
+        // 获取最后一次错误信息
+        const std::string& getLastError() const { return lastError; }
 
     private:
         std::shared_ptr<ExcelHandler> excelHandler;
+        std::string lastError;  // 存储最后一次错误信息
     };
 } // TinaToolBox
 

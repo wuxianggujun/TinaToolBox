@@ -32,6 +32,7 @@
 
 #include "ExcelScriptInterpreter.hpp"
 #include "ExcelHandler.hpp"
+#include "ThreadPool.hpp"
 
 
 namespace TinaToolBox
@@ -259,7 +260,6 @@ namespace TinaToolBox
         else if (actionName == "保存")
         {
             // Handle save
-            *(volatile int*)0 = 0;
         }
         else if (actionName == "显示日志面板")
         {
@@ -567,7 +567,7 @@ namespace TinaToolBox
             auto excelHandler = std::make_shared<ExcelHandler>();
             
             // 创建并运行解释器
-            ExcelScriptInterpreter interpreter(excelHandler);
+            auto interpreter = std::make_shared<ExcelScriptInterpreter>(excelHandler);
             
             // 示例脚本
             std::string script = R"(
@@ -577,10 +577,23 @@ namespace TinaToolBox
                 write "Hello" to B1
             )";
             
-            if (interpreter.executeScript(script)) {
-                std::cout << "Script executed successfully" << std::endl;
-            } else {
-                std::cerr << "Script execution failed" << std::endl;
+            // 使用线程池异步执行脚本
+            static ThreadPool pool;  // 创建静态线程池实例
+            
+            auto future = pool.submit([interpreter, script]() {
+                return interpreter->executeScript(script);
+            }, ThreadPool::TaskPriority::Normal);
+
+            // 获取执行结果（这里可以设置超时时间，或者使用其他方式等待结果）
+            try {
+                auto result = future.get();  // 等待执行完成并获取结果
+                if (result == ExcelScriptInterpreter::ErrorCode::SUCCESS) {
+                    std::cout << "Script executed successfully" << std::endl;
+                } else {
+                    std::cerr << "Script execution failed: " << interpreter->getLastError() << std::endl;
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error executing script in thread pool: " << e.what() << std::endl;
             }
         }
     }

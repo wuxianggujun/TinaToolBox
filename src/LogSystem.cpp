@@ -25,14 +25,31 @@ namespace TinaToolBox {
         }
     }
 
+    void StdoutRedirector::flushBuffer() {
+        if (!buffer_.empty()) {
+            auto &logSystem = LogSystem::getInstance();
+            logSystem.log(QString::fromStdString(buffer_), 
+                         isStderr_ ? spdlog::level::err : spdlog::level::info);
+            buffer_.clear();
+        }
+    }
+
+    int StdoutRedirector::sync() {
+        flushBuffer();
+        return 0;
+    }
+
     std::streambuf::int_type StdoutRedirector::overflow(int_type c) {
         if (c != EOF) {
             if (c == '\n') {
-                auto &logSystem = LogSystem::getInstance();
-                logSystem.log(QString::fromStdString(buffer_), isStderr_ ? spdlog::level::err : spdlog::level::info);
-                buffer_.clear();
+                // 如果缓冲区不为空，刷新它
+                flushBuffer();
             } else {
                 buffer_ += static_cast<char>(c);
+                // 对于stderr，当缓冲区达到一定大小时立即刷新
+                if (isStderr_ && buffer_.length() >= 1024) {
+                    flushBuffer();
+                }
             }
         }
         return c;
@@ -65,8 +82,8 @@ namespace TinaToolBox {
     }
 
     void LogSystem::setupStdRedirectors() {
-        stdoutRedirector_ = std::make_unique<StdoutRedirector>(false);
-        stderrRedirector_ = std::make_unique<StdoutRedirector>(false);
+        stdoutRedirector_ = std::make_unique<StdoutRedirector>(false);  // for stdout
+        stderrRedirector_ = std::make_unique<StdoutRedirector>(true);   // for stderr, changed to true
     }
 
     void LogSystem::cacheLog(const LogEntry &entry) {

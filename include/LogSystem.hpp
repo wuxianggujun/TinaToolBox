@@ -18,8 +18,10 @@ namespace TinaToolBox {
 
     protected:
         int_type overflow(int_type c) override;
+        int sync() override;
 
     private:
+        void flushBuffer();
         std::string buffer_;
         bool isStderr_;
         std::streambuf *oldBuf_;
