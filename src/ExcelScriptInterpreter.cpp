@@ -7,6 +7,7 @@
 #include <iostream>
 #include <utility>
 #include <filesystem>
+#include <sstream>
 
 namespace TinaToolBox
 {
@@ -14,10 +15,41 @@ namespace TinaToolBox
     {
     }
 
+    ExcelScriptInterpreter::~ExcelScriptInterpreter() = default;
+
+    void ExcelScriptInterpreter::setConfig(const std::string& key, const std::string& value) {
+        config_[key] = value;
+    }
+
+    std::string ExcelScriptInterpreter::getConfig(const std::string& key, const std::string& defaultValue) const {
+        auto it = config_.find(key);
+        return it != config_.end() ? it->second : defaultValue;
+    }
+
+    const std::map<std::string, std::string>& ExcelScriptInterpreter::getAllConfig() const {
+        return config_;
+    }
+
+    void ExcelScriptInterpreter::setInitialConfig(const std::map<std::string, std::string>& config) {
+        config_ = config;
+    }
+
     std::any ExcelScriptInterpreter::visitOpenStatement(ExcelScriptParser::OpenStatementContext* context)
     {
-        std::string filename = context->STRING()->getText();
-        filename = filename.substr(1, filename.length() - 2); // 移除引号
+        std::string filename;
+        if (auto* configValue = context->value()->configValue()) {
+            // 如果是配置值引用
+            std::string configKey = configValue->STRING()->getText();
+            configKey = configKey.substr(1, configKey.length() - 2); // 移除引号
+            filename = getConfig(configKey);
+        } else if (auto* stringValue = context->value()->STRING()) {
+            // 如果是直接的字符串值
+            filename = stringValue->getText();
+            filename = filename.substr(1, filename.length() - 2); // 移除引号
+        } else {
+            lastError = "Invalid filename type";
+            return ErrorCode::INVALID_VALUE;
+        }
         
         // 检查文件是否存在
         if (!std::filesystem::exists(filename)) {
@@ -25,10 +57,8 @@ namespace TinaToolBox
             return ErrorCode::FILE_NOT_FOUND;
         }
 
-        if (excelHandler)
-        {
-            if (excelHandler->openFile(filename))
-            {
+        if (excelHandler) {
+            if (excelHandler->openFile(filename)) {
                 std::cout << "Successfully opened file: " << filename << std::endl;
                 return ErrorCode::SUCCESS;
             }
@@ -39,8 +69,7 @@ namespace TinaToolBox
         return ErrorCode::EXECUTION_ERROR;
     }
 
-    std::any ExcelScriptInterpreter::visitSelectSheetStatement(
-        ExcelScriptParser::SelectSheetStatementContext* context)
+    std::any ExcelScriptInterpreter::visitSelectSheetStatement(ExcelScriptParser::SelectSheetStatementContext* context)
     {
         if (!excelHandler) {
             lastError = "Excel handler not initialized";
@@ -48,31 +77,36 @@ namespace TinaToolBox
         }
 
         bool success = false;
-        if (context->STRING())
-        {
-            std::string sheetName = context->STRING()->getText();
-            sheetName = sheetName.substr(1, sheetName.length() - 2);
+        if (auto* configValue = context->value()->configValue()) {
+            // 如果是配置值引用
+            std::string configKey = configValue->STRING()->getText();
+            configKey = configKey.substr(1, configKey.length() - 2); // 移除引号
+            std::string sheetName = getConfig(configKey);
             success = excelHandler->selectSheet(sheetName);
-            if (success)
-            {
+            if (success) {
                 std::cout << "Selected sheet: " << sheetName << std::endl;
-            }
-            else
-            {
+            } else {
                 lastError = "Sheet not found: " + sheetName;
                 return ErrorCode::SHEET_NOT_FOUND;
             }
-        }
-        else if (context->NUMBER())
-        {
-            int sheetIndex = std::stoi(context->NUMBER()->getText());
-            success = excelHandler->selectSheet(sheetIndex - 1); // 转换为0基索引
-            if (success)
-            {
-                std::cout << "Selected sheet at index: " << sheetIndex << std::endl;
+        } else if (auto* stringValue = context->value()->STRING()) {
+            // 如果是字符串值
+            std::string sheetName = stringValue->getText();
+            sheetName = sheetName.substr(1, sheetName.length() - 2); // 移除引号
+            success = excelHandler->selectSheet(sheetName);
+            if (success) {
+                std::cout << "Selected sheet: " << sheetName << std::endl;
+            } else {
+                lastError = "Sheet not found: " + sheetName;
+                return ErrorCode::SHEET_NOT_FOUND;
             }
-            else
-            {
+        } else if (auto* numberValue = context->value()->NUMBER()) {
+            // 如果是数字值
+            int sheetIndex = std::stoi(numberValue->getText());
+            success = excelHandler->selectSheet(sheetIndex - 1); // 转换为0基索引
+            if (success) {
+                std::cout << "Selected sheet at index: " << sheetIndex << std::endl;
+            } else {
                 lastError = "Invalid sheet index: " + std::to_string(sheetIndex);
                 return ErrorCode::SHEET_NOT_FOUND;
             }
@@ -163,6 +197,27 @@ namespace TinaToolBox
                         return errorCode;  // 如果有任何语句执行失败，立即返回错误
                     }
                 }
+            }
+            
+            // 处理配置相关命令
+            if (script.find("get config") != std::string::npos) {
+                size_t keyStart = script.find('"', 11);  // 跳过"get config "
+                size_t keyEnd = script.find('"', keyStart + 1);
+                std::string key = script.substr(keyStart + 1, keyEnd - keyStart - 1);
+                
+                std::string value = getConfig(key);
+                std::cout << "Config " << key << " = " << value << std::endl;
+            }
+            else if (script.find("set config") != std::string::npos) {
+                size_t keyStart = script.find('"', 11);  // 跳过"set config "
+                size_t keyEnd = script.find('"', keyStart + 1);
+                std::string key = script.substr(keyStart + 1, keyEnd - keyStart - 1);
+                
+                size_t valueStart = script.find('"', keyEnd + 1);
+                size_t valueEnd = script.find('"', valueStart + 1);
+                std::string value = script.substr(valueStart + 1, valueEnd - valueStart - 1);
+                
+                setConfig(key, value);
             }
             
             return ErrorCode::SUCCESS;

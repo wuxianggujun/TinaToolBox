@@ -578,14 +578,28 @@ namespace TinaToolBox
                     {"author", "John Doe"},
                     {"version", "1.0"},
                     {"description", "Excel automation script"},
-                    {"target_file", "data.xlsx"}
+                    {"target_file", "test.xlsx"},
+                    {"last_modified", "2024-03-20"},
+                    {"script_type", "excel_automation"}
                 };
 
                 std::string script = R"(
-                    open "test.xlsx"
+                    // 读取并显示配置
+                    get config "target_file"
+                    print config "author"
+                    
+                    // 设置新的配置
+                    set config "last_run_date" "2024-03-20"
+                    
+                    // 使用配置值打开文件
+                    open config "target_file"
                     select sheet 1
                     read A1
                     write "Hello" to B1
+                    
+                    // 显示更多配置信息
+                    print config "version"
+                    print config "description"
                 )";
 
                 // 生成随机密钥
@@ -595,7 +609,7 @@ namespace TinaToolBox
                 
                 // 创建加密文件（只加密脚本内容）
                 if (!TTBFile::createEncrypted("example.ttb", config, script, key,
-                                            TinaToolBox::EncryptionFlags::ConfigEncrypted)) {
+                                            TinaToolBox::EncryptionFlags::AllEncrypted)) {
                     std::cerr << "Failed to create TTB file - check file size limits" << std::endl;
                     return;
                 }
@@ -613,10 +627,14 @@ namespace TinaToolBox
                 std::cout << "TTB file loaded successfully" << std::endl;
 
                 // 获取配置
-                std::string author = ttbFile->getConfigValue("author");
-                std::string targetFile = ttbFile->getConfigValue("target_file");
-                std::cout << "Script author: " << author << std::endl;
-                std::cout << "Target file: " << targetFile << std::endl;
+                const auto& fileConfig = ttbFile->getConfig();
+                std::cout << "Configuration loaded:" << std::endl;
+                for (const auto& [key, value] : fileConfig) {
+                    std::cout << key << ": " << value << std::endl;
+                }
+
+                // 设置解释器的初始配置
+                interpreter->setInitialConfig(fileConfig);
 
                 // 获取脚本内容并异步执行
                 auto scriptContent = ttbFile->getScript();
@@ -630,6 +648,13 @@ namespace TinaToolBox
                 auto result = future.get(); // 等待执行完成并获取结果
                 if (result == ExcelScriptInterpreter::ErrorCode::SUCCESS) {
                     std::cout << "Script executed successfully" << std::endl;
+                    
+                    // 获取更新后的配置
+                    const auto& updatedConfig = interpreter->getAllConfig();
+                    std::cout << "Updated configuration:" << std::endl;
+                    for (const auto& [key, value] : updatedConfig) {
+                        std::cout << key << ": " << value << std::endl;
+                    }
                 } else {
                     std::cerr << "Script execution failed: " << interpreter->getLastError() << std::endl;
                 }
