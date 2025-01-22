@@ -34,6 +34,7 @@
 #include "ExcelHandler.hpp"
 #include "ThreadPool.hpp"
 #include "TTBFile.hpp"
+#include "TTBScriptEngine.hpp"
 
 namespace TinaToolBox
 {
@@ -564,16 +565,22 @@ namespace TinaToolBox
         if (functionName == "功能2")
         {
             try {
-                // 创建Excel处理器
-                auto excelHandler = std::make_shared<ExcelHandler>();
-
-                // 创建并运行解释器
-                auto interpreter = std::make_shared<ExcelScriptInterpreter>(excelHandler);
-
-                // 使用线程池异步执行脚本
-                static ThreadPool pool; // 创建静态线程池实例
+                TTBScriptEngine engine;
                 
-                // 创建TTB文件
+                // 设置进度回调
+                engine.setProgressCallback([](const std::string& message, int progress) {
+                    std::cout << "[" << progress << "%] " << message << std::endl;
+                });
+                
+                // 设置配置更新回调
+                engine.setConfigUpdateCallback([](const std::map<std::string, std::string>& config) {
+                    std::cout << "Configuration updated:" << std::endl;
+                    for (const auto& [key, value] : config) {
+                        std::cout << key << ": " << value << std::endl;
+                    }
+                });
+
+                // 准备配置和脚本
                 std::map<std::string, std::string> config = {
                     {"author", "John Doe"},
                     {"version", "1.0"},
@@ -602,62 +609,27 @@ namespace TinaToolBox
                     print config "description"
                 )";
 
-                // 生成随机密钥
-                auto key = TTBFile::generateKey();
-
-                std::cout << "Creating encrypted TTB file..." << std::endl;
-                
-                // 创建加密文件（只加密脚本内容）
-                if (!TTBFile::createEncrypted("example.ttb", config, script, key,
-                                            TinaToolBox::EncryptionFlags::AllEncrypted)) {
-                    std::cerr << "Failed to create TTB file - check file size limits" << std::endl;
+                // 创建加密的TTB文件
+                auto result = engine.createScript("example.ttb", config, script, true);
+                if (result != TTBScriptEngine::Error::SUCCESS) {
+                    std::cerr << "Failed to create script: " << engine.getLastError() << std::endl;
                     return;
                 }
 
-                std::cout << "TTB file created successfully" << std::endl;
-
-                // 读取TTB文件
-                std::cout << "Loading encrypted TTB file..." << std::endl;
-                auto ttbFile = TTBFile::loadEncrypted("example.ttb", key);
-                if (!ttbFile) {
-                    std::cerr << "Failed to load TTB file" << std::endl;
+                // 执行脚本
+                result = engine.executeScript("example.ttb");
+                if (result != TTBScriptEngine::Error::SUCCESS) {
+                    std::cerr << "Failed to execute script: " << engine.getLastError() << std::endl;
                     return;
                 }
 
-                std::cout << "TTB file loaded successfully" << std::endl;
-
-                // 获取配置
-                const auto& fileConfig = ttbFile->getConfig();
-                std::cout << "Configuration loaded:" << std::endl;
-                for (const auto& [key, value] : fileConfig) {
+                // 获取最终配置
+                const auto& finalConfig = engine.getCurrentConfig();
+                std::cout << "\nFinal configuration:" << std::endl;
+                for (const auto& [key, value] : finalConfig) {
                     std::cout << key << ": " << value << std::endl;
                 }
 
-                // 设置解释器的初始配置
-                interpreter->setInitialConfig(fileConfig);
-
-                // 获取脚本内容并异步执行
-                auto scriptContent = ttbFile->getScript();
-                std::cout << "Executing script..." << std::endl;
-                
-                auto future = pool.submit([interpreter, scriptContent]() {
-                    return interpreter->executeScript(scriptContent);
-                }, ThreadPool::TaskPriority::Normal);
-
-                // 获取执行结果
-                auto result = future.get(); // 等待执行完成并获取结果
-                if (result == ExcelScriptInterpreter::ErrorCode::SUCCESS) {
-                    std::cout << "Script executed successfully" << std::endl;
-                    
-                    // 获取更新后的配置
-                    const auto& updatedConfig = interpreter->getAllConfig();
-                    std::cout << "Updated configuration:" << std::endl;
-                    for (const auto& [key, value] : updatedConfig) {
-                        std::cout << key << ": " << value << std::endl;
-                    }
-                } else {
-                    std::cerr << "Script execution failed: " << interpreter->getLastError() << std::endl;
-                }
             } catch (const std::exception& e) {
                 std::cerr << "Error: " << e.what() << std::endl;
             }
