@@ -8,6 +8,7 @@
 #include "TTBScriptEngine.hpp"
 #include "TTBFile.hpp"
 #include "TTBResourceExtractor.hpp"
+#include "TTBCrypto.hpp"
 
 using namespace TinaToolBox;
 
@@ -72,25 +73,7 @@ int main(int argc, char* argv[]) {
         
         std::cout << "Decompressed size: " << uncompressedData.size() << " bytes" << std::endl;
 
-        // 3. 验证解压后的数据
-        if (uncompressedData.size() < 4) {
-            std::cerr << "Decompressed data too small" << std::endl;
-            return 1;
-        }
-
-        // 检查TTB文件头
-        if (memcmp(uncompressedData.data(), "TTB", 3) != 0) {
-            std::cerr << "Invalid TTB file header" << std::endl;
-            // 打印前几个字节用于调试
-            std::cerr << "First few bytes of decompressed data: ";
-            for (size_t i = 0; i < std::min(size_t(16), uncompressedData.size()); ++i) {
-                std::cerr << std::hex << (int)uncompressedData[i] << " ";
-            }
-            std::cerr << std::dec << std::endl;
-            return 1;
-        }
-
-        // 4. 创建临时文件
+        // 3. 创建临时文件
         std::filesystem::path tempPath = std::filesystem::temp_directory_path() / "temp.ttb";
         {
             std::ofstream tempFile(tempPath, std::ios::binary);
@@ -104,7 +87,40 @@ int main(int argc, char* argv[]) {
             std::cout << "Created temporary file: " << tempPath.string() << std::endl;
         }
 
-        // 5. 执行TTB文件
+        // 4. 检查文件是否加密
+        bool isEncrypted = TTBFile::isEncrypted(tempPath.string());
+        std::cout << "TTB file " << (isEncrypted ? "is" : "is not") << " encrypted" << std::endl;
+
+        // 5. 根据加密状态加载TTB文件
+        std::unique_ptr<TTBFile> ttbFile;
+        try {
+            if (isEncrypted) {
+                // 使用默认密钥
+                AESKey defaultKey = {
+                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+                    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                    0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+                };
+                std::cout << "Loading encrypted TTB file with default key..." << std::endl;
+                ttbFile = TTBFile::loadEncrypted(tempPath.string(), defaultKey);
+            } else {
+                std::cout << "Loading unencrypted TTB file..." << std::endl;
+                ttbFile = TTBFile::load(tempPath.string());
+            }
+
+            if (!ttbFile) {
+                std::cerr << "Failed to load TTB file" << std::endl;
+                std::filesystem::remove(tempPath);
+                return 1;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to load TTB file: " << e.what() << std::endl;
+            std::filesystem::remove(tempPath);
+            return 1;
+        }
+
+        // 6. 执行TTB文件
         TTBScriptEngine engine;
         
         // 设置进度回调
@@ -112,9 +128,17 @@ int main(int argc, char* argv[]) {
             std::cout << "[" << progress << "%] " << message << std::endl;
         });
 
-        auto result = engine.executeScript(tempPath.string());
+        // 使用默认密钥
+        AESKey defaultKey = {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+            0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+            0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+        };
 
-        // 6. 清理临时文件
+        auto result = engine.executeScript(tempPath.string(), defaultKey, ttbFile.get());
+
+        // 7. 清理临时文件
         std::filesystem::remove(tempPath);
 
         if (result != TTBScriptEngine::Error::SUCCESS) {

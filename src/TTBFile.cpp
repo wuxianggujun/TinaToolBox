@@ -377,4 +377,36 @@ namespace TinaToolBox
     {
         return Crypto::generateIV();
     }
+
+    bool TTBFile::isEncrypted(const std::string& filename)
+    {
+        std::ifstream file(filename, std::ios::binary);
+        if (!file) {
+            return false;
+        }
+
+        TTBHeader header;
+        file.read(reinterpret_cast<char*>(&header), sizeof(header));
+        
+        if (header.magic != TTB_MAGIC || header.version != TTB_VERSION) {
+            return false;
+        }
+
+        return (header.flags & static_cast<uint16_t>(EncryptionFlags::AllEncrypted)) != 0;
+    }
+
+    bool TTBFile::isEncryptedFromMemory(const char* data, size_t size)
+    {
+        if (!data || size < sizeof(TTBHeader)) {
+            return false;
+        }
+
+        const TTBHeader* header = reinterpret_cast<const TTBHeader*>(data);
+        
+        if (header->magic != TTB_MAGIC || header->version != TTB_VERSION) {
+            return false;
+        }
+
+        return (header->flags & static_cast<uint16_t>(EncryptionFlags::AllEncrypted)) != 0;
+    }
 } // namespace TinaToolBox

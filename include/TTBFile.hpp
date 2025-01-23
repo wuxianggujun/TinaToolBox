@@ -76,6 +76,12 @@ namespace TinaToolBox
         // 从内存数据加载加密的 TTB 文件
         static std::unique_ptr<TTBFile> loadEncryptedFromMemory(const char* data, size_t size, const AESKey& key);
 
+        // 检查TTB文件是否加密
+        static bool isEncrypted(const std::string& filename);
+
+        // 从内存数据检查TTB文件是否加密
+        static bool isEncryptedFromMemory(const char* data, size_t size);
+
         // 获取配置
         const std::map<std::string, std::string>& getConfig() const { return config_; }
 
