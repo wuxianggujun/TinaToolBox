@@ -614,9 +614,12 @@ namespace TinaToolBox
                     print config "description"
                 )";
 
-                // 创建 TTB 文件 (这次我们指定文件名 "my_script_container.ttb")
-                std::string ttbFilename = "my_script_container.ttb"; // 指定要生成的文件名
-                auto createResult = engine.createScript(ttbFilename, config, script, true); // 创建加密的 TTB 文件
+                // 生成加密密钥
+                auto key = TTBFile::generateKey();
+                
+                // 创建 TTB 文件
+                std::string ttbFilename = "my_script_container.ttb";
+                auto createResult = engine.createScript(ttbFilename, config, script, false);  // 改为不加密
 
                 if (createResult != TTBScriptEngine::Error::SUCCESS)
                 {
