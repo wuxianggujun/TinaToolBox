@@ -23,6 +23,7 @@ set(ANTLR4_RUNTIME_ONLY ON)
 find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(antlr4-runtime CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 # 创建资源目录
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/resources)
@@ -44,6 +45,8 @@ set(TEMPLATE_SOURCES
         ${CMAKE_SOURCE_DIR}/src/ExcelScriptInterpreter.cpp
         ${CMAKE_SOURCE_DIR}/src/ExcelHandler.cpp
         ${CMAKE_SOURCE_DIR}/src/TTBResourceLoader.cpp
+        ${CMAKE_SOURCE_DIR}/src/TTBResourceHandle.cpp
+        ${CMAKE_SOURCE_DIR}/src/TTBTemporaryFile.cpp
         ${CMAKE_BINARY_DIR}/generated/excel_script/ExcelScriptLexer.cpp
         ${CMAKE_BINARY_DIR}/generated/excel_script/ExcelScriptParser.cpp
 )
@@ -70,6 +73,7 @@ target_link_libraries(TTBTemplate PRIVATE
         OpenSSL::Crypto
         antlr4_shared
         xlnt
+        spdlog::spdlog
 )
 
 # 设置编译选项

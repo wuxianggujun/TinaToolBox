@@ -14,6 +14,8 @@
 #include "TTBPacker.hpp"
 #include "TTBScriptEngine.hpp"
 #include "TTBResourceExtractor.hpp"
+#include "TTBTemporaryFile.hpp"
+#include "TTBResourceHandle.hpp"
 
 namespace TinaToolBox
 {
@@ -99,15 +101,15 @@ namespace TinaToolBox
             reportProgress("Creating temporary file...", 50);
             
             // 3. 创建临时文件
-            auto tempPath = std::filesystem::temp_directory_path() / "temp.ttb";
+            TTBTemporaryFile tempFile("ttb_script_");
             {
-                std::ofstream tempFile(tempPath, std::ios::binary);
-                if (!tempFile) {
+                std::ofstream file(tempFile.path(), std::ios::binary);
+                if (!file) {
                     lastError_ = "Failed to create temporary file";
                     return Error::FILE_CREATE_ERROR;
                 }
-                tempFile.write(reinterpret_cast<const char*>(uncompressedData.data()), 
-                             uncompressedData.size());
+                file.write(reinterpret_cast<const char*>(uncompressedData.data()), 
+                          uncompressedData.size());
             }
 
             reportProgress("Loading TTB file...", 70);
@@ -121,14 +123,13 @@ namespace TinaToolBox
                 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
             };
 
-            if (TTBFile::isEncrypted(tempPath.string())) {
-                ttbFile = TTBFile::loadEncrypted(tempPath.string(), defaultKey);
+            if (TTBFile::isEncrypted(tempFile.path().string())) {
+                ttbFile = TTBFile::loadEncrypted(tempFile.path().string(), defaultKey);
             } else {
-                ttbFile = TTBFile::load(tempPath.string());
+                ttbFile = TTBFile::load(tempFile.path().string());
             }
 
             if (!ttbFile) {
-                std::filesystem::remove(tempPath);
                 lastError_ = "Failed to load TTB file";
                 return Error::FILE_LOAD_ERROR;
             }
@@ -139,8 +140,7 @@ namespace TinaToolBox
             TTBScriptEngine engine;
             engine.setProgressCallback(progressCallback_);
             
-            auto result = engine.executeScript(tempPath.string(), defaultKey, ttbFile.get());
-            std::filesystem::remove(tempPath);
+            auto result = engine.executeScript(tempFile.path().string(), defaultKey, ttbFile.get());
 
             if (result != TTBScriptEngine::Error::SUCCESS) {
                 lastError_ = engine.getLastError();
@@ -253,34 +253,27 @@ namespace TinaToolBox
 
     bool TTBPacker::updateResource(const std::string& exePath, const std::vector<uint8_t>& compressedData)
     {
-        HANDLE hUpdateRes = BeginUpdateResourceW(
-            reinterpret_cast<LPCWSTR>(std::filesystem::path(exePath).wstring().c_str()),
-            FALSE);
-        
-        if (hUpdateRes == NULL) {
-            lastError_ = "Failed to begin resource update";
+        try {
+            TTBResourceHandle handle(exePath);
+            
+            if (!UpdateResourceW(handle.get(),
+                               L"TTB_DATA",
+                               MAKEINTRESOURCEW(1),
+                               MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                               reinterpret_cast<LPVOID>(const_cast<uint8_t*>(compressedData.data())),
+                               static_cast<DWORD>(compressedData.size()))) {
+                DWORD error = GetLastError();
+                lastError_ = "Failed to update resource. Error code: " + std::to_string(error);
+                return false;
+            }
+
+            handle.commit();
+            return true;
+        }
+        catch (const std::exception& e) {
+            lastError_ = std::string("Error during resource update: ") + e.what();
             return false;
         }
-
-        if (!UpdateResourceW(hUpdateRes,
-                           L"TTB_DATA",
-                           MAKEINTRESOURCEW(1),
-                           MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                           reinterpret_cast<LPVOID>(const_cast<uint8_t*>(compressedData.data())),
-                           static_cast<DWORD>(compressedData.size()))) {
-            DWORD error = GetLastError();
-            EndUpdateResource(hUpdateRes, TRUE);
-            lastError_ = "Failed to update resource. Error code: " + std::to_string(error);
-            return false;
-        }
-
-        if (!EndUpdateResource(hUpdateRes, FALSE)) {
-            DWORD error = GetLastError();
-            lastError_ = "Failed to commit resource update. Error code: " + std::to_string(error);
-            return false;
-        }
-
-        return true;
     }
 
     std::vector<uint8_t> TTBPacker::loadMinimalExeTemplate()
