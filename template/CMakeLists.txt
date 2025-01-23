@@ -39,6 +39,7 @@ set(TEMPLATE_SOURCES
         src/main.cpp
         ${CMAKE_SOURCE_DIR}/src/TTBFile.cpp
         ${CMAKE_SOURCE_DIR}/src/TTBCrypto.cpp
+        ${CMAKE_SOURCE_DIR}/src/TTBPacker.cpp
         ${CMAKE_SOURCE_DIR}/src/TTBScriptEngine.cpp
         ${CMAKE_SOURCE_DIR}/src/ExcelScriptInterpreter.cpp
         ${CMAKE_SOURCE_DIR}/src/ExcelHandler.cpp

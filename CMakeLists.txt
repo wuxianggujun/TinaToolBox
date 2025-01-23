@@ -95,13 +95,10 @@ file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
 file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
 
-# 收集所有源文件，但排除TTBPacker
+# 收集所有源文件
 file(GLOB_RECURSE ALL_SOURCE_FILES 
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
-
-# 从源文件列表中排除TTBPacker.cpp
-list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX ".*TTBPacker\\.cpp$")
 
 # 生成资源文件
 qt_add_resources(RESOURCES ${RC_FILES})

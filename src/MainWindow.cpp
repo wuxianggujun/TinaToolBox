@@ -36,6 +36,7 @@
 #include "ThreadPool.hpp"
 #include "TTBFile.hpp"
 #include "TTBScriptEngine.hpp"
+#include "TTBPacker.hpp"
 
 namespace TinaToolBox
 {
@@ -652,198 +653,32 @@ namespace TinaToolBox
                 qDebug() << "TTB path:" << ttbPath;
                 qDebug() << "Output path:" << outputPath;
 
-                // 2. 首先复制模板文件到输出路径
-                if (!QFile::copy(templatePath, outputPath)) {
-                    if (QFile::exists(outputPath)) {
-                        QFile::remove(outputPath);
-                        if (!QFile::copy(templatePath, outputPath)) {
-                            QMessageBox::critical(this, "Error", "Failed to create output file");
-                            return;
-                        }
-                    }
-                }
-
-                // 3. 读取TTB文件数据
-                QFile ttbFile(ttbPath);
-                if (!ttbFile.open(QIODevice::ReadOnly)) {
-                    QMessageBox::critical(this, "Error", "Failed to open TTB file");
-                    return;
-                }
-                QByteArray ttbData = ttbFile.readAll();
-                ttbFile.close();
-
-                qDebug() << "Read TTB data size:" << ttbData.size() << "bytes";
-
-                // 检查TTB数据是否有效
-                if (ttbData.isEmpty()) {
-                    QMessageBox::critical(this, "Error", "TTB file is empty");
-                    return;
-                }
-
-                // 打印前几个字节用于调试
-                qDebug() << "First few bytes of TTB data:";
-                for (int i = 0; i < std::min<qsizetype>(16, ttbData.size()); ++i) {
-                    qDebug().nospace() << QString("0x%1 ").arg((unsigned char)ttbData[i], 2, 16, QChar('0'));
-                }
-
-                // 压缩TTB数据
-                uLong sourceLen = ttbData.size();
-                uLong destLen = compressBound(sourceLen);
-                std::vector<Bytef> compressedData(destLen);
+                // 2. 使用TTBPacker打包文件
+                TTBPacker packer;
                 
-                z_stream zs = {0};
-                zs.zalloc = Z_NULL;
-                zs.zfree = Z_NULL;
-                zs.opaque = Z_NULL;
-                
-                int initResult = deflateInit2(&zs, 
-                    Z_BEST_COMPRESSION,    // 压缩级别
-                    Z_DEFLATED,           // 压缩方法
-                    15 + 16,              // 窗口大小和gzip标记
-                    8,                    // 内存级别
-                    Z_DEFAULT_STRATEGY);   // 压缩策略
-                
-                if (initResult != Z_OK) {
-                    QString error = QString("Failed to initialize compression: %1")
-                        .arg(zs.msg ? zs.msg : "Unknown error");
-                    QMessageBox::critical(this, "Error", error);
-                    return;
-                }
-                
-                zs.next_in = reinterpret_cast<Bytef*>(ttbData.data());
-                zs.avail_in = sourceLen;
-                zs.next_out = compressedData.data();
-                zs.avail_out = destLen;
-                
-                // 修改压缩逻辑，处理缓冲区问题
-                std::vector<Bytef> temp;
-                while (true) {
-                    int ret = deflate(&zs, Z_FINISH);
-                    
-                    if (ret == Z_STREAM_END) {
-                        break;  // 压缩完成
-                    }
-                    
-                    if (ret == Z_BUF_ERROR) {
-                        // 输出缓冲区已满，需要扩展
-                        size_t currentSize = compressedData.size();
-                        temp = compressedData;  // 保存当前数据
-                        compressedData.resize(currentSize * 2);  // 扩大一倍
-                        std::copy(temp.begin(), temp.end(), compressedData.begin());
-                        
-                        // 更新zlib流的输出指针和大小
-                        zs.next_out = compressedData.data() + zs.total_out;
-                        zs.avail_out = compressedData.size() - zs.total_out;
-                        
-                        continue;
-                    }
-                    
-                    if (ret < 0) {  // 其他错误
-                        QString error = QString("Failed to compress data: %1 (ret=%2)")
-                            .arg(zs.msg ? zs.msg : "Unknown error")
-                            .arg(ret);
-                        deflateEnd(&zs);
-                        QMessageBox::critical(this, "Error", error);
-                        qDebug() << "Compression error details:";
-                        qDebug() << "Input size:" << sourceLen;
-                        qDebug() << "Output buffer size:" << compressedData.size();
-                        qDebug() << "Bytes written:" << zs.total_out;
-                        qDebug() << "Return code:" << ret;
-                        return;
-                    }
-                }
-                
-                compressedData.resize(zs.total_out);
-                deflateEnd(&zs);
+                // 设置进度回调
+                packer.setProgressCallback([](const std::string& message, int progress) {
+                    qDebug() << "[" << progress << "%]" << message.c_str();
+                });
 
-                qDebug() << "Compression successful:";
-                qDebug() << "Original size:" << sourceLen << "bytes";
-                qDebug() << "Compressed size:" << zs.total_out << "bytes";
-                qDebug() << "Compression ratio:" << (float)zs.total_out / sourceLen * 100 << "%";
+                auto result = packer.packToExecutable(
+                    templatePath.toStdString(),
+                    ttbPath.toStdString(),
+                    outputPath.toStdString()
+                );
 
-                // 打印压缩后数据的前几个字节
-                qDebug() << "First few bytes of compressed data:";
-                for (size_t i = 0; i < std::min<size_t>(16, compressedData.size()); ++i) {
-                    qDebug().nospace() << QString("0x%1 ").arg((unsigned char)compressedData[i], 2, 16, QChar('0'));
-                }
-
-                // 4. 使用Windows API更新资源
-                HANDLE hUpdateRes = BeginUpdateResourceW((LPCWSTR)outputPath.utf16(), FALSE);
-                if (hUpdateRes == NULL) {
-                    DWORD error = GetLastError();
+                if (result != TTBPacker::Error::SUCCESS) {
                     QMessageBox::critical(this, "Error", 
-                        QString("Failed to begin resource update. Error code: %1").arg(error));
+                        QString("Failed to pack executable: %1").arg(packer.getLastError().c_str()));
                     return;
                 }
 
-                // 5. 添加TTB数据作为自定义资源
-                if (!UpdateResourceW(hUpdateRes, 
-                                   L"TTB_DATA",  // 资源类型
-                                   MAKEINTRESOURCEW(1),  // 资源ID
-                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                                   compressedData.data(),
-                                   compressedData.size())) {
-                    DWORD error = GetLastError();
-                    EndUpdateResource(hUpdateRes, TRUE);  // 取消更改
-                    QMessageBox::critical(this, "Error", 
-                        QString("Failed to update resource. Error code: %1").arg(error));
-                    return;
-                }
-
-                // 6. 提交资源更新
-                if (!EndUpdateResource(hUpdateRes, FALSE)) {
-                    DWORD error = GetLastError();
-                    QMessageBox::critical(this, "Error", 
-                        QString("Failed to commit resource update. Error code: %1").arg(error));
-                    return;
-                }
-
-                // 7. 验证文件大小和资源
-                QFile outputFile(outputPath);
-                if (outputFile.exists()) {
-                    qint64 finalSize = outputFile.size();
-                    
-                    // 验证资源是否正确写入
-                    HANDLE hFile = CreateFileW((LPCWSTR)outputPath.utf16(), 
-                                            GENERIC_READ, 
-                                            FILE_SHARE_READ, 
-                                            NULL, 
-                                            OPEN_EXISTING, 
-                                            FILE_ATTRIBUTE_NORMAL, 
-                                            NULL);
-                    
-                    if (hFile != INVALID_HANDLE_VALUE) {
-                        HMODULE hModule = LoadLibraryExW((LPCWSTR)outputPath.utf16(), 
-                                                        NULL, 
-                                                        LOAD_LIBRARY_AS_DATAFILE);
-                        if (hModule) {
-                            HRSRC hRes = FindResourceW(hModule, MAKEINTRESOURCEW(1), L"TTB_DATA");
-                            if (hRes) {
-                                DWORD resourceSize = SizeofResource(hModule, hRes);
-                                qDebug() << "Verified resource size:" << resourceSize << "bytes";
-                                if (resourceSize != compressedData.size()) {
-                                    qWarning() << "Resource size mismatch! Original:" << compressedData.size() 
-                                             << "Resource:" << resourceSize;
-                                }
-                            } else {
-                                qWarning() << "Failed to verify resource!";
-                            }
-                            FreeLibrary(hModule);
-                        }
-                        CloseHandle(hFile);
-                    }
-
-                    QString msg = QString("Successfully created packed executable:\n%1\n\n"
-                                        "Original TTB size: %2 bytes\n"
-                                        "Final file size: %3 bytes")
-                        .arg(outputPath)
-                        .arg(ttbData.size())
-                        .arg(finalSize);
-                    QMessageBox::information(this, "Success", msg);
-                }
+                QString msg = QString("Successfully created packed executable:\n%1").arg(outputPath);
+                QMessageBox::information(this, "Success", msg);
 
             } catch (const std::exception& e) {
-                QMessageBox::critical(this, "Error", QString("Failed to pack executable: %1").arg(e.what()));
+                QMessageBox::critical(this, "Error", 
+                    QString("Failed to pack executable: %1").arg(e.what()));
             }
         }
     }

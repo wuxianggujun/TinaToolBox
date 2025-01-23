@@ -9,41 +9,278 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
-
-#include "TtbPacker.hpp"
 #include <zlib.h>
+
+#include "TTBPacker.hpp"
+#include "TTBScriptEngine.hpp"
+#include "TTBResourceExtractor.hpp"
 
 namespace TinaToolBox
 {
     // 定义函数指针类型
     typedef BOOL (WINAPI *CHECKSUM_MAPPED_FILE)(PVOID BaseAddress, DWORD FileLength, PDWORD HeaderSum, PDWORD CheckSum);
 
-    void TTBPacker::createExecutable(const std::string& ttbFile, const std::string& exeFile)
+    TTBPacker::Error TTBPacker::packToExecutable(
+        const std::string& templatePath,
+        const std::string& ttbPath,
+        const std::string& outputPath)
     {
-        try
-        {
-            // 1. 加载模板EXE
-            auto exeTemplate = loadMinimalExeTemplate();
+        try {
+            reportProgress("Reading TTB file...", 0);
+            
+            // 1. 读取TTB文件
+            std::ifstream ttbFile(ttbPath, std::ios::binary);
+            if (!ttbFile) {
+                lastError_ = "Failed to open TTB file: " + ttbPath;
+                return Error::FILE_LOAD_ERROR;
+            }
 
-            // 2. 查找数据段偏移
-            size_t dataOffset = findDataSegmentOffset(exeTemplate);
+            ttbFile.seekg(0, std::ios::end);
+            size_t ttbSize = ttbFile.tellg();
+            ttbFile.seekg(0);
+            std::vector<uint8_t> ttbData(ttbSize);
+            ttbFile.read(reinterpret_cast<char*>(ttbData.data()), ttbSize);
+            ttbFile.close();
 
-            // 3. 压缩TTB数据
-            auto compressedData = compressTTBData(ttbFile);
+            reportProgress("Compressing TTB data...", 20);
+            
+            // 2. 压缩TTB数据
+            auto compressedData = compressData(ttbData);
+            if (compressedData.empty()) {
+                return Error::COMPRESSION_FAILED;
+            }
 
-            // 4. 注入压缩后的数据
-            injectData(exeTemplate, dataOffset, compressedData);
+            reportProgress("Creating output file...", 40);
+            
+            // 3. 复制模板文件到输出路径
+            if (!std::filesystem::copy_file(templatePath, outputPath, 
+                std::filesystem::copy_options::overwrite_existing)) {
+                lastError_ = "Failed to create output file: " + outputPath;
+                return Error::FILE_CREATE_ERROR;
+            }
 
-            // 5. 更新PE头部
-            updatePEHeaders(exeTemplate, compressedData.size());
+            reportProgress("Updating resources...", 60);
+            
+            // 4. 更新资源
+            if (!updateResource(outputPath, compressedData)) {
+                return Error::RESOURCE_UPDATE_ERROR;
+            }
 
-            // 6. 写入新的可执行文件
-            writeExecutable(exeTemplate, exeFile);
+            reportProgress("Packing completed successfully", 100);
+            return Error::SUCCESS;
         }
-        catch (const std::exception& e)
-        {
-            throw std::runtime_error(std::string("Failed to create executable: ") + e.what());
+        catch (const std::exception& e) {
+            lastError_ = std::string("Error during packing: ") + e.what();
+            return Error::FILE_CREATE_ERROR;
         }
+    }
+
+    TTBPacker::Error TTBPacker::extractAndExecute(const std::string& exePath)
+    {
+        try {
+            reportProgress("Extracting TTB data...", 0);
+            
+            // 1. 提取压缩的TTB数据
+            TTBResourceExtractor extractor;
+            auto compressedData = extractor.extractTTBData();
+            if (compressedData.empty()) {
+                lastError_ = "No TTB data found in executable";
+                return Error::NO_TTB_DATA;
+            }
+
+            reportProgress("Decompressing data...", 30);
+            
+            // 2. 解压数据
+            auto uncompressedData = decompressData(compressedData);
+            if (uncompressedData.empty()) {
+                return Error::DECOMPRESSION_FAILED;
+            }
+
+            reportProgress("Creating temporary file...", 50);
+            
+            // 3. 创建临时文件
+            auto tempPath = std::filesystem::temp_directory_path() / "temp.ttb";
+            {
+                std::ofstream tempFile(tempPath, std::ios::binary);
+                if (!tempFile) {
+                    lastError_ = "Failed to create temporary file";
+                    return Error::FILE_CREATE_ERROR;
+                }
+                tempFile.write(reinterpret_cast<const char*>(uncompressedData.data()), 
+                             uncompressedData.size());
+            }
+
+            reportProgress("Loading TTB file...", 70);
+            
+            // 4. 加载TTB文件
+            std::unique_ptr<TTBFile> ttbFile;
+            AESKey defaultKey = {
+                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+                0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+            };
+
+            if (TTBFile::isEncrypted(tempPath.string())) {
+                ttbFile = TTBFile::loadEncrypted(tempPath.string(), defaultKey);
+            } else {
+                ttbFile = TTBFile::load(tempPath.string());
+            }
+
+            if (!ttbFile) {
+                std::filesystem::remove(tempPath);
+                lastError_ = "Failed to load TTB file";
+                return Error::FILE_LOAD_ERROR;
+            }
+
+            reportProgress("Executing script...", 90);
+            
+            // 5. 执行脚本
+            TTBScriptEngine engine;
+            engine.setProgressCallback(progressCallback_);
+            
+            auto result = engine.executeScript(tempPath.string(), defaultKey, ttbFile.get());
+            std::filesystem::remove(tempPath);
+
+            if (result != TTBScriptEngine::Error::SUCCESS) {
+                lastError_ = engine.getLastError();
+                return Error::FILE_LOAD_ERROR;
+            }
+
+            reportProgress("Script executed successfully", 100);
+            return Error::SUCCESS;
+        }
+        catch (const std::exception& e) {
+            lastError_ = std::string("Error during extraction: ") + e.what();
+            return Error::FILE_LOAD_ERROR;
+        }
+    }
+
+    std::vector<uint8_t> TTBPacker::compressData(const std::vector<uint8_t>& data)
+    {
+        if (data.empty()) {
+            lastError_ = "Input data is empty";
+            return {};
+        }
+
+        uLong sourceLen = data.size();
+        uLong destLen = compressBound(sourceLen);
+        std::vector<Bytef> compressedData(destLen);
+        
+        z_stream zs = {0};
+        zs.zalloc = Z_NULL;
+        zs.zfree = Z_NULL;
+        zs.opaque = Z_NULL;
+        
+        if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+            lastError_ = "Failed to initialize compression";
+            return {};
+        }
+
+        zs.next_in = const_cast<Bytef*>(data.data());
+        zs.avail_in = sourceLen;
+        zs.next_out = compressedData.data();
+        zs.avail_out = destLen;
+
+        std::vector<Bytef> temp;
+        while (true) {
+            int ret = deflate(&zs, Z_FINISH);
+            
+            if (ret == Z_STREAM_END) {
+                break;
+            }
+            
+            if (ret == Z_BUF_ERROR) {
+                size_t currentSize = compressedData.size();
+                temp = compressedData;
+                compressedData.resize(currentSize * 2);
+                std::copy(temp.begin(), temp.end(), compressedData.begin());
+                
+                zs.next_out = compressedData.data() + zs.total_out;
+                zs.avail_out = compressedData.size() - zs.total_out;
+                continue;
+            }
+            
+            if (ret < 0) {
+                lastError_ = std::string("Compression error: ") + 
+                            (zs.msg ? zs.msg : "Unknown error");
+                deflateEnd(&zs);
+                return {};
+            }
+        }
+
+        deflateEnd(&zs);
+        compressedData.resize(zs.total_out);
+        return compressedData;
+    }
+
+    std::vector<uint8_t> TTBPacker::decompressData(const std::vector<uint8_t>& data)
+    {
+        if (data.empty()) {
+            lastError_ = "Input data is empty";
+            return {};
+        }
+
+        std::vector<uint8_t> uncompressedData(data.size() * 10);
+        
+        z_stream zs = {0};
+        zs.zalloc = Z_NULL;
+        zs.zfree = Z_NULL;
+        zs.opaque = Z_NULL;
+        
+        if (inflateInit2(&zs, 15 + 16) != Z_OK) {
+            lastError_ = "Failed to initialize decompression";
+            return {};
+        }
+
+        zs.next_in = const_cast<Bytef*>(data.data());
+        zs.avail_in = static_cast<uInt>(data.size());
+        zs.next_out = uncompressedData.data();
+        zs.avail_out = static_cast<uInt>(uncompressedData.size());
+
+        int ret = inflate(&zs, Z_FINISH);
+        if (ret != Z_STREAM_END) {
+            lastError_ = std::string("Decompression error: ") + 
+                        (zs.msg ? zs.msg : "Unknown error");
+            inflateEnd(&zs);
+            return {};
+        }
+
+        inflateEnd(&zs);
+        uncompressedData.resize(zs.total_out);
+        return uncompressedData;
+    }
+
+    bool TTBPacker::updateResource(const std::string& exePath, const std::vector<uint8_t>& compressedData)
+    {
+        HANDLE hUpdateRes = BeginUpdateResourceW(
+            reinterpret_cast<LPCWSTR>(std::filesystem::path(exePath).wstring().c_str()),
+            FALSE);
+        
+        if (hUpdateRes == NULL) {
+            lastError_ = "Failed to begin resource update";
+            return false;
+        }
+
+        if (!UpdateResourceW(hUpdateRes,
+                           L"TTB_DATA",
+                           MAKEINTRESOURCEW(1),
+                           MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                           reinterpret_cast<LPVOID>(const_cast<uint8_t*>(compressedData.data())),
+                           static_cast<DWORD>(compressedData.size()))) {
+            DWORD error = GetLastError();
+            EndUpdateResource(hUpdateRes, TRUE);
+            lastError_ = "Failed to update resource. Error code: " + std::to_string(error);
+            return false;
+        }
+
+        if (!EndUpdateResource(hUpdateRes, FALSE)) {
+            DWORD error = GetLastError();
+            lastError_ = "Failed to commit resource update. Error code: " + std::to_string(error);
+            return false;
+        }
+
+        return true;
     }
 
     std::vector<uint8_t> TTBPacker::loadMinimalExeTemplate()
@@ -101,40 +338,6 @@ namespace TinaToolBox
         // 为简化示例，这里返回一个固定偏移
         // 在实际实现中，你需要遍历PE文件的节表来找到正确的文件偏移
         return resourceRVA;
-    }
-
-    std::vector<uint8_t> TTBPacker::compressTTBData(const std::string& ttbFile)
-    {
-        std::ifstream file(ttbFile, std::ios::binary | std::ios::ate);
-        if (!file)
-        {
-            throw std::runtime_error("Failed to open TTB file: " + ttbFile);
-        }
-
-        std::streamsize inputSize = file.tellg();
-        file.seekg(0, std::ios::beg);
-
-        std::vector<uint8_t> input(inputSize);
-        if (!file.read(reinterpret_cast<char*>(input.data()), inputSize))
-        {
-            throw std::runtime_error("Failed to read TTB file");
-        }
-
-        // 压缩数据
-        std::vector<uint8_t> output(compressBound(inputSize));
-        z_stream zs = {0};
-        deflateInit(&zs, Z_BEST_COMPRESSION);
-
-        zs.next_in = input.data();
-        zs.avail_in = input.size();
-        zs.next_out = output.data();
-        zs.avail_out = output.size();
-
-        deflate(&zs, Z_FINISH);
-        deflateEnd(&zs);
-
-        output.resize(zs.total_out);
-        return output;
     }
 
     void TTBPacker::injectData(std::vector<uint8_t>& exeTemplate,
@@ -203,18 +406,18 @@ namespace TinaToolBox
     }
 
     void TTBPacker::writeExecutable(const std::vector<uint8_t>& exeTemplate,
-                                  const std::string& exeFile)
+                                  const std::string& outputPath)
     {
-        std::ofstream file(exeFile, std::ios::binary);
+        std::ofstream file(outputPath, std::ios::binary);
         if (!file)
         {
-            throw std::runtime_error("Failed to create output file: " + exeFile);
+            throw std::runtime_error("Failed to create output file: " + outputPath);
         }
 
-        if (!file.write(reinterpret_cast<const char*>(exeTemplate.data()),
-                       exeTemplate.size()))
+        file.write(reinterpret_cast<const char*>(exeTemplate.data()), exeTemplate.size());
+        if (!file)
         {
-            throw std::runtime_error("Failed to write output file");
+            throw std::runtime_error("Failed to write output file: " + outputPath);
         }
     }
 } // TinaToolBox
