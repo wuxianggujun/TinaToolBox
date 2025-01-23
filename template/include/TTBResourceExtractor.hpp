@@ -14,8 +14,8 @@ public:
             return {};
         }
 
-        // 查找TTB资源
-        HRSRC hRes = FindResource(hModule, L"TTB_DATA", RT_RCDATA);
+        // 查找TTB资源，使用ID为1的RCDATA资源
+        HRSRC hRes = FindResource(hModule, MAKEINTRESOURCE(1), RT_RCDATA);
         if (!hRes) {
             return {};
         }

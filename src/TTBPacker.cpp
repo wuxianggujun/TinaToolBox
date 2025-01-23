@@ -50,7 +50,7 @@ namespace TinaToolBox
     {
         // 从资源目录加载模板文件
         std::filesystem::path templatePath = std::filesystem::current_path() / "resources" / "template.exe";
-        
+
         if (!std::filesystem::exists(templatePath))
         {
             throw std::runtime_error("Template EXE not found: " + templatePath.string());
@@ -144,7 +144,7 @@ namespace TinaToolBox
         // 更新资源大小
         PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)exeTemplate.data();
         PIMAGE_NT_HEADERS ntHeaders = (PIMAGE_NT_HEADERS)(exeTemplate.data() + dosHeader->e_lfanew);
-        
+
         // 找到资源节
         PIMAGE_SECTION_HEADER sectionHeader = IMAGE_FIRST_SECTION(ntHeaders);
         for (WORD i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++)
@@ -192,7 +192,7 @@ namespace TinaToolBox
         ntHeaders->OptionalHeader.CheckSum = 0;  // 重新计算校验和
         DWORD headerSum = 0;
         DWORD checkSum = 0;
-        
+
         if (!pfnCheckSum(exeTemplate.data(), exeTemplate.size(), &headerSum, &checkSum)) {
             FreeLibrary(hImageHlp);
             throw std::runtime_error("CheckSumMappedFile failed");

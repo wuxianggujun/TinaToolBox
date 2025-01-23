@@ -92,7 +92,13 @@ file(GLOB_RECURSE RC_FILES ${PROJECT_SOURCE_DIR}/resources/*.qrc)
 file(GLOB_RECURSE UI_FILES ${PROJECT_SOURCE_DIR}/ui/*.ui)
 file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h*)
 
-aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
+# 收集所有源文件，但排除TTBPacker
+file(GLOB_RECURSE ALL_SOURCE_FILES 
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+)
+
+# 从源文件列表中排除TTBPacker.cpp
+list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX ".*TTBPacker\\.cpp$")
 
 # 生成资源文件
 qt_add_resources(RESOURCES ${RC_FILES})
@@ -101,7 +107,7 @@ qt_add_resources(RESOURCES ${RC_FILES})
 list(APPEND PROJECT_SOURCES
         ${ANTLR_ExcelScript_CXX_OUTPUTS}
         ${HEADER_FILES}
-        ${SOURCE_FILES}
+        ${ALL_SOURCE_FILES}
         ${RC_FILES}
         ${UI_FILES}
         ${RESOURCES})
@@ -225,10 +231,25 @@ target_include_directories(TTBPacker PRIVATE
 
 # 链接TTBPacker的依赖
 if(MSVC)
+    # 查找Windows SDK路径
+    get_filename_component(WINSDK_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots;KitsRoot10]" ABSOLUTE CACHE)
+    
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(WINSDK_ARCH "x64")
+    else()
+        set(WINSDK_ARCH "x86")
+    endif()
+    
+    # 添加Windows SDK库路径
+    target_link_directories(TTBPacker PRIVATE
+        "${WINSDK_DIR}/Lib/10.0.22621.0/um/${WINSDK_ARCH}"
+    )
+    
     target_link_libraries(TTBPacker PRIVATE 
         ZLIB::ZLIB
-        "Imagehlp.lib"  # 使用完整的库名称
+        imagehlp.lib
     )
+    
     target_compile_options(TTBPacker PRIVATE /utf-8)
     target_compile_definitions(TTBPacker PRIVATE 
         _CRT_SECURE_NO_WARNINGS
@@ -244,11 +265,13 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy 
         $<TARGET_FILE:TTBTemplate>
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
+    COMMAND ${CMAKE_COMMAND} -E echo "Copying template from: $<TARGET_FILE:TTBTemplate>"
+    COMMAND ${CMAKE_COMMAND} -E echo "Copying template to: ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe"
     DEPENDS TTBTemplate
 )
 
 # 添加一个自定义目标来确保模板文件被复制
-add_custom_target(copy_template
+add_custom_target(copy_template ALL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
 )
 
