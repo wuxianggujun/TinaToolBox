@@ -1,2 +1,0 @@
-corrosion_import_crate(MANIFEST_PATH  ${PROJECT_SOURCE_DIR}/dependencies/libcalamine/Cargo.toml)
-set_property(TARGET libcalamine PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/libcalamine/)

@@ -47,8 +47,7 @@ set(TEMPLATE_SOURCES
         ${CMAKE_SOURCE_DIR}/src/TTBResourceLoader.cpp
         ${CMAKE_SOURCE_DIR}/src/TTBResourceHandle.cpp
         ${CMAKE_SOURCE_DIR}/src/TTBTemporaryFile.cpp
-        ${CMAKE_BINARY_DIR}/generated/excel_script/ExcelScriptLexer.cpp
-        ${CMAKE_BINARY_DIR}/generated/excel_script/ExcelScriptParser.cpp
+        ${ANTLR_ExcelScript_CXX_OUTPUTS}
 )
 
 # 添加可执行文件
@@ -95,16 +94,9 @@ install(TARGETS TTBTemplate
     ARCHIVE DESTINATION lib
 )
 
-# 如果是Debug模式，复制xlnt的DLL
-if(WIN32)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(XLNT_DLL_NAME "xlntd.dll")
-    else()
-        set(XLNT_DLL_NAME "xlnt.dll")
-    endif()
-    copy_dll(TTBTemplate "${CMAKE_BINARY_DIR}/dependencies/xlnt/source" "${XLNT_DLL_NAME}")
-endif()
-
 # 打印输出路径信息
 message(STATUS "TTBTemplate will be built to: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS "Resource file location: ${CMAKE_CURRENT_BINARY_DIR}/resources/TTBTemplate.rc")
+
+# 确保在主项目的ANTLR文件生成后再构建模板
+add_dependencies(TTBTemplate antlr4_shared)

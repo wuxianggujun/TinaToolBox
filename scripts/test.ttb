@@ -1,4 +1,0 @@
-void main(void){
-    double foo = 1.5;
-    printf("Hello World ! %d \n",2024 - 2001);
-}

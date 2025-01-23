@@ -85,3 +85,5 @@ cmake-build-*
 .idea/
 
 
+/tests/.idea/
+/tests/cmake-build-debug/
