@@ -25,8 +25,7 @@ namespace TinaToolBox
     std::pair<const char*, size_t> TTBResourceLoader::loadResourceWindows(const std::string& resourceName,
                                                                           const std::string& resourceType)
     {
-        HRSRC hRes = FindResource(nullptr, reinterpret_cast<LPCWSTR>(resourceName.c_str()),
-                                  reinterpret_cast<LPCWSTR>(resourceType.c_str()));
+        HRSRC hRes = FindResourceA(nullptr, resourceName.c_str(), resourceType.c_str());
         if (!hRes)
         {
             std::cerr << "Error: FindResource failed for resource " << resourceName << " of type " << resourceType <<
@@ -36,15 +35,19 @@ namespace TinaToolBox
 
         HGLOBAL hResLoad = LoadResource(nullptr, hRes);
         if (!hResLoad)
+        {
             std::cerr << "Error: LoadResource failed for resource " << resourceName << " of type " << resourceType <<
                 std::endl;
-        return {nullptr, 0};
+            return {nullptr, 0};
+        }
 
         const char* pResData = static_cast<const char*>(LockResource(hResLoad));
         if (!pResData)
+        {
             std::cerr << "Error: LockResource failed for resource " << resourceName << " of type " << resourceType <<
                 std::endl;
-        return {nullptr, 0};
+            return {nullptr, 0};
+        }
 
         DWORD resSize = SizeofResource(nullptr, hRes);
         if (!resSize)
@@ -53,7 +56,8 @@ namespace TinaToolBox
                 std::endl;
             return {nullptr, 0};
         }
-        return {pResData, resSize};
+
+        return {pResData, static_cast<size_t>(resSize)};
     }
 
 #else

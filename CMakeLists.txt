@@ -25,6 +25,9 @@ set(PROJECT_SOURCES "")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
 
+# 添加选项控制是否构建模板项目
+option(BUILD_TEMPLATE "Build TTBTemplate project" ON)
+
 #include(ArrowConfig)
 # 设置 PDFium_DIR 指向 PDFiumConfig.cmake 所在目录
 set(PDFium_DIR "${PROJECT_SOURCE_DIR}/dependencies/pdfium-win-x64" CACHE PATH "Path to PDFiumConfig.cmake")
@@ -112,6 +115,7 @@ list(APPEND PROJECT_SOURCES
         ${UI_FILES}
         ${RESOURCES})
 
+# 在主项目配置之前先添加依赖项目
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -216,67 +220,27 @@ if (WIN32)
     copy_dll(TinaToolBox "${CMAKE_BINARY_DIR}/dependencies/xlnt/source" "${XLNT_DLL_NAME}")
 endif ()
 
-# 添加模板项目
-add_subdirectory(template)
+# 在构建模板项目之前，确保资源目录存在
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/resources)
 
-# 添加TTBPacker可执行文件
-add_executable(TTBPacker
-    src/TTBPacker.cpp
-)
-
-# 设置TTBPacker的包含目录
-target_include_directories(TTBPacker PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-# 链接TTBPacker的依赖
-if(MSVC)
-    # 查找Windows SDK路径
-    get_filename_component(WINSDK_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots;KitsRoot10]" ABSOLUTE CACHE)
+if(BUILD_TEMPLATE)
+    add_subdirectory(template)
     
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(WINSDK_ARCH "x64")
-    else()
-        set(WINSDK_ARCH "x86")
-    endif()
-    
-    # 添加Windows SDK库路径
-    target_link_directories(TTBPacker PRIVATE
-        "${WINSDK_DIR}/Lib/10.0.22621.0/um/${WINSDK_ARCH}"
+    # 添加一个自定义命令来复制模板文件
+    add_custom_command(
+        OUTPUT ${CMAKE_SOURCE_DIR}/resources/template.exe
+        COMMAND ${CMAKE_COMMAND} -E copy 
+            $<TARGET_FILE:TTBTemplate>
+            ${CMAKE_SOURCE_DIR}/resources/template.exe
+        DEPENDS TTBTemplate
+        COMMENT "Copying template executable to resources directory"
     )
     
-    target_link_libraries(TTBPacker PRIVATE 
-        ZLIB::ZLIB
-        imagehlp.lib
-    )
-    
-    target_compile_options(TTBPacker PRIVATE /utf-8)
-    target_compile_definitions(TTBPacker PRIVATE 
-        _CRT_SECURE_NO_WARNINGS
-        NOMINMAX
-        WIN32_LEAN_AND_MEAN
+    # 添加一个自定义目标来确保模板文件被复制
+    add_custom_target(copy_template ALL
+        DEPENDS ${CMAKE_SOURCE_DIR}/resources/template.exe
     )
 endif()
-
-# 创建resources目录（如果不存在）
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
-    COMMAND ${CMAKE_COMMAND} -E copy 
-        $<TARGET_FILE:TTBTemplate>
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
-    COMMAND ${CMAKE_COMMAND} -E echo "Copying template from: $<TARGET_FILE:TTBTemplate>"
-    COMMAND ${CMAKE_COMMAND} -E echo "Copying template to: ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe"
-    DEPENDS TTBTemplate
-)
-
-# 添加一个自定义目标来确保模板文件被复制
-add_custom_target(copy_template ALL
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
-)
-
-# 添加依赖关系
-add_dependencies(TTBPacker copy_template)
 
 # 添加测试目录（如果存在）
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)

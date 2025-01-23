@@ -13,16 +13,26 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+# 设置ANTLR4的编译选项
+set(ANTLR4_WITH_STATIC_CRT OFF)
+set(ANTLR4_TAG "4.13.1")
+set(ANTLR4_SHARED_LIBS OFF)
+set(ANTLR4_RUNTIME_ONLY ON)
+
 # 查找必要的包
 find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(antlr4-runtime CONFIG REQUIRED)
+
+# 创建资源目录
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/resources)
 
 # 添加资源文件
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/resources.rc.in
-        ${CMAKE_CURRENT_BINARY_DIR}/resources.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/resources/TTBTemplate.rc
         @ONLY)
 
-message(STATUS "Resource file will be generated at: ${CMAKE_CURRENT_BINARY_DIR}/resources.rc")
+message(STATUS "Resource file will be generated at: ${CMAKE_CURRENT_BINARY_DIR}/resources/TTBTemplate.rc")
 
 # 设置源文件
 set(TEMPLATE_SOURCES
@@ -32,19 +42,24 @@ set(TEMPLATE_SOURCES
         ${CMAKE_SOURCE_DIR}/src/TTBScriptEngine.cpp
         ${CMAKE_SOURCE_DIR}/src/ExcelScriptInterpreter.cpp
         ${CMAKE_SOURCE_DIR}/src/ExcelHandler.cpp
-        ${CMAKE_SOURCE_DIR}/src/LogSystem.cpp
+        ${CMAKE_SOURCE_DIR}/src/TTBResourceLoader.cpp
+        ${CMAKE_BINARY_DIR}/generated/excel_script/ExcelScriptLexer.cpp
+        ${CMAKE_BINARY_DIR}/generated/excel_script/ExcelScriptParser.cpp
 )
 
 # 添加可执行文件
 add_executable(TTBTemplate ${TEMPLATE_SOURCES})
 
 # 添加资源文件编译
-add_windows_resource(TTBTemplate ${CMAKE_CURRENT_BINARY_DIR}/resources.rc)
+add_windows_resource(TTBTemplate ${CMAKE_CURRENT_BINARY_DIR}/resources/TTBTemplate.rc)
 
 # 添加包含目录
 target_include_directories(TTBTemplate PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_BINARY_DIR}/generated/excel_script
+        ${ANTLR4_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/dependencies/xlnt/source/../include
 )
 
 # 链接必要的库
@@ -52,6 +67,8 @@ target_link_libraries(TTBTemplate PRIVATE
         ZLIB::ZLIB
         OpenSSL::SSL
         OpenSSL::Crypto
+        antlr4_shared
+        xlnt
 )
 
 # 设置编译选项
@@ -61,6 +78,8 @@ if (MSVC)
             _CRT_SECURE_NO_WARNINGS
             NOMINMAX
             WIN32_LEAN_AND_MEAN
+            _WIN32_WINNT=0x0601
+            _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
     )
 endif()
 
@@ -71,5 +90,16 @@ install(TARGETS TTBTemplate
     ARCHIVE DESTINATION lib
 )
 
+# 如果是Debug模式，复制xlnt的DLL
+if(WIN32)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(XLNT_DLL_NAME "xlntd.dll")
+    else()
+        set(XLNT_DLL_NAME "xlnt.dll")
+    endif()
+    copy_dll(TTBTemplate "${CMAKE_BINARY_DIR}/dependencies/xlnt/source" "${XLNT_DLL_NAME}")
+endif()
+
 # 打印输出路径信息
 message(STATUS "TTBTemplate will be built to: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(STATUS "Resource file location: ${CMAKE_CURRENT_BINARY_DIR}/resources/TTBTemplate.rc")
