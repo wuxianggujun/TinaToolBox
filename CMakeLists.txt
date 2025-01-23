@@ -31,14 +31,14 @@ set(PDFium_DIR "${PROJECT_SOURCE_DIR}/dependencies/pdfium-win-x64" CACHE PATH "P
 
 list(APPEND CMAKE_PREFIX_PATH ${PDFium_DIR})
 
-if(MSVC)
+if (MSVC)
     add_compile_options(/MP /bigobj /EHsc)
     # 禁用 Qt 关键字宏，包括 emit
-#    add_compile_definitions(QT_NO_KEYWORDS)
+    #    add_compile_definitions(QT_NO_KEYWORDS)
     add_definitions(-D_WIN32_WINNT=0x0601)
     add_definitions(-DNOMINMAX)
     add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
-endif()
+endif ()
 
 # 设置ANTLR4的编译选项
 set(ANTLR4_WITH_STATIC_CRT OFF)
@@ -52,18 +52,18 @@ include(Utils)
 
 # 确保ANTLR4的include目录被正确包含
 include_directories(
-    ${ANTLR4_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/excel_script
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${ANTLR4_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/excel_script
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 set(ANTLR_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/antlr4/antlr-4.13.2-complete.jar")
 
-CPMAddPackage( 
+CPMAddPackage(
         NAME Corrosion
         URL "${PROJECT_SOURCE_DIR}/dependencies/corrosion/corrosion-master.zip"
 )
-
+find_package(ZLIB REQUIRED)
 find_package(ANTLR REQUIRED)
 find_package(PDFium REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -98,13 +98,13 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCE_FILES)
 qt_add_resources(RESOURCES ${RC_FILES})
 
 # Add generated ANTLR files to the project sources
-list(APPEND PROJECT_SOURCES 
-    ${ANTLR_ExcelScript_CXX_OUTPUTS}
-    ${HEADER_FILES} 
-    ${SOURCE_FILES} 
-    ${RC_FILES} 
-    ${UI_FILES} 
-    ${RESOURCES})
+list(APPEND PROJECT_SOURCES
+        ${ANTLR_ExcelScript_CXX_OUTPUTS}
+        ${HEADER_FILES}
+        ${SOURCE_FILES}
+        ${RC_FILES}
+        ${UI_FILES}
+        ${RESOURCES})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies)
 
@@ -134,9 +134,9 @@ target_include_directories(TinaToolBox PRIVATE
 
 target_compile_features(TinaToolBox PRIVATE cxx_std_17)
 
-if(MSVC)
+if (MSVC)
     target_link_options(TinaToolBox PRIVATE "/VERBOSE:LIB")
-endif()
+endif ()
 
 target_link_libraries(TinaToolBox PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
@@ -153,7 +153,9 @@ target_link_libraries(TinaToolBox PRIVATE
         Tesseract::libtesseract
         utf8cpp
         xlnt
+        ZLIB::ZLIB
 )
+
 target_link_libraries(TinaToolBox PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
 target_link_libraries(TinaToolBox PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Arrow::arrow_static,Arrow::arrow_shared>")
@@ -171,7 +173,6 @@ target_compile_options(TinaToolBox PRIVATE
 
 
 target_compile_definitions(TinaToolBox PRIVATE CMAKE_TOOLCHAIN_FILE="D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
-
 
 
 if (${QT_VERSION} VERSION_LESS 6.1.0)
@@ -203,33 +204,58 @@ if (WIN32)
     # 复制 xlnt 的 DLL
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(XLNT_DLL_NAME "xlntd.dll")
-    else()
+    else ()
         set(XLNT_DLL_NAME "xlnt.dll")
-    endif()
+    endif ()
     copy_dll(TinaToolBox "${CMAKE_BINARY_DIR}/dependencies/xlnt/source" "${XLNT_DLL_NAME}")
+endif ()
+
+# 添加模板项目
+add_subdirectory(template)
+
+# 添加TTBPacker可执行文件
+add_executable(TTBPacker
+    src/TTBPacker.cpp
+)
+
+# 设置TTBPacker的包含目录
+target_include_directories(TTBPacker PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# 链接TTBPacker的依赖
+if(MSVC)
+    target_link_libraries(TTBPacker PRIVATE 
+        ZLIB::ZLIB
+        "Imagehlp.lib"  # 使用完整的库名称
+    )
+    target_compile_options(TTBPacker PRIVATE /utf-8)
+    target_compile_definitions(TTBPacker PRIVATE 
+        _CRT_SECURE_NO_WARNINGS
+        NOMINMAX
+        WIN32_LEAN_AND_MEAN
+    )
 endif()
 
-if (WIN32)
-    # Define resource file and output .res file
-    set(RESOURCE_FILE ${PROJECT_SOURCE_DIR}/resources/resources.rc) # Correct path to resources.rc
-    set(RESOURCE_OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/resources_ttb.res) # Output .res in build directory
+# 创建resources目录（如果不存在）
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
+    COMMAND ${CMAKE_COMMAND} -E copy 
+        $<TARGET_FILE:TTBTemplate>
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
+    DEPENDS TTBTemplate
+)
 
-    # Custom command to compile resources.rc using rc.exe
-    add_custom_command(
-            OUTPUT ${RESOURCE_OUTPUT_FILE}
-            COMMAND rc.exe -fo ${RESOURCE_OUTPUT_FILE} ${RESOURCE_FILE}
-            DEPENDS ${RESOURCE_FILE}
-            COMMENT "Compiling resources.rc..."
-            VERBATIM
-    )
+# 添加一个自定义目标来确保模板文件被复制
+add_custom_target(copy_template
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/template.exe
+)
 
-    # Custom target to ensure resource compilation happens before linking
-    add_custom_target(CompileResources ALL
-            DEPENDS ${RESOURCE_OUTPUT_FILE}
-            COMMENT "Ensuring resource compilation..."
-    )
+# 添加依赖关系
+add_dependencies(TTBPacker copy_template)
 
-    # Link the generated resources.res file to your executable
-    target_link_libraries(TinaToolBox PRIVATE ${RESOURCE_OUTPUT_FILE})
-    add_dependencies(TinaToolBox CompileResources) # Ensure CompileResources target runs before TinaToolBox target
+# 添加测试目录（如果存在）
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    add_subdirectory(tests)
 endif()

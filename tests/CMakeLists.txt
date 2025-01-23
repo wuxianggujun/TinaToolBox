@@ -40,7 +40,7 @@ set(TESTABLE_SRC_FILES
 
 list(APPEND PROJECT_SOURCES ${HEADER_FILES} ${TEST_SOURCE_FILES} ${TESTABLE_SRC_FILES})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/../dependencies/OpenXLSX ${CMAKE_CURRENT_BINARY_DIR}/OpenXLSX-build)
+#add_subdirectory(${PROJECT_SOURCE_DIR}/../dependencies/OpenXLSX ${CMAKE_CURRENT_BINARY_DIR}/OpenXLSX-build)
 # 添加测试可执行文件
 add_executable(TinaToolBoxTests ${PROJECT_SOURCES})
 
@@ -66,7 +66,6 @@ else()
 endif()
 
 target_link_libraries(TinaToolBoxTests PRIVATE
-        OpenXLSX
         GTest::gtest
         GTest::gtest_main # 链接 gtest_main 库，它提供了 main 函数
         $<$<BOOL:${ARROW_BUILD_STATIC}>:Parquet::parquet_static>

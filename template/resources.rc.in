@@ -1,0 +1,8 @@
+#include <windows.h>
+
+// 这里的TTB_DATA资源将在打包时被替换为实际的TTB文件数据
+TTB_DATA RCDATA 
+{
+    // 占位符，将在打包时被替换
+    0x00
+} 
