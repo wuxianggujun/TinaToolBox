@@ -32,25 +32,37 @@ int main(int argc, char* argv[]) {
         uncompressedData.resize(compressedData.size() * 10); // 增加缓冲区大小
         
         z_stream zs = {0};
+        zs.zalloc = Z_NULL;
+        zs.zfree = Z_NULL;
+        zs.opaque = Z_NULL;
+        
+        // 使用inflateInit2来匹配deflateInit2的设置
+        if (inflateInit2(&zs, 15 + 16) != Z_OK) {
+            std::cerr << "Failed to initialize zlib" << std::endl;
+            return 1;
+        }
+
         zs.next_in = compressedData.data();
         zs.avail_in = static_cast<uInt>(compressedData.size());
         zs.next_out = uncompressedData.data();
         zs.avail_out = static_cast<uInt>(uncompressedData.size());
 
-        if (inflateInit(&zs) != Z_OK) {
-            std::cerr << "Failed to initialize zlib" << std::endl;
-            return 1;
-        }
-
         // 执行解压
         int ret = inflate(&zs, Z_FINISH);
         if (ret != Z_STREAM_END) {
             std::cerr << "Failed to decompress TTB data (ret=" << ret << ")" << std::endl;
-            // 打印更多调试信息
             std::cerr << "zlib error: " << (zs.msg ? zs.msg : "unknown error") << std::endl;
             std::cerr << "Input size: " << compressedData.size() << std::endl;
             std::cerr << "Output buffer size: " << uncompressedData.size() << std::endl;
             std::cerr << "Bytes written: " << zs.total_out << std::endl;
+            
+            // 打印前几个字节用于调试
+            std::cerr << "First few bytes of compressed data: ";
+            for (size_t i = 0; i < std::min(size_t(16), compressedData.size()); ++i) {
+                std::cerr << std::hex << (int)compressedData[i] << " ";
+            }
+            std::cerr << std::dec << std::endl;
+            
             inflateEnd(&zs);
             return 1;
         }
@@ -69,6 +81,12 @@ int main(int argc, char* argv[]) {
         // 检查TTB文件头
         if (memcmp(uncompressedData.data(), "TTB", 3) != 0) {
             std::cerr << "Invalid TTB file header" << std::endl;
+            // 打印前几个字节用于调试
+            std::cerr << "First few bytes of decompressed data: ";
+            for (size_t i = 0; i < std::min(size_t(16), uncompressedData.size()); ++i) {
+                std::cerr << std::hex << (int)uncompressedData[i] << " ";
+            }
+            std::cerr << std::dec << std::endl;
             return 1;
         }
 

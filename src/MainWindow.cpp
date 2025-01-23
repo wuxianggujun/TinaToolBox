@@ -29,6 +29,7 @@
 #include "UIConfig.hpp"
 #include <QElapsedTimer>
 #include <QDebug>
+#include <zlib.h>
 
 #include "ExcelScriptInterpreter.hpp"
 #include "ExcelHandler.hpp"
@@ -665,10 +666,97 @@ namespace TinaToolBox
 
                 qDebug() << "Read TTB data size:" << ttbData.size() << "bytes";
 
-                // 验证TTB文件头
-                if (ttbData.size() < 4 || memcmp(ttbData.constData(), "TTB", 3) != 0) {
-                    QMessageBox::critical(this, "Error", "Invalid TTB file format");
+                // 检查TTB数据是否有效
+                if (ttbData.isEmpty()) {
+                    QMessageBox::critical(this, "Error", "TTB file is empty");
                     return;
+                }
+
+                // 打印前几个字节用于调试
+                qDebug() << "First few bytes of TTB data:";
+                for (int i = 0; i < std::min<qsizetype>(16, ttbData.size()); ++i) {
+                    qDebug().nospace() << QString("0x%1 ").arg((unsigned char)ttbData[i], 2, 16, QChar('0'));
+                }
+
+                // 压缩TTB数据
+                uLong sourceLen = ttbData.size();
+                uLong destLen = compressBound(sourceLen);
+                std::vector<Bytef> compressedData(destLen);
+                
+                z_stream zs = {0};
+                zs.zalloc = Z_NULL;
+                zs.zfree = Z_NULL;
+                zs.opaque = Z_NULL;
+                
+                int initResult = deflateInit2(&zs, 
+                    Z_BEST_COMPRESSION,    // 压缩级别
+                    Z_DEFLATED,           // 压缩方法
+                    15 + 16,              // 窗口大小和gzip标记
+                    8,                    // 内存级别
+                    Z_DEFAULT_STRATEGY);   // 压缩策略
+                
+                if (initResult != Z_OK) {
+                    QString error = QString("Failed to initialize compression: %1")
+                        .arg(zs.msg ? zs.msg : "Unknown error");
+                    QMessageBox::critical(this, "Error", error);
+                    return;
+                }
+                
+                zs.next_in = reinterpret_cast<Bytef*>(ttbData.data());
+                zs.avail_in = sourceLen;
+                zs.next_out = compressedData.data();
+                zs.avail_out = destLen;
+                
+                // 修改压缩逻辑，处理缓冲区问题
+                std::vector<Bytef> temp;
+                while (true) {
+                    int ret = deflate(&zs, Z_FINISH);
+                    
+                    if (ret == Z_STREAM_END) {
+                        break;  // 压缩完成
+                    }
+                    
+                    if (ret == Z_BUF_ERROR) {
+                        // 输出缓冲区已满，需要扩展
+                        size_t currentSize = compressedData.size();
+                        temp = compressedData;  // 保存当前数据
+                        compressedData.resize(currentSize * 2);  // 扩大一倍
+                        std::copy(temp.begin(), temp.end(), compressedData.begin());
+                        
+                        // 更新zlib流的输出指针和大小
+                        zs.next_out = compressedData.data() + zs.total_out;
+                        zs.avail_out = compressedData.size() - zs.total_out;
+                        
+                        continue;
+                    }
+                    
+                    if (ret < 0) {  // 其他错误
+                        QString error = QString("Failed to compress data: %1 (ret=%2)")
+                            .arg(zs.msg ? zs.msg : "Unknown error")
+                            .arg(ret);
+                        deflateEnd(&zs);
+                        QMessageBox::critical(this, "Error", error);
+                        qDebug() << "Compression error details:";
+                        qDebug() << "Input size:" << sourceLen;
+                        qDebug() << "Output buffer size:" << compressedData.size();
+                        qDebug() << "Bytes written:" << zs.total_out;
+                        qDebug() << "Return code:" << ret;
+                        return;
+                    }
+                }
+                
+                compressedData.resize(zs.total_out);
+                deflateEnd(&zs);
+
+                qDebug() << "Compression successful:";
+                qDebug() << "Original size:" << sourceLen << "bytes";
+                qDebug() << "Compressed size:" << zs.total_out << "bytes";
+                qDebug() << "Compression ratio:" << (float)zs.total_out / sourceLen * 100 << "%";
+
+                // 打印压缩后数据的前几个字节
+                qDebug() << "First few bytes of compressed data:";
+                for (size_t i = 0; i < std::min<size_t>(16, compressedData.size()); ++i) {
+                    qDebug().nospace() << QString("0x%1 ").arg((unsigned char)compressedData[i], 2, 16, QChar('0'));
                 }
 
                 // 4. 使用Windows API更新资源
@@ -685,8 +773,8 @@ namespace TinaToolBox
                                    L"TTB_DATA",  // 资源类型
                                    MAKEINTRESOURCEW(1),  // 资源ID
                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                                   (LPVOID)ttbData.data(),
-                                   ttbData.size())) {
+                                   compressedData.data(),
+                                   compressedData.size())) {
                     DWORD error = GetLastError();
                     EndUpdateResource(hUpdateRes, TRUE);  // 取消更改
                     QMessageBox::critical(this, "Error", 
@@ -725,8 +813,8 @@ namespace TinaToolBox
                             if (hRes) {
                                 DWORD resourceSize = SizeofResource(hModule, hRes);
                                 qDebug() << "Verified resource size:" << resourceSize << "bytes";
-                                if (resourceSize != ttbData.size()) {
-                                    qWarning() << "Resource size mismatch! Original:" << ttbData.size() 
+                                if (resourceSize != compressedData.size()) {
+                                    qWarning() << "Resource size mismatch! Original:" << compressedData.size() 
                                              << "Resource:" << resourceSize;
                                 }
                             } else {
