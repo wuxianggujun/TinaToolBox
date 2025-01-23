@@ -633,45 +633,121 @@ namespace TinaToolBox
         if (functionName == "功能3")
         {
             try {
-                TTBScriptEngine engine;
+                // 1. 获取正确的文件路径
+                QString appDir = QCoreApplication::applicationDirPath();
+                QString templatePath = appDir + "/bin/TTBTemplate.exe";
+                QString ttbPath = appDir + "/bin/my_script_container.ttb";
+                QString outputPath = appDir + "/bin/output.exe";
 
-                // 设置进度回调 (保持不变)
-                engine.setProgressCallback([](const std::string& message, int progress) {
-                    std::cout << "[" << progress << "%] " << message << std::endl;
-                });
+                qDebug() << "Template path:" << templatePath;
+                qDebug() << "TTB path:" << ttbPath;
+                qDebug() << "Output path:" << outputPath;
 
-                // 设置配置更新回调 (保持不变)
-                engine.setConfigUpdateCallback([](const std::map<std::string, std::string>& config) {
-                    std::cout << "Configuration updated:" << std::endl;
-                    for (const auto& [key, value] : config) {
-                        std::cout << key << ": " << value << std::endl;
+                // 2. 首先复制模板文件到输出路径
+                if (!QFile::copy(templatePath, outputPath)) {
+                    if (QFile::exists(outputPath)) {
+                        QFile::remove(outputPath);
+                        if (!QFile::copy(templatePath, outputPath)) {
+                            QMessageBox::critical(this, "Error", "Failed to create output file");
+                            return;
+                        }
                     }
-                });
+                }
 
-                // 从资源加载 TTB 文件 (这次加载的是 SCRIPT_CONTAINER_TTB 资源)
-                std::unique_ptr<TTBFile> ttbFile = TTBFile::loadFromResource("SCRIPT_CONTAINER_TTB", "RCDATA");
-                if (!ttbFile) {
-                    std::cerr << "Failed to load TTB script container from resource." << std::endl;
+                // 3. 读取TTB文件数据
+                QFile ttbFile(ttbPath);
+                if (!ttbFile.open(QIODevice::ReadOnly)) {
+                    QMessageBox::critical(this, "Error", "Failed to open TTB file");
+                    return;
+                }
+                QByteArray ttbData = ttbFile.readAll();
+                ttbFile.close();
+
+                qDebug() << "Read TTB data size:" << ttbData.size() << "bytes";
+
+                // 验证TTB文件头
+                if (ttbData.size() < 4 || memcmp(ttbData.constData(), "TTB", 3) != 0) {
+                    QMessageBox::critical(this, "Error", "Invalid TTB file format");
                     return;
                 }
 
-                // 执行脚本 (执行从资源加载的 TTB 文件)
-                TTBScriptEngine::Error result = engine.executeScript("", {},ttbFile.get()); // 执行从资源加载的 TTB 文件
-                if (result != TTBScriptEngine::Error::SUCCESS) {
-                    std::cerr << "Failed to execute script from TTB container: " << engine.getLastError() << std::endl;
+                // 4. 使用Windows API更新资源
+                HANDLE hUpdateRes = BeginUpdateResourceW((LPCWSTR)outputPath.utf16(), FALSE);
+                if (hUpdateRes == NULL) {
+                    DWORD error = GetLastError();
+                    QMessageBox::critical(this, "Error", 
+                        QString("Failed to begin resource update. Error code: %1").arg(error));
                     return;
                 }
 
-                // 获取最终配置 (保持不变)
-                const auto& finalConfig = engine.getCurrentConfig();
-                std::cout << "\nFinal configuration (from embedded TTB script):" << std::endl;
-                for (const auto& [key, value] : finalConfig) {
-                    std::cout << key << ": " << value << std::endl;
+                // 5. 添加TTB数据作为自定义资源
+                if (!UpdateResourceW(hUpdateRes, 
+                                   L"TTB_DATA",  // 资源类型
+                                   MAKEINTRESOURCEW(1),  // 资源ID
+                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                                   (LPVOID)ttbData.data(),
+                                   ttbData.size())) {
+                    DWORD error = GetLastError();
+                    EndUpdateResource(hUpdateRes, TRUE);  // 取消更改
+                    QMessageBox::critical(this, "Error", 
+                        QString("Failed to update resource. Error code: %1").arg(error));
+                    return;
                 }
 
+                // 6. 提交资源更新
+                if (!EndUpdateResource(hUpdateRes, FALSE)) {
+                    DWORD error = GetLastError();
+                    QMessageBox::critical(this, "Error", 
+                        QString("Failed to commit resource update. Error code: %1").arg(error));
+                    return;
+                }
+
+                // 7. 验证文件大小和资源
+                QFile outputFile(outputPath);
+                if (outputFile.exists()) {
+                    qint64 finalSize = outputFile.size();
+                    
+                    // 验证资源是否正确写入
+                    HANDLE hFile = CreateFileW((LPCWSTR)outputPath.utf16(), 
+                                            GENERIC_READ, 
+                                            FILE_SHARE_READ, 
+                                            NULL, 
+                                            OPEN_EXISTING, 
+                                            FILE_ATTRIBUTE_NORMAL, 
+                                            NULL);
+                    
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        HMODULE hModule = LoadLibraryExW((LPCWSTR)outputPath.utf16(), 
+                                                        NULL, 
+                                                        LOAD_LIBRARY_AS_DATAFILE);
+                        if (hModule) {
+                            HRSRC hRes = FindResourceW(hModule, MAKEINTRESOURCEW(1), L"TTB_DATA");
+                            if (hRes) {
+                                DWORD resourceSize = SizeofResource(hModule, hRes);
+                                qDebug() << "Verified resource size:" << resourceSize << "bytes";
+                                if (resourceSize != ttbData.size()) {
+                                    qWarning() << "Resource size mismatch! Original:" << ttbData.size() 
+                                             << "Resource:" << resourceSize;
+                                }
+                            } else {
+                                qWarning() << "Failed to verify resource!";
+                            }
+                            FreeLibrary(hModule);
+                        }
+                        CloseHandle(hFile);
+                    }
+
+                    QString msg = QString("Successfully created packed executable:\n%1\n\n"
+                                        "Original TTB size: %2 bytes\n"
+                                        "Final file size: %3 bytes")
+                        .arg(outputPath)
+                        .arg(ttbData.size())
+                        .arg(finalSize);
+                    QMessageBox::information(this, "Success", msg);
+                }
 
             } catch (const std::exception& e) {
-                std::cerr << "Error: " << e.what() << std::endl;
+                QMessageBox::critical(this, "Error", QString("Failed to pack executable: %1").arg(e.what()));
             }
         }
     }
